@@ -1,7 +1,7 @@
 import gymImage from "../assets/hero.png"
 import { useState } from "react"
 
-function Register() {
+export default function Register() {
 
     const [permisoFile, setPermisoFile] = useState(null)
 
@@ -43,6 +43,20 @@ function Register() {
     console.log("Formulario válido:", formData)
     }
 
+    // calcula edad
+    let age = null
+
+    if (formData.fechaNacimiento){
+      const today = new Date()
+      const birthDate = new Date(formData.fechaNacimiento)
+
+      age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+    }
 
     const validate = () => {
     const newErrors = {}
@@ -108,20 +122,10 @@ function Register() {
       }
     }
 
-  // fecha de nacimiento obligatoria, ser mayor de 14 años
-  let age = null  
+  // fecha de nacimiento obligatoria, ser mayor de 14 años  
   if (!formData.fechaNacimiento) {
         newErrors.fechaNacimiento = "La fecha de nacimiento es obligatoria"
     } else {
-        const today = new Date()
-        const birthDate = new Date(formData.fechaNacimiento)
-
-        age = today.getFullYear() - birthDate.getFullYear()
-        const monthDiff = today.getMonth() - birthDate.getMonth()
-
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--
-        }
 
     // si es menor de 14 no puede registrarse
         if (age < 14) {
@@ -138,6 +142,7 @@ function Register() {
               newErrors.permiso = "La foto debe ocupar hasta 16MB"
           }
     }
+  }
 
   // contraseña obligatoria, 
     if (!formData.password) {
@@ -348,7 +353,7 @@ function Register() {
                 )}
               </div>
 
-              {formData.edad >= 14 && formData.edad < 18 && (
+              {age >= 14 && age < 18 && (
               <div className="col-span-2">
                 <label className="block text-sm mb-1 text-[#5B0672]">
                     Autorización firmada
@@ -392,7 +397,4 @@ function Register() {
 
     </div>
   )
-}
-
-export default Register
 }
