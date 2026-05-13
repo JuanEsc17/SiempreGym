@@ -1,7 +1,7 @@
 import gymImage from "../assets/hero.png"
 import { useState } from "react"
 
-function Register() {
+export default function Register() {
 
     const [permisoFile, setPermisoFile] = useState(null)
 
@@ -138,6 +138,7 @@ function Register() {
               newErrors.permiso = "La foto debe ocupar hasta 16MB"
           }
     }
+  }
 
   // contraseña obligatoria, 
     if (!formData.password) {
@@ -392,7 +393,4 @@ function Register() {
 
     </div>
   )
-}
-
-export default Register
 }
