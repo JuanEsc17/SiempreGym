@@ -1,5 +1,6 @@
 import gymImage from "../assets/hero.png"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
 
@@ -28,6 +29,8 @@ export default function Register() {
         })
         }   
 
+
+    const navigate = useNavigate();
     // revisa errores, si los hay no deja enviar el formulario
     const handleSubmit = async (e) => {
       e.preventDefault()
@@ -57,6 +60,7 @@ export default function Register() {
 
         if (data.mensaje) {
           alert(data.mensaje);
+          navigate("/login");
         } else {
           alert("Error al registrar usuario");
         }
