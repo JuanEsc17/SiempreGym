@@ -1,5 +1,5 @@
 const RegisterRepository = require("../repositories/registerRepository");
-const db = require("../db/connection");
+const db = require("../src/db");
 
 const repo = new RegisterRepository(db);
 
