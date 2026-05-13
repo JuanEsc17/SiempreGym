@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header/Navigation */}
-      <header className="bg-gradient-to-r from-[#5B0672] to-[#8A0BD2] text-white py-4 px-6">
+      <header className="bg-gradient-to-r from-[#5d0874] to-[#8A0BD2] text-white py-4 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={gymLogo} alt="SiempreGym Logo" className="h-12 w-12 rounded-full object-cover" />
