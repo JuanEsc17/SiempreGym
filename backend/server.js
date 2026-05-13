@@ -4,6 +4,8 @@ const cors = require("cors")
 require("./src/db")
 const authRoutes = require("./src/routes/auth")
 
+const registerRoutes = require("./src/routes/register");
+
 const app = express()
 
 // middleware
@@ -14,6 +16,8 @@ app.use(express.json())
 app.get("/", (req, res) => {
     res.send("Backend funcionando 🚀")
 })
+
+app.use("/api", registerRoutes);
 
 // levantar servidor
 const PORT = 3000
