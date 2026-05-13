@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom"
 import gymImage from "../assets/hero.png"
 
 const USERS_DB = {
-  "facundotaddei@gmail.com": { password: "Mar1234!", role: "cliente" },
-  "simonbaños@gmail.com": { password: "Cocina123!", role: "profesor" },
-  "matiascorrea@gmail.com": { password: "Arte123!", role: "empleado" },
-  "agusperez@gmail.com": { password: "Password123!", role: "cliente" },
-  "florenciaesc@gmail.com": { password: "Termo123!", role: "administrador" }
+  "facundotaddei@gmail.com": { password: "Mar1234!", rol: "cliente" },
+  "simonbanos@gmail.com": { password: "Cocina123!", rol: "profesor" },
+  "matiascorrea@gmail.com": { password: "Arte123!", rol: "empleado" },
+  "agusperez@gmail.com": { password: "Password123!", rol: "cliente" },
+  "florenciaesc@gmail.com": { password: "Termo123!", rol: "administrador" }
 }
 
 export default function Login() {
@@ -70,6 +70,7 @@ export default function Login() {
       setErrors(validationErrors)
       return
     }
+
     setIsLoading(true)
     await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -87,20 +88,23 @@ export default function Login() {
       return
     }
 
-    if (user.role === "administrador") {
+    // Si es admin, mostrar pantalla 2FA
+    if (user.rol === "administrador") {
       const code = generateVerificationCode()
       setGeneratedCode(code)
       sendVerificationEmail(formData.email, code)
-      setUserFor2FA({ email: formData.email, role: user.role })
+      setUserFor2FA({ email: formData.email, rol: user.rol })
       setShow2FA(true)
       setIsLoading(false)
       return
     }
 
+    // Login exitoso
     setErrors({})
     setServerError("")
-    sessionStorage.setItem("user", JSON.stringify({ email: formData.email, role: user.role }))
-    console.log(`Login exitoso como ${user.role}:`, formData.email)
+    localStorage.setItem("user", JSON.stringify({ email: formData.email, rol: user.rol }))
+    console.log(`Login exitoso como ${user.rol}:`, formData.email)
+    setFormData({ email: "", password: "" })
     setIsLoading(false)
     navigate("/")
   }
@@ -115,9 +119,11 @@ export default function Login() {
       setErrors({ verificationCode: "Código incorrecto" })
       return
     }
-    sessionStorage.setItem("user", JSON.stringify({ email: userFor2FA.email, role: userFor2FA.role }))
+
+    localStorage.setItem("user", JSON.stringify({ email: userFor2FA.email, rol: userFor2FA.rol }))
     console.log("Login exitoso con 2FA")
     setShow2FA(false)
+    setFormData({ email: "", password: "" })
     navigate("/")
   }
 

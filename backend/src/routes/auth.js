@@ -2,10 +2,13 @@ const express = require("express")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const connection = require("../db")
+const { sendVerificationCode } = require("../services/emailService")
 
 const router = express.Router()
 
-// Generar token JWT
+// Almacenar códigos temporalmente (en producción, usar Redis)
+const codes2FA = new Map()
+
 const generateToken = (user) => {
   return jwt.sign(
     { id: user.id_usuario, email: user.email, rol: user.rol },
@@ -14,11 +17,14 @@ const generateToken = (user) => {
   )
 }
 
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
 // POST /api/auth/login
 router.post("/login", (req, res) => {
   const { email, password } = req.body
 
-  // Validación básica
   if (!email || !password) {
     return res.status(400).json({
       success: false,
@@ -26,7 +32,6 @@ router.post("/login", (req, res) => {
     })
   }
 
-  // Buscar usuario en la BD
   const query = "SELECT * FROM usuarios WHERE email = ?"
   connection.query(query, [email], async (err, results) => {
     if (err) {
@@ -37,7 +42,6 @@ router.post("/login", (req, res) => {
       })
     }
 
-    // Usuario no encontrado
     if (results.length === 0) {
       return res.status(401).json({
         success: false,
@@ -46,8 +50,6 @@ router.post("/login", (req, res) => {
     }
 
     const user = results[0]
-
-    // Comparar contraseña
     const passwordMatch = await bcrypt.compare(password, user.password_hash)
 
     if (!passwordMatch) {
@@ -57,12 +59,100 @@ router.post("/login", (req, res) => {
       })
     }
 
-    // Login exitoso - generar token
-    const token = generateToken(user)
+    // Si es admin, enviar código 2FA
+    if (user.rol === "administrador") {
+      const code = generateVerificationCode()
+      
+      // Guardar código con expiración (10 minutos)
+      codes2FA.set(email, {
+        code,
+        timestamp: Date.now(),
+        userId: user.id_usuario
+      })
 
+      // Enviar email
+      const emailSent = await sendVerificationCode(email, code)
+
+      if (!emailSent) {
+        return res.status(500).json({
+          success: false,
+          message: "Error al enviar el código de verificación"
+        })
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Código enviado a tu email",
+        requires2FA: true,
+        email: user.email,
+        userId: user.id_usuario
+      })
+    }
+
+    // Login directo para otros roles
+    const token = generateToken(user)
     res.status(200).json({
       success: true,
       message: "Login exitoso",
+      token,
+      user: {
+        id: user.id_usuario,
+        email: user.email,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        rol: user.rol
+      }
+    })
+  })
+})
+
+// POST /api/auth/verify-2fa
+router.post("/verify-2fa", (req, res) => {
+  const { email, code } = req.body
+
+  if (!email || !code) {
+    return res.status(400).json({
+      success: false,
+      message: "Datos incompletos"
+    })
+  }
+
+  const storedData = codes2FA.get(email)
+
+  // Verificar que el código existe y no expiró (10 minutos)
+  if (!storedData || storedData.code !== code) {
+    return res.status(401).json({
+      success: false,
+      message: "Código incorrecto"
+    })
+  }
+
+  if (Date.now() - storedData.timestamp > 10 * 60 * 1000) {
+    codes2FA.delete(email)
+    return res.status(401).json({
+      success: false,
+      message: "Código expirado"
+    })
+  }
+
+  // Buscar usuario
+  connection.query("SELECT * FROM usuarios WHERE id_usuario = ?", [storedData.userId], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado"
+      })
+    }
+
+    const user = results[0]
+    const token = generateToken(user)
+
+    // Limpiar código usado
+    codes2FA.delete(email)
+
+    res.status(200).json({
+      success: true,
+      message: "2FA verificado",
       token,
       user: {
         id: user.id_usuario,
