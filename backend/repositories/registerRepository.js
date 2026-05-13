@@ -1,14 +1,12 @@
-// src/repositories/cliente.repository.js
-
-class ClienteRepository {
+class RegisterRepository {
   constructor(db) {
     this.db = db;
   }
 
   // busco por email, si existe devuelve el objeto
   async findByEmail(email) {
-    const [rows] = await this.db.execute(
-      "SELECT * FROM clientes WHERE email = ?",
+    const [rows] = await this.db.promise().execute(
+      "SELECT * FROM usuarios WHERE email = ?",
       [email]
     );
     return rows[0];
@@ -16,8 +14,8 @@ class ClienteRepository {
 
   // busco por nombre de usuario, si existe devuelve el objeto
   async findByUsername(username) {
-    const [rows] = await this.db.execute(
-      "SELECT * FROM clientes WHERE username = ?",
+    const [rows] = await this.db.promise().execute(
+      "SELECT * FROM usuarios WHERE username = ?",
       [username]
     );
     return rows[0];
@@ -26,8 +24,8 @@ class ClienteRepository {
   // creo un nuevo cliente en la base de datos con los valores correspondientes
   async create(cliente) {
     const query = `
-      INSERT INTO clientes
-      (username, email, password, nombre, apellido, dni, telefono, fecha_nacimiento, plan, permiso)
+      INSERT INTO usuarios
+      (nombre, apellido, username, email, password, dni, telefono, fecha_nacimiento, foto_autorizacion, tipo_plan)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -44,9 +42,9 @@ class ClienteRepository {
       cliente.permiso || null
     ];
 
-    const [result] = await this.db.execute(query, values);
+    const [result] = await this.db.promise().execute(query, values);
     return result.insertId;
   }
 }
 
-module.exports = ClienteRepository;
+module.exports = RegisterRepository;
