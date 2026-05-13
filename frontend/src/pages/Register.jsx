@@ -29,20 +29,43 @@ export default function Register() {
         }   
 
     // revisa errores, si los hay no deja enviar el formulario
-    const handleSubmit = (e) => {
-    e.preventDefault()
+    const handleSubmit = async (e) => {
+      e.preventDefault()
 
-    const validationErrors = validate()
+      const validationErrors = validate()
 
-    if (Object.keys(validationErrors).length > 0) {
+      if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors)
         return
-    }
+      }
 
     setErrors({})
     console.log("Formulario válido:", formData)
-    }
 
+    try {
+        const response = await fetch("http://localhost:3000/api/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if (data.mensaje) {
+          alert(data.mensaje);
+        } else {
+          alert("Error al registrar usuario");
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Error al conectar con el servidor");
+    }
+  }
     // calcula edad
     let age = null
 
