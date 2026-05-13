@@ -1,7 +1,7 @@
 const express = require("express")
 const cors = require("cors")
 
-require("./config/db")
+require("./src/db")
 
 const app = express()
 
