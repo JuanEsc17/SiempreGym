@@ -5,3 +5,25 @@
 * {
   font-family: 'Roboto', sans-serif;
 }
+
+@layer base {
+
+  :root {
+  --bg-1: #5B0672;
+  --bg-2: #8A0BD2;
+  --bg-3: #AF50E5;
+  --bg-4: #D980F9;
+  --purple-light: #E2CEF6;
+  --bg-dark: #1a1a2e;
+  --bg-card: #2d2d3a;
+  --text-primary: #ffffff;
+  --text-primary2: #000000;
+  --text-secondary: rgba(255,255,255,0.6);
+  --text-muted: rgba(255,255,255,0.4);
+  --gray: #505050;
+  --accent: #f59e0b;
+  --teal: #14b8a6;
+  --green: #4ade80;
+  --red: #f87171;
+  }
+}
