@@ -43,13 +43,13 @@ const register = async (req, res) => {
     // verifico nombre de usuario y mail únicos (escenario 2 y 3)
     if (await repo.findByUsername(data.username)) {
       return res.status(400).json({
-        error: "Ya existe un usuario con ese nombre"
+        error: "Ya existe un usuario con ese nombre de usuario"
       });
     }
 
     if (await repo.findByEmail(data.email)) {
       return res.status(400).json({
-        error: "Mail ya registrado"
+        error: "Ya existe un usuario con ese mail"
       });
     }
 
@@ -87,7 +87,7 @@ const register = async (req, res) => {
     // verifico dni único
     if (await repo.findByDni(data.dni)) {
       return res.status(400).json({
-        error: "Ya existe un usuario con ese DNI"
+        error: "Ya existe un usuario con ese número de DNI"
       });
     }
 
@@ -101,7 +101,7 @@ const register = async (req, res) => {
     // verifico nombre max 50 caracteres (escenario 15)
     if (data.username.length > 50) {
       return res.status(400).json({
-        error: "Nombre de usuario con un máximo de 50 caracteres"
+        error: "El nombre de usuario no puede superar los 50 caracteres"
       });
     }
 

@@ -65,11 +65,11 @@ export default function Register() {
 
         console.log(data);
 
-        if (data.mensaje) {
+        if (response.ok) {
           alert(data.mensaje);
           navigate("/login");
         } else {
-          alert("Error al registrar usuario");
+          alert(data.error);
         }
 
     } catch (error) {
