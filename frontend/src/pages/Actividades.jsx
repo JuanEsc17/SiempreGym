@@ -73,25 +73,39 @@ function ClaseCard({ clase, onReservar }) {
     jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb', domingo: 'Dom'
   };
 
+  const porcentaje = Math.round((clase.cupos_disponibles / clase.cupo_maximo) * 100);
+  const colorBarra = porcentaje > 50 ? '#4ade80' : porcentaje > 20 ? '#f59e0b' : '#f87171';
+  const labelCupos = porcentaje <= 20 ? '🔴 Casi lleno' : `👤 ${clase.cupos_disponibles} lugares disponibles`;
+
   return (
-    <div className="rounded-xl overflow-hidden flex h-28 cursor-pointer transition-transform hover:scale-[1.01]"
-      style={{ background: '#2d2d3a', borderLeft: '4px solid #8A0BD2' }}>
-      <div className="flex flex-col justify-center px-3 min-w-[80px]">
+    <div className="rounded-2xl overflow-hidden flex h-28 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+      style={{ 
+        background: '#2d2d3a', 
+        borderLeft: '4px solid #8A0BD2',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+      }}>
+      <div className="flex flex-col justify-center px-3 min-w-[85px]">
         <span className="text-xs opacity-50 text-white">{diasMap[clase.dia] || clase.dia}</span>
         <span className="text-xl font-medium text-white leading-tight">{clase.horario?.slice(0, 5)}</span>
         <span className="text-xs opacity-50 text-white mt-1">{clase.duracion} min</span>
       </div>
-      <div className="flex-1 relative overflow-hidden"
+      <div className="flex-1 relative overflow-hidden rounded-r-2xl"
         style={{ backgroundImage: `url(${imagen})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
-        <div className="relative z-10 p-3 h-full flex flex-col justify-center gap-1">
+        <div className="relative z-10 p-3 h-full flex flex-col justify-between">
           <p className="text-xl font-medium text-white capitalize">{clase.actividad}</p>
-          <p className="text-xs" style={{ color: '#4ade80' }}>👤 {clase.cupos_disponibles} lugares disponibles</p>
+          <div>
+            <p className="text-xs mb-1" style={{ color: colorBarra }}>{labelCupos}</p>
+            <div className="w-full h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
+              <div className="h-1 rounded-full transition-all"
+                style={{ width: `${porcentaje}%`, background: colorBarra }} />
+            </div>
+          </div>
         </div>
-        <span className="absolute bottom-2 right-12 z-10 text-xs text-white">Reservar</span>
+        <span className="absolute bottom-3 right-12 z-10 text-xs text-white opacity-80">Reservar</span>
         <button onClick={onReservar}
-          className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center text-white text-xl border-none cursor-pointer transition-all hover:opacity-80"
-          style={{ background: '#f59e0b' }}>
+          className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center text-white text-xl border-none cursor-pointer transition-all hover:opacity-80 hover:scale-110"
+          style={{ background: '#f59e0b', boxShadow: '0 2px 8px rgba(245,158,11,0.5)' }}>
           +
         </button>
       </div>
