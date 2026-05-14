@@ -1,5 +1,6 @@
 const RegisterRepository = require("../repositories/registerRepository");
 const db = require("../src/db");
+const bcrypt = require("bcrypt");
 
 const repo = new RegisterRepository(db);
 
@@ -154,10 +155,14 @@ const register = async (req, res) => {
     }
 
     // agrego cliente a la base de datos (escenario 1 y 12)
+
+    // hasheo contraseña
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
     await repo.create({
       username: data.username,
       email: data.email,
-      password: data.password, // después podés hashear
+      password: hashedPassword, // guarda contraseña hasheada
       nombre: data.nombre,
       apellido: data.apellido,
       dni: data.dni,
