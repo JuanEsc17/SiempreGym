@@ -1,16 +1,19 @@
-const UsuariosRepo = require('../repositories/usuariosRepository');
+const db = require('../src/db');
+const UsuariosRepository = require('../repositories/usuariosRepository');
+
+const repo = new UsuariosRepository(db);
 
 const UsuariosController = {
 
-async getById(req, res) {
+  async getById(req, res) {
     try {
-        const usuario = await UsuariosRepo.buscarPorId(req.params.id);
-        if (!usuario) return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado' });
-        res.json({ ok: true, data: usuario });
+      const usuario = await repo.buscarPorId(req.params.id);
+      if (!usuario) return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado' });
+      res.json({ ok: true, data: usuario });
     } catch (error) {
-        res.status(500).json({ ok: false, mensaje: error.message });
+      res.status(500).json({ ok: false, mensaje: error.message });
     }
-    }
+  }
 
 };
 

@@ -1,17 +1,23 @@
-const ClasesRepo = require('../../repositories/clasesRepository');
+const ClasesRepository = require('../../repositories/clasesRepository');
 
 const diasMap = {
-    'DOM': 'domingo', 'LUN': 'lunes', 'MAR': 'martes',
-    'MIE': 'miercoles', 'JUE': 'jueves', 'VIE': 'viernes', 'SAB': 'sabado'
+  'DOM': 'domingo', 'LUN': 'lunes', 'MAR': 'martes',
+  'MIE': 'miercoles', 'JUE': 'jueves', 'VIE': 'viernes', 'SAB': 'sabado'
 };
 
-async function getDisponibles() {
-    return await ClasesRepo.getDisponibles();
-}
+class ClasesService {
+  constructor(db) {
+    this.repo = new ClasesRepository(db);
+  }
 
-async function getPorDia(dia) {
+  async getDisponibles() {
+    return await this.repo.getDisponibles();
+  }
+
+  async getPorDia(dia) {
     const nombreDia = diasMap[dia] || dia;
-    return await ClasesRepo.getPorDia(nombreDia);
+    return await this.repo.getPorDia(nombreDia);
+  }
 }
 
-module.exports = { getDisponibles, getPorDia };
+module.exports = ClasesService;

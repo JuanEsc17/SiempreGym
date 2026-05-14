@@ -1,10 +1,15 @@
-const pool = require('../src/db');
+class UsuariosRepository {
+  constructor(db) {
+    this.db = db;
+  }
 
-async function buscarPorId(id_usuario) {
-    const [rows] = await pool.query(
-    'SELECT * FROM usuarios WHERE id_usuario = ?', [id_usuario]
+  async buscarPorId(id_usuario) {
+    const [rows] = await this.db.promise().execute(
+      'SELECT * FROM usuarios WHERE id_usuario = ?',
+      [id_usuario]
     );
     return rows[0] || null;
+  }
 }
 
-module.exports = { buscarPorId };
+module.exports = UsuariosRepository;

@@ -3,7 +3,7 @@ import yogaImg from '../assets/Yoga2.png';
 import pilatesImg from '../assets/Pilatesmq.png';
 import funcionalImg from '../assets/Funcional.png';
 
-const BASE_URL = 'http://localhost:3001/api';
+const BASE_URL = 'http://localhost:3000/api';
 const CLIENTE_ID = 1;
 
 const imagenesClase = {
