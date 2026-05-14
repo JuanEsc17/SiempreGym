@@ -61,11 +61,12 @@ router.post("/login", (req, res) => {
     if (user.rol === "admin") {
       const code = generateVerificationCode()
       
-      // Guardar código con expiración (10 minutos)
+      // Guardar código con expiración (15 minutos)
       codes2FA.set(email, {
         code,
         timestamp: Date.now(),
-        userId: user.id_usuario
+        userId: user.id_usuario,
+        usado: false
       })
 
       // Enviar email
@@ -111,25 +112,41 @@ router.post("/verify-2fa", (req, res) => {
   if (!email || !code) {
     return res.status(400).json({
       success: false,
-      message: "Datos incompletos"
+      message: "Campo incompleto"
     })
   }
 
   const storedData = codes2FA.get(email)
 
-  // Verificar que el código existe y no expiró (10 minutos)
-  if (!storedData || storedData.code !== code) {
+  if (!storedData) {
     return res.status(401).json({
       success: false,
-      message: "Código incorrecto"
+      message: "Código no válido"
     })
   }
 
-  if (Date.now() - storedData.timestamp > 10 * 60 * 1000) {
+  // Verificar si el código fue usado
+  if (storedData.usado) {
+    return res.status(401).json({
+      success: false,
+      message: "Código ya utilizado"
+    })
+  }
+
+  // Verificar expiración (15 minutos)
+  if (Date.now() - storedData.timestamp > 15 * 60 * 1000) {
     codes2FA.delete(email)
     return res.status(401).json({
       success: false,
-      message: "Código expirado"
+      message: "Este código ya venció"
+    })
+  }
+
+  // Verificar que el código coincide
+  if (storedData.code !== code) {
+    return res.status(401).json({
+      success: false,
+      message: "Código incorrecto"
     })
   }
 
@@ -145,12 +162,12 @@ router.post("/verify-2fa", (req, res) => {
     const user = results[0]
     const token = generateToken(user)
 
-    // Limpiar código usado
-    codes2FA.delete(email)
+    // Marcar código como usado
+    storedData.usado = true
 
     res.status(200).json({
       success: true,
-      message: "2FA verificado",
+      message: "Inicio de sesión exitoso",
       token,
       user: {
         id: user.id_usuario,

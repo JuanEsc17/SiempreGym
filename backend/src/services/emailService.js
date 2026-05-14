@@ -31,7 +31,7 @@ const sendVerificationCode = async (email, code) => {
               </p>
             </div>
             <p style="color: #999; text-align: center; font-size: 12px;">
-              Este código expira en 10 minutos
+              Este código expira en 15 minutos
             </p>
             <p style="color: #999; text-align: center; font-size: 12px;">
               Si no solicitaste este código, ignora este email
