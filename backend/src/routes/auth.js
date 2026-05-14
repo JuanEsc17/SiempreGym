@@ -1,5 +1,4 @@
 const express = require("express")
-const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const connection = require("../db")
 const { sendVerificationCode } = require("../services/emailService")
@@ -50,8 +49,7 @@ router.post("/login", (req, res) => {
     }
 
     const user = results[0]
-    const passwordMatch = await bcrypt.compare(password, user.password_hash)
-
+    const passwordMatch = user.password === password
     if (!passwordMatch) {
       return res.status(401).json({
         success: false,
@@ -60,7 +58,7 @@ router.post("/login", (req, res) => {
     }
 
     // Si es admin, enviar código 2FA
-    if (user.rol === "administrador") {
+    if (user.rol === "admin") {
       const code = generateVerificationCode()
       
       // Guardar código con expiración (10 minutos)

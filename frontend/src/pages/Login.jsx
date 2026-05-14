@@ -1,14 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import gymImage from "../assets/hero.png"
-
-const USERS_DB = {
-  "facundotaddei@gmail.com": { password: "Mar1234!", rol: "cliente" },
-  "simonbanos@gmail.com": { password: "Cocina123!", rol: "profesor" },
-  "matiascorrea@gmail.com": { password: "Arte123!", rol: "empleado" },
-  "agusperez@gmail.com": { password: "Password123!", rol: "cliente" },
-  "florenciaesc@gmail.com": { password: "Termo123!", rol: "administrador" }
-}
+import { loginUser, verify2FA } from "../services/authService"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -18,7 +11,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [show2FA, setShow2FA] = useState(false)
   const [verificationCode, setVerificationCode] = useState("")
-  const [generatedCode, setGeneratedCode] = useState("")
   const [userFor2FA, setUserFor2FA] = useState(null)
 
   const validateEmail = (email) => {
@@ -30,13 +22,8 @@ export default function Login() {
     return password && password.length >= 1
   }
 
-  const generateVerificationCode = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString()
-  }
-
-  const sendVerificationEmail = (email, code) => {
-    console.log(`Código enviado a ${email}: ${code}`)
-    return true
+  const getRedirectPath = (rol) => {
+    return rol === "cliente" ? "/actividades" : "/"
   }
 
   const validate = () => {
@@ -72,41 +59,31 @@ export default function Login() {
     }
 
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const result = await loginUser(formData.email, formData.password)
 
-    const user = USERS_DB[formData.email]
-
-    if (!user) {
-      setServerError("Mail y/o contraseña incorrectos")
+    if (!result.success) {
+      setServerError(result.message)
       setIsLoading(false)
       return
     }
 
-    if (user.password !== formData.password) {
-      setServerError("Mail y/o contraseña incorrectos")
-      setIsLoading(false)
-      return
-    }
-
-    // Si es admin, mostrar pantalla 2FA
-    if (user.rol === "administrador") {
-      const code = generateVerificationCode()
-      setGeneratedCode(code)
-      sendVerificationEmail(formData.email, code)
-      setUserFor2FA({ email: formData.email, rol: user.rol })
+    // Si requiere 2FA
+    if (result.requires2FA) {
+      setUserFor2FA({ email: formData.email, userId: result.userId })
       setShow2FA(true)
       setIsLoading(false)
       return
     }
 
-    // Login exitoso
+    // Login exitoso directo
     setErrors({})
     setServerError("")
-    localStorage.setItem("user", JSON.stringify({ email: formData.email, rol: user.rol }))
-    console.log(`Login exitoso como ${user.rol}:`, formData.email)
+    localStorage.setItem("token", result.token)
+    localStorage.setItem("user", JSON.stringify(result.user))
+    console.log("Login exitoso:", result.user.email)
     setFormData({ email: "", password: "" })
     setIsLoading(false)
-    navigate("/")
+    navigate(getRedirectPath(result.user.rol))
   }
 
   const handleVerify2FA = async (e) => {
@@ -115,22 +92,25 @@ export default function Login() {
       setErrors({ verificationCode: "El código es obligatorio" })
       return
     }
-    if (verificationCode !== generatedCode) {
-      setErrors({ verificationCode: "Código incorrecto" })
+
+    const result = await verify2FA(userFor2FA.email, verificationCode)
+
+    if (!result.success) {
+      setErrors({ verificationCode: result.message })
       return
     }
 
-    localStorage.setItem("user", JSON.stringify({ email: userFor2FA.email, rol: userFor2FA.rol }))
+    localStorage.setItem("token", result.token)
+    localStorage.setItem("user", JSON.stringify(result.user))
     console.log("Login exitoso con 2FA")
     setShow2FA(false)
     setFormData({ email: "", password: "" })
-    navigate("/")
+    navigate(getRedirectPath(result.user.rol))
   }
 
   const handleBack2FA = () => {
     setShow2FA(false)
     setVerificationCode("")
-    setGeneratedCode("")
     setUserFor2FA(null)
     setErrors({})
     setFormData({ email: "", password: "" })
