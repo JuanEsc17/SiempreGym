@@ -21,6 +21,15 @@ class RegisterRepository {
     return rows[0];
   }
 
+  // busco por dni
+  async findByDni(dni) {
+  const [rows] = await this.db.promise().execute(
+     "SELECT * FROM usuarios WHERE dni = ?",
+      [dni]
+  );
+  return rows[0];
+  }
+
   // creo un nuevo cliente en la base de datos con los valores correspondientes
   async create(cliente) {
     const query = `

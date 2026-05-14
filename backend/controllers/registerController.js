@@ -84,6 +84,13 @@ const register = async (req, res) => {
       });
     }
 
+    // verifico dni único
+    if (await repo.findByDni(data.dni)) {
+      return res.status(400).json({
+        error: "Ya existe un usuario con ese DNI"
+      });
+    }
+
     // verifico telefono solo números (escenario 9)
     if (!/^[0-9]+$/.test(data.telefono)) {
       return res.status(400).json({

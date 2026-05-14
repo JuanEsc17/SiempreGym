@@ -46,12 +46,19 @@ export default function Register() {
     console.log("Formulario válido:", formData)
 
     try {
+        const form = new FormData();
+
+        Object.keys(formData).forEach(key => {
+          form.append(key, formData[key]);
+        });
+
+        if (permisoFile) {
+          form.append("permiso", permisoFile);
+        }
+
         const response = await fetch("http://localhost:3000/api/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
+          method: "POST",
+          body: form
         });
 
         const data = await response.json();
@@ -379,7 +386,7 @@ export default function Register() {
                     <p className="text-red-600 text-xs mt-1">{errors.plan}</p>
                 )}
               </div>
-
+                // permiso
               {age >= 14 && age < 18 && (
               <div className="col-span-2">
                 <label className="block text-sm mb-1 text-[#5B0672]">
