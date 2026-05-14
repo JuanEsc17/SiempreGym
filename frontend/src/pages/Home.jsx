@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import gymImage from "../assets/hero.png"
-import gymLogo from '../assets/logo.png'
+import Header from "../components/Header"
 
 export default function Home() {
   const navigate = useNavigate()
@@ -8,29 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header/Navigation */}
-      <header className="bg-gradient-to-r from-[#5d0874] to-[#8A0BD2] text-white py-4 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={gymLogo} alt="SiempreGym Logo" className="h-12 w-12 rounded-full object-cover" />
-            <h1 className="text-3xl font-bold">SiempreGym</h1>
-          </div>
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate("/login")}
-              className="px-6 py-2 rounded-lg bg-white text-[#5B0672] font-semibold hover:bg-[#E2CEF6] transition-colors"
-            >
-              Iniciar Sesión
-            </button>
-            <button
-              onClick={() => navigate("/register")}
-              className="px-6 py-2 rounded-lg bg-[#AF50E5] text-white font-semibold hover:bg-[#8A0BD2] transition-colors"
-            >
-              Registrarse
-            </button>
-          </div>
-        </div>
-      </header>
-
+      <Header />
       {/* Hero Section */}
       <section className="bg-linear-to-r from-[#5B0672] via-[#8A0BD2] to-[#AF50E5] text-white py-20 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
