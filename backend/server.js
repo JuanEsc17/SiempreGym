@@ -8,10 +8,18 @@ const registerRoutes = require("./src/routes/register");
 
 const app = express()
 
+//crear clases
+const clasesRoutes = require("./src/routes/clasesRoutes");
+const usuariosRoutes = require("./src/routes/usuariosRoutes");
+
 // middleware
 app.use(cors())
 app.use(express.json())
+//crearclases
+app.use("/api/clases", clasesRoutes);
+app.use("/api/usuarios", usuariosRoutes);
 
+//
 // ruta de prueba
 app.get("/", (req, res) => {
     res.send("Backend funcionando 🚀")
@@ -26,3 +34,4 @@ const PORT = 3000
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`)
 })
+

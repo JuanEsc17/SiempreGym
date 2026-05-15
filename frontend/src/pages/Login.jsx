@@ -23,7 +23,9 @@ export default function Login() {
   }
 
   const getRedirectPath = (rol) => {
-    return rol === "cliente" ? "/actividades" : "/"
+    if (rol === "cliente") return "/actividades"
+    if (rol === "admin") return "/admin"
+    return "/"
   }
 
   const validate = () => {

@@ -1,17 +1,71 @@
-const ClasesRepo = require('../../repositories/clasesRepository');
+const ClasesRepository = require('../../repositories/clasesRepository');
 
 const diasMap = {
-    'DOM': 'domingo', 'LUN': 'lunes', 'MAR': 'martes',
-    'MIE': 'miercoles', 'JUE': 'jueves', 'VIE': 'viernes', 'SAB': 'sabado'
+  'DOM': 'domingo', 'LUN': 'lunes', 'MAR': 'martes',
+  'MIE': 'miercoles', 'JUE': 'jueves', 'VIE': 'viernes', 'SAB': 'sabado'
 };
 
-async function getDisponibles() {
-    return await ClasesRepo.getDisponibles();
-}
+class ClasesService {
+  constructor(db) {
+    this.repo = new ClasesRepository(db);
+  }
 
-async function getPorDia(dia) {
+  async getDisponibles() {
+    return await this.repo.getDisponibles();
+  }
+
+  async getPorDia(dia) {
     const nombreDia = diasMap[dia] || dia;
-    return await ClasesRepo.getPorDia(nombreDia);
+    return await this.repo.getPorDia(nombreDia);
+  }
+
+  async crearClase(datos) {
+    if (!datos.actividad || !datos.dia || !datos.horario || !datos.duracion || 
+        !datos.cupo_maximo || !datos.id_profesor || !datos.id_sala) {
+      throw { status: 400, mensaje: 'No se ingresaron todos los datos necesarios' };
+    }
+
+    const actividadesValidas = ['yoga', 'pilates', 'funcional'];
+    if (!actividadesValidas.includes(datos.actividad.toLowerCase())) {
+        throw { status: 400, mensaje: 'La actividad debe ser Yoga, Pilates o Funcional' };
+    }
+
+    if (datos.cupo_maximo <= 0) throw { status: 400, mensaje: 'El cupo debe ser mayor a 0' };
+    if (datos.duracion <= 0) throw { status: 400, mensaje: 'La duración debe ser mayor a 0' };
+
+    const profesorExiste = await this.repo.existeProfesor(datos.id_profesor);
+    if (!profesorExiste) throw { status: 404, mensaje: 'El profesor no existe en el sistema' };
+
+    const salaExiste = await this.repo.existeSala(datos.id_sala);
+    if (!salaExiste) throw { status: 404, mensaje: 'La sala no existe en el sistema' };
+    // Cupo no puede superar la capacidad de la sala
+    const sala = await this.repo.obtenerSalaPorId(datos.id_sala);
+    if (datos.cupo_maximo > sala.capacidad) {
+      throw { status: 400, mensaje: `El cupo no puede superar la capacidad de la sala (${sala.capacidad} personas)` };
+    }
+    const profOcupado = await this.repo.profesorOcupado(datos.id_profesor, datos.dia, datos.horario);
+    if (profOcupado) throw { status: 409, mensaje: 'El profesor ya tiene una clase asignada en ese horario' };
+
+    const salaOcup = await this.repo.salaOcupada(datos.id_sala, datos.dia, datos.horario);
+    if (salaOcup) throw { status: 409, mensaje: `La sala ya tiene una clase asignada el día ${datos.dia} ${datos.horario}` };
+
+    const duplicada = await this.repo.claseExiste(datos.actividad, datos.dia, datos.horario, datos.id_profesor, datos.id_sala);
+    if (duplicada) throw { status: 409, mensaje: 'Ya existe una clase con esos datos' };
+
+    const id_nueva_clase = await this.repo.crearClase(datos);
+    return { id_clase: id_nueva_clase, mensaje: 'Clase creada exitosamente' };
+    
+    
+
+    }
+  
+  async obtenerProfesores() {
+    return await this.repo.obtenerProfesores();
+  }
+
+  async obtenerSalas() {
+    return await this.repo.obtenerSalas();
+  }
 }
 
-module.exports = { getDisponibles, getPorDia };
+module.exports = ClasesService;
