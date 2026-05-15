@@ -22,7 +22,7 @@ class ClasesRepository {
     return rows;
   }
 
-  // Nuevo método para obtener sala por ID
+  // cosas para crear clase
   async obtenerSalaPorId(id_sala) {
     const [rows] = await this.db.promise().execute(
         `SELECT id_sala, nombre, capacidad FROM salas WHERE id_sala = ?`,
@@ -30,6 +30,7 @@ class ClasesRepository {
     );
     return rows[0];
   }
+
   async existeProfesor(id_profesor) {
     const [rows] = await this.db.promise().execute(
       `SELECT id_usuario FROM usuarios WHERE id_usuario = ? AND rol = 'profesor'`,
@@ -93,6 +94,10 @@ class ClasesRepository {
     );
     return rows;
   }
+
+  //editar clase 
+  
+
 }
 
 module.exports = ClasesRepository;

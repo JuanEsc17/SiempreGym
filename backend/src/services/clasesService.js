@@ -18,6 +18,8 @@ class ClasesService {
     const nombreDia = diasMap[dia] || dia;
     return await this.repo.getPorDia(nombreDia);
   }
+  
+  // Chequeos para crear clase
 
   async crearClase(datos) {
     if (!datos.actividad || !datos.dia || !datos.horario || !datos.duracion || 
