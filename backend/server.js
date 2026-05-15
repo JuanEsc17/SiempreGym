@@ -5,6 +5,9 @@ require("./src/db")
 const authRoutes = require("./src/routes/auth")
 
 const registerRoutes = require("./src/routes/register");
+const clasesRoutes = require("./src/routes/clasesRoutes");
+const reservasRoutes = require("./src/routes/reservasRoutes");
+const usuariosRoutes = require("./src/routes/usuariosRoutes");
 
 const app = express()
 
@@ -27,6 +30,9 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api", registerRoutes);
+app.use("/api/clases", clasesRoutes);
+app.use("/api/reservas", reservasRoutes);
+app.use("/api/usuarios", usuariosRoutes);
 
 // levantar servidor
 const PORT = 3000

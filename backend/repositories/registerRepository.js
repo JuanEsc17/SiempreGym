@@ -1,59 +1,67 @@
-class RegisterRepository {
+class ReservasRepository {
   constructor(db) {
     this.db = db;
   }
 
-  // busco por email, si existe devuelve el objeto
-  async findByEmail(email) {
+  async buscarClasePorId(id_clase) {
     const [rows] = await this.db.promise().execute(
-      "SELECT * FROM usuarios WHERE email = ?",
-      [email]
+      'SELECT * FROM clases WHERE id_clase = ?', [id_clase]
     );
-    return rows[0];
+    return rows[0] || null;
   }
 
-  // busco por nombre de usuario, si existe devuelve el objeto
-  async findByUsername(username) {
+  async buscarClientePorId(id_usuario) {
     const [rows] = await this.db.promise().execute(
-      "SELECT * FROM usuarios WHERE username = ?",
-      [username]
+      'SELECT * FROM usuarios WHERE id_usuario = ?', [id_usuario]
     );
-    return rows[0];
+    return rows[0] || null;
   }
 
-  // busco por dni
-  async findByDni(dni) {
-  const [rows] = await this.db.promise().execute(
-     "SELECT * FROM usuarios WHERE dni = ?",
-      [dni]
-  );
-  return rows[0];
+  async buscarReservasDeCliente(id_usuario) {
+    const [rows] = await this.db.promise().execute(
+      `SELECT r.*, c.fecha_hora_inicio, c.duracion
+       FROM reservas r
+       JOIN clases c ON r.id_clase = c.id_clase
+       WHERE r.id_usuario = ? AND r.estado = 'CONFIRMADA'`,
+      [id_usuario]
+    );
+    return rows;
   }
 
-  // creo un nuevo cliente en la base de datos con los valores correspondientes
-  async create(cliente) {
-    const query = `
-      INSERT INTO usuarios
-      (nombre, apellido, username, email, dni, telefono, fecha_nacimiento,password, foto_autorizacion, tipo_plan)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-      cliente.nombre,
-      cliente.apellido,
-      cliente.username,
-      cliente.email,
-      cliente.dni,
-      cliente.telefono,
-      cliente.fechaNacimiento,
-      cliente.password,
-      cliente.permiso || null,
-      cliente.plan
-    ];
-
-    const [result] = await this.db.promise().execute(query, values);
+  async insertarReserva(id_usuario, id_clase, estado, tipo_pago, monto, saldo) {
+    const [result] = await this.db.promise().execute(
+      `INSERT INTO reservas (id_usuario, id_clase, estado, tipo_pago, monto_pagado, saldo_pendiente)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id_usuario, id_clase, estado, tipo_pago, monto, saldo]
+    );
     return result.insertId;
+  }
+
+  async actualizarCupos(id_clase) {
+    await this.db.promise().execute(
+      'UPDATE clases SET cupos_disponibles = cupos_disponibles - 1 WHERE id_clase = ?',
+      [id_clase]
+    );
+  }
+
+  async descontarCredito(id_usuario) {
+    await this.db.promise().execute(
+      'UPDATE usuarios SET creditos = creditos - 1 WHERE id_usuario = ?',
+      [id_usuario]
+    );
+  }
+
+  async getReservasPorUsuario(id_usuario) {
+    const [rows] = await this.db.promise().execute(
+      `SELECT r.*, c.actividad, c.dia, c.horario, c.duracion
+       FROM reservas r
+       JOIN clases c ON r.id_clase = c.id_clase
+       WHERE r.id_usuario = ?
+       ORDER BY r.fecha_reserva DESC`,
+      [id_usuario]
+    );
+    return rows;
   }
 }
 
-module.exports = RegisterRepository;
+module.exports = ReservasRepository;
