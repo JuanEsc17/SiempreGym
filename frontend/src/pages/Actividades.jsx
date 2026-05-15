@@ -5,6 +5,8 @@ import funcionalImg from '../assets/Funcional.png';
 
 const BASE_URL = 'http://localhost:3000/api';
 const CLIENTE_ID = 1;
+//const usuario = JSON.parse(localStorage.getItem('user'));
+//const CLIENTE_ID = usuario?.id;
 
 const imagenesClase = {
   yoga: yogaImg,
@@ -77,13 +79,52 @@ function ClaseCard({ clase, onReservar }) {
   const colorBarra = porcentaje > 50 ? '#4ade80' : porcentaje > 20 ? '#f59e0b' : '#f87171';
   const labelCupos = porcentaje <= 20 ? '🔴 Casi lleno' : `👤 ${clase.cupos_disponibles} lugares disponibles`;
 
+const ahora = new Date();
+
+const diasSemana = [
+  'domingo',
+  'lunes',
+  'martes',
+  'miercoles',
+  'jueves',
+  'viernes',
+  'sabado'
+];
+
+const fechaClase = new Date();
+
+const partesHora = clase.horario?.slice(0, 5).split(':');
+
+fechaClase.setHours(
+  parseInt(partesHora[0]),
+  parseInt(partesHora[1]),
+  0,
+  0
+);
+
+const claseIniciada =
+  clase.dia?.toLowerCase() === diasSemana[ahora.getDay()] &&
+  ahora >= fechaClase;
+
+console.log({
+  clase: clase.actividad,
+  horario: clase.horario,
+  diaClase: clase.dia,
+  claseIniciada
+});
+
   return (
-    <div className="rounded-2xl overflow-hidden flex h-28 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
-      style={{ 
-        background: '#2d2d3a', 
-        borderLeft: '4px solid #8A0BD2',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
-      }}>
+    <div
+  className={`rounded-2xl overflow-hidden flex h-28 cursor-pointer transition-all duration-300 hover:shadow-2xl
+      ${!claseIniciada && 'hover:scale-[1.02]'}`}
+      style={{
+        background: claseIniciada ? '#252532' : '#2d2d3a',
+        borderLeft: claseIniciada
+        ? '4px solid #6b7280'
+        : '4px solid #8A0BD2',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+        opacity: claseIniciada ? 0.6 : 1
+        }}>
       <div className="flex flex-col justify-center px-3 min-w-[85px]">
         <span className="text-xs opacity-50 text-white">{diasMap[clase.dia] || clase.dia}</span>
         <span className="text-xl font-medium text-white leading-tight">{clase.horario?.slice(0, 5)}</span>
@@ -91,9 +132,27 @@ function ClaseCard({ clase, onReservar }) {
       </div>
       <div className="flex-1 relative overflow-hidden rounded-r-2xl"
         style={{ backgroundImage: `url(${imagen})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+        <div className="absolute inset-0"
+          style={{
+            background: claseIniciada
+            ? 'rgba(0,0,0,0.75)'
+            : 'rgba(0,0,0,0.5)'
+          }}
+        />
         <div className="relative z-10 p-3 h-full flex flex-col justify-between">
           <p className="text-xl font-medium text-white capitalize">{clase.actividad}</p>
+          {claseIniciada && (
+          <span
+              className="text-[10px] px-2 py-1 rounded-full w-fit mt-1"
+              style={{
+              background: 'rgba(239,68,68,0.2)',
+              color: '#fca5a5',
+              border: '1px solid rgba(239,68,68,0.4)'
+              }}
+            >
+            Clase iniciada
+          </span>
+          )}
           <div>
             <p className="text-xs mb-1" style={{ color: colorBarra }}>{labelCupos}</p>
             <div className="w-full h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
@@ -103,9 +162,20 @@ function ClaseCard({ clase, onReservar }) {
           </div>
         </div>
         <span className="absolute bottom-3 right-12 z-10 text-xs text-white opacity-80">Reservar</span>
-        <button onClick={onReservar}
+        <button onClick={() => {
+                if (claseIniciada) {
+                  alert('La actividad ya comenzó');
+                  return;
+                }
+                onReservar();
+          }}
           className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center text-white text-xl border-none cursor-pointer transition-all hover:opacity-80 hover:scale-110"
-          style={{ background: '#f59e0b', boxShadow: '0 2px 8px rgba(245,158,11,0.5)' }}>
+          style={{
+            background: claseIniciada ? '#6b7280' : '#f59e0b',
+            boxShadow: claseIniciada
+            ? 'none'
+            : '0 2px 8px rgba(245,158,11,0.5)'
+          }}>
           +
         </button>
       </div>

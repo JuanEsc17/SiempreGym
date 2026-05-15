@@ -1,7 +1,16 @@
 const ReservasRepository = require('../../repositories/reservasRepository');
 
 function claseYaIniciada(clase) {
-  return new Date(clase.fecha_hora_inicio) <= new Date();
+  const inicioClase = new Date(clase.fecha_hora_inicio);
+  const ahora = new Date();
+  console.log("==============");
+  console.log("AHORA:", ahora);
+  console.log("CLASE:", inicioClase);
+  console.log("RAW:", clase.fecha_hora_inicio);
+  console.log("RESULTADO:", ahora >= inicioClase);
+
+
+  return ahora >= inicioClase;
 }
 
 function haySuperposicion(reservasExistentes, claseNueva) {
