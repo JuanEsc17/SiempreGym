@@ -72,7 +72,7 @@ export default function VerClasesAdmin() {
           </button>
         </div>
 
-        {/* Buscador */}
+        {/* Buscador 
         <input
           type="text"
           placeholder="Buscar por actividad o día..."
@@ -83,7 +83,7 @@ export default function VerClasesAdmin() {
             background: '#2d2d3a',
             border: '1px solid rgba(255,255,255,0.1)',
           }}
-        />
+        />*/}
 
         {/* Lista */}
         {loading && (
