@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:3000/api';
@@ -11,19 +12,15 @@ const DIAS_LABEL = {
 const FORMATOS_VALIDOS = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_IMG_MB = 16;
 
-// ─── Sidebar (igual que Actividades) ─────────────────
 function Sidebar() {
   return (
-    <div
-      className="fixed top-0 left-0 h-screen w-14 flex flex-col items-center pt-5 z-50"
-      style={{ background: '#5B0672' }}
-    >
+    <div className="fixed top-0 left-0 h-screen w-14 flex flex-col items-center pt-5 z-50"
+      style={{ background: '#5B0672' }}>
       <span className="text-white text-2xl cursor-pointer">☰</span>
     </div>
   );
 }
 
-// ─── Campo de formulario reutilizable ─────────────────
 function Campo({ label, error, children }) {
   return (
     <div className="flex flex-col gap-1">
@@ -31,16 +28,11 @@ function Campo({ label, error, children }) {
         {label}
       </label>
       {children}
-      {error && (
-        <span className="text-xs mt-0.5" style={{ color: '#f87171' }}>
-          {error}
-        </span>
-      )}
+      {error && <span className="text-xs mt-0.5" style={{ color: '#f87171' }}>{error}</span>}
     </div>
   );
 }
 
-// ─── Input estilizado ─────────────────────────────────
 const inputStyle = {
   background: '#2d2d3a',
   border: '1px solid rgba(255,255,255,0.1)',
@@ -52,10 +44,6 @@ const inputStyle = {
   width: '100%',
 };
 
-const inputFocusStyle = {
-  border: '1px solid #8A0BD2',
-};
-
 function StyledInput({ error, ...props }) {
   const [focused, setFocused] = useState(false);
   return (
@@ -63,7 +51,7 @@ function StyledInput({ error, ...props }) {
       {...props}
       style={{
         ...inputStyle,
-        ...(focused ? inputFocusStyle : {}),
+        ...(focused ? { border: '1px solid #8A0BD2' } : {}),
         ...(error ? { border: '1px solid #f87171' } : {}),
       }}
       onFocus={() => setFocused(true)}
@@ -79,7 +67,7 @@ function StyledSelect({ error, children, ...props }) {
       {...props}
       style={{
         ...inputStyle,
-        ...(focused ? inputFocusStyle : {}),
+        ...(focused ? { border: '1px solid #8A0BD2' } : {}),
         ...(error ? { border: '1px solid #f87171' } : {}),
         appearance: 'none',
         cursor: 'pointer',
@@ -92,7 +80,6 @@ function StyledSelect({ error, children, ...props }) {
   );
 }
 
-// ─── Toast de notificación ────────────────────────────
 function Toast({ mensaje, tipo, onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 4000);
@@ -104,10 +91,8 @@ function Toast({ mensaje, tipo, onClose }) {
   const icon = tipo === 'exito' ? '✓' : '✕';
 
   return (
-    <div
-      className="fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl"
-      style={{ background: bg, maxWidth: '360px', animation: 'slideIn 0.3s ease' }}
-    >
+    <div className="fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-2xl"
+      style={{ background: bg, maxWidth: '360px' }}>
       <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
         style={{ background: 'rgba(255,255,255,0.25)' }}>{icon}</span>
       <span>{mensaje}</span>
@@ -116,8 +101,10 @@ function Toast({ mensaje, tipo, onClose }) {
   );
 }
 
-// ─── Página principal ─────────────────────────────────
-export default function CrearClase() {
+export default function EditarClase() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     actividad: '',
     dia: '',
@@ -129,48 +116,54 @@ export default function CrearClase() {
   });
   const [imagen, setImagen] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
+  const [imagenActual, setImagenActual] = useState(null);
   const [errores, setErrores] = useState({});
   const [loading, setLoading] = useState(false);
+  const [cargando, setCargando] = useState(true);
   const [toast, setToast] = useState(null);
   const [profesores, setProfesores] = useState([]);
   const [salas, setSalas] = useState([]);
-  const [cargandoDatos, setCargandoDatos] = useState(true);
 
-  // ── Cargar profesores y salas ──
+  // Cargar datos de la clase + profesores + salas
   useEffect(() => {
     async function cargar() {
       try {
-        const [resProfesores, resSalas] = await Promise.all([
+        const [resClase, resProfesores, resSalas] = await Promise.all([
+          axios.get(`${BASE_URL}/clases/${id}`),
           axios.get(`${BASE_URL}/clases/profesores`),
           axios.get(`${BASE_URL}/clases/salas`),
         ]);
+
+        if (resClase.data.ok) {
+          const c = resClase.data.data;
+          setForm({
+            actividad: c.actividad || '',
+            dia: c.dia || '',
+            horario: c.horario?.slice(0, 5) || '',
+            duracion: c.duracion || '',
+            cupo_maximo: c.cupo_maximo || '',
+            id_profesor: c.id_profesor || '',
+            id_sala: c.id_sala || '',
+          });
+          setImagenActual(c.imagen);
+        }
         if (resProfesores.data.ok) setProfesores(resProfesores.data.data);
         if (resSalas.data.ok) setSalas(resSalas.data.data);
       } catch {
-        // Si el back no está listo, usamos datos de prueba
-        setProfesores([
-          { id_usuario: 1, nombre: 'Juan', apellido: 'Pérez' },
-          { id_usuario: 2, nombre: 'María', apellido: 'González' },
-        ]);
-        setSalas([
-          { id_sala: 1, nombre: 'Sala 1', capacidad: 20 },
-          { id_sala: 2, nombre: 'Sala 2', capacidad: 30 },
-        ]);
+        setToast({ mensaje: 'Error al cargar los datos de la clase', tipo: 'error' });
       } finally {
-        setCargandoDatos(false);
+        setCargando(false);
       }
     }
     cargar();
-  }, []);
+  }, [id]);
 
-  // ── Cambio de campo ──
   function handleChange(e) {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     if (errores[name]) setErrores(prev => ({ ...prev, [name]: null }));
   }
 
-  // ── Cambio de imagen ──
   function handleImagen(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -182,7 +175,7 @@ export default function CrearClase() {
       return;
     }
     if (file.size > MAX_IMG_MB * 1024 * 1024) {
-      setErrores(prev => ({ ...prev, imagen: `La imagen supera el tamaño máximo permitido de ${MAX_IMG_MB} MB` }));
+      setErrores(prev => ({ ...prev, imagen: `La imagen debe tener un tamaño máximo de ${MAX_IMG_MB} MB` }));
       setImagen(null);
       setImagenPreview(null);
       return;
@@ -193,29 +186,26 @@ export default function CrearClase() {
     setImagenPreview(URL.createObjectURL(file));
   }
 
-  // ── Validación frontend ──
   function validar() {
     const e = {};
-    if (!form.actividad.trim()) e.actividad = 'La actividad es obligatoria';
+    if (!form.actividad) e.actividad = 'La actividad es obligatoria';
     if (!form.dia) e.dia = 'Seleccioná un día';
     if (!form.horario) e.horario = 'El horario es obligatorio';
     if (!form.duracion) {
       e.duracion = 'La duración es obligatoria';
     } else if (Number(form.duracion) <= 0) {
-      e.duracion = 'La duración debe ser mayor a 0';
+      e.duracion = 'La duración mínima debe ser mayor a 0';
     }
     if (!form.cupo_maximo) {
       e.cupo_maximo = 'El cupo es obligatorio';
     } else if (Number(form.cupo_maximo) <= 0) {
-      e.cupo_maximo = 'El cupo debe ser mayor a 0';
+      e.cupo_maximo = 'El cupo máximo debe ser mayor a 0';
     }
     if (!form.id_profesor) e.id_profesor = 'Seleccioná un profesor';
     if (!form.id_sala) e.id_sala = 'Seleccioná una sala';
-    if (!imagen) e.imagen = 'La imagen es obligatoria';
     return e;
   }
 
-  // ── Submit ──
   async function handleSubmit(e) {
     e.preventDefault();
     const e_validacion = validar();
@@ -228,33 +218,37 @@ export default function CrearClase() {
     try {
       const formData = new FormData();
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
-      formData.append('imagen', imagen);
+      if (imagen) formData.append('imagen', imagen);
 
-      const res = await axios.post(`${BASE_URL}/clases/crear`, formData, {
+      const res = await axios.put(`${BASE_URL}/clases/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       if (res.data.ok) {
-        setToast({ mensaje: 'Clase creada exitosamente', tipo: 'exito' });
-        setForm({ actividad: '', dia: '', horario: '', duracion: '', cupo_maximo: '', id_profesor: '', id_sala: '' });
-        setImagen(null);
-        setImagenPreview(null);
-        setErrores({});
+        setToast({ mensaje: 'Clase actualizada exitosamente', tipo: 'exito' });
+        setTimeout(() => navigate('/admin'), 2000);
       } else {
         setToast({ mensaje: res.data.mensaje, tipo: 'error' });
       }
     } catch (err) {
-      const msg = err.response?.data?.mensaje || 'Error al crear la clase';
+      const msg = err.response?.data?.mensaje || 'Error al actualizar la clase';
       setToast({ mensaje: msg, tipo: 'error' });
     } finally {
       setLoading(false);
     }
   }
 
+  if (cargando) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" style={{ background: '#1a1a2e' }}>
+        <p className="text-white opacity-60">Cargando clase...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen" style={{ background: '#1a1a2e' }}>
       <style>{`
-        @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
         input[type="file"] { display: none; }
         select option { background: #2d2d3a; }
@@ -262,18 +256,15 @@ export default function CrearClase() {
 
       <Sidebar />
 
-      {toast && (
-        <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />
-      )}
+      {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
 
       <div className="flex-1 pl-20 pr-6 py-6 max-w-3xl">
 
-        {/* Header */}
         <div className="border-b pb-3 mb-8" style={{ borderColor: 'rgba(255,255,255,0.12)' }}>
           <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#8A0BD2' }}>
             Panel de administración
           </p>
-          <h1 className="text-3xl font-medium text-white">Crear clase</h1>
+          <h1 className="text-3xl font-medium text-white">Editar clase</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -339,14 +330,8 @@ export default function CrearClase() {
 
           {/* Profesor */}
           <Campo label="Profesor" error={errores.id_profesor}>
-            <StyledSelect
-              name="id_profesor"
-              value={form.id_profesor}
-              onChange={handleChange}
-              error={errores.id_profesor}
-              disabled={cargandoDatos}
-            >
-              <option value="">{cargandoDatos ? 'Cargando...' : 'Seleccionar profesor'}</option>
+            <StyledSelect name="id_profesor" value={form.id_profesor} onChange={handleChange} error={errores.id_profesor}>
+              <option value="">Seleccionar profesor</option>
               {profesores.map(p => (
                 <option key={p.id_usuario} value={p.id_usuario}>
                   {p.nombre} {p.apellido}
@@ -357,14 +342,8 @@ export default function CrearClase() {
 
           {/* Sala */}
           <Campo label="Sala" error={errores.id_sala}>
-            <StyledSelect
-              name="id_sala"
-              value={form.id_sala}
-              onChange={handleChange}
-              error={errores.id_sala}
-              disabled={cargandoDatos}
-            >
-              <option value="">{cargandoDatos ? 'Cargando...' : 'Seleccionar sala'}</option>
+            <StyledSelect name="id_sala" value={form.id_sala} onChange={handleChange} error={errores.id_sala}>
+              <option value="">Seleccionar sala</option>
               {salas.map(s => (
                 <option key={s.id_sala} value={s.id_sala}>
                   {s.nombre} — capacidad {s.capacidad}
@@ -375,22 +354,16 @@ export default function CrearClase() {
 
           {/* Imagen */}
           <Campo label="Imagen de la clase" error={errores.imagen}>
-            <label
-              htmlFor="imagen-input"
+            <label htmlFor="imagen-input"
               className="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all hover:opacity-80"
               style={{
                 background: '#2d2d3a',
                 border: errores.imagen ? '1px solid #f87171' : '1px dashed rgba(255,255,255,0.2)',
                 borderRadius: '10px',
-              }}
-            >
+              }}>
               {imagenPreview ? (
                 <>
-                  <img
-                    src={imagenPreview}
-                    alt="preview"
-                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                  />
+                  <img src={imagenPreview} alt="preview" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
                   <div>
                     <p className="text-sm text-white font-medium">{imagen.name}</p>
                     <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
@@ -405,35 +378,42 @@ export default function CrearClase() {
                     <span className="text-2xl">🖼️</span>
                   </div>
                   <div>
-                    <p className="text-sm text-white">Subir imagen</p>
+                    <p className="text-sm text-white">
+                      {imagenActual ? `Imagen actual: ${imagenActual} — click para cambiar` : 'Subir imagen'}
+                    </p>
                     <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      JPG, PNG, GIF, WEBP · Máx. {MAX_IMG_MB} MB
+                      JPG, PNG, GIF, WEBP · Máx. {MAX_IMG_MB} MB · opcional
                     </p>
                   </div>
                 </>
               )}
             </label>
-            <input
-              id="imagen-input"
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-              onChange={handleImagen}
-            />
+            <input id="imagen-input" type="file" accept="image/*" onChange={handleImagen} />
           </Campo>
 
-          {/* Botón submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all mt-2"
-            style={{
-              background: loading ? 'rgba(138,11,210,0.5)' : '#8A0BD2',
-              boxShadow: loading ? 'none' : '0 4px 20px rgba(138,11,210,0.4)',
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? 'Creando clase...' : 'Agregar actividad'}
-          </button>
+          {/* Botones */}
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <button
+              type="button"
+              onClick={() => navigate('/admin')}
+              className="py-3 rounded-xl font-medium text-sm border-none cursor-pointer transition-all"
+              style={{ background: '#2d2d3a', color: 'rgba(255,255,255,0.7)' }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all"
+              style={{
+                background: loading ? 'rgba(138,11,210,0.5)' : '#8A0BD2',
+                boxShadow: loading ? 'none' : '0 4px 20px rgba(138,11,210,0.4)',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'Guardando...' : 'Guardar cambios'}
+            </button>
+          </div>
 
         </form>
       </div>

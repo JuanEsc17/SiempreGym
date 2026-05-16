@@ -10,8 +10,15 @@ const upload = multer({
 
 router.get('/disponibles', ClasesController.getDisponibles);
 router.get('/por-dia', ClasesController.getPorDia);
+
+//si no deliro esto es lo de crear clase
 router.get('/profesores', ClasesController.obtenerProfesores);
 router.get('/salas', ClasesController.obtenerSalas);
 router.post('/crear', upload.single('imagen'), ClasesController.crearClase);
 
+//para obtener todas las clases (admin)
+router.get('/todas', ClasesController.obtenerTodas);
+//para editar clase
+router.get('/:id', ClasesController.obtenerClasePorId);
+router.put('/:id', upload.single('imagen'), ClasesController.editarClase);
 module.exports = router;

@@ -1,6 +1,8 @@
 const express = require("express")
 const cors = require("cors")
 
+
+
 require("./src/db")
 const authRoutes = require("./src/routes/auth")
 const registerRoutes = require("./src/routes/register")
@@ -9,6 +11,8 @@ const reservasRoutes = require("./src/routes/reservasRoutes")
 const usuariosRoutes = require("./src/routes/usuariosRoutes")
 
 const app = express()
+
+app.use('/uploads', express.static('uploads'))//para servir las imagenes de las clases
 
 app.use(cors())
 app.use(express.json())

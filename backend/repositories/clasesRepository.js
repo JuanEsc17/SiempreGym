@@ -96,8 +96,38 @@ class ClasesRepository {
   }
 
   //editar clase 
-  
+  async obtenerClasePorId(id_clase) {
+    const [rows] = await this.db.promise().execute(
+        `SELECT * FROM clases WHERE id_clase = ?`,
+        [id_clase]
+    );
+    return rows[0] || null;
+}
 
+  async editarClase(id_clase, datos) {
+    const { actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala, imagen } = datos;
+    
+    if (imagen) {
+        const [result] = await this.db.promise().execute(
+            `UPDATE clases SET actividad=?, dia=?, horario=?, duracion=?, cupo_maximo=?, id_profesor=?, id_sala=?, imagen=? WHERE id_clase=?`,
+            [actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala, imagen, id_clase]
+        );
+        return result.affectedRows > 0;
+    } else {
+        const [result] = await this.db.promise().execute(
+            `UPDATE clases SET actividad=?, dia=?, horario=?, duracion=?, cupo_maximo=?, id_profesor=?, id_sala=? WHERE id_clase=?`,
+            [actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala, id_clase]
+        );
+        return result.affectedRows > 0;
+    }
+  }
+  // para mostrar todas las clases en el admin
+  async obtenerTodas() {
+    const [rows] = await this.db.promise().execute(
+        `SELECT * FROM clases ORDER BY dia, horario`
+    );
+    return rows;
+  }
 }
 
 module.exports = ClasesRepository;

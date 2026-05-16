@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom"
 
 export default function AdminPanel() {
   const navigate = useNavigate()
-  const user = JSON.parse(localStorage.getItem("user") || "{}")
 
   return (
     <div className="flex min-h-screen" style={{ background: '#1a1a2e' }}>
@@ -14,16 +13,24 @@ export default function AdminPanel() {
           <h1 className="text-3xl font-medium text-white">Panel de administración</h1>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div
-            onClick={() => navigate("/admin/clases/crear")}
+        <div className="grid grid-cols-2 gap-4">
+          <div onClick={() => navigate("/crear-clase")}
             className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
-            style={{ background: '#5B0672' }}
-          >
+            style={{ background: '#5B0672' }}>
             <span className="text-3xl">➕</span>
             <div>
               <p className="text-white font-medium">Crear clase</p>
               <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Agregar nueva actividad</p>
+            </div>
+          </div>
+
+          <div onClick={() => navigate("/ver-clases-admin")}
+            className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
+            style={{ background: '#8A0BD2' }}>
+            <span className="text-3xl">📋</span>
+            <div>
+              <p className="text-white font-medium">Ver clases</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Ver y editar actividades</p>
             </div>
           </div>
         </div>
