@@ -70,7 +70,50 @@ async obtenerSalas(req, res) {
         res.status(500).json({ ok: false, mensaje: error.message });
     }
 },
+//para editar
+//buscar la clase por id
+async obtenerClasePorId(req, res) {
+    try {
+        const clase = await service.obtenerClasePorId(req.params.id);
+        res.json({ ok: true, data: clase });
+    } catch (error) {
+        const status = error.status || 500;
+        res.status(status).json({ ok: false, mensaje: error.mensaje || error.message });
+    }
+},
 
+//el real editar clases
+async editarClase(req, res) {
+    try {
+        const { actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala } = req.body;
+
+        const datos = {
+            actividad,
+            dia,
+            horario,
+            duracion: parseInt(duracion),
+            cupo_maximo: parseInt(cupo_maximo),
+            id_profesor: parseInt(id_profesor),
+            id_sala: parseInt(id_sala),
+            imagen: req.file ? req.file.filename : null
+        };
+
+        const resultado = await service.editarClase(req.params.id, datos);
+        res.json({ ok: true, data: resultado });
+    } catch (error) {
+        const status = error.status || 500;
+        res.status(status).json({ ok: false, mensaje: error.mensaje || error.message });
+    }
+},
+//para mostrar todas las clases en el admin panel
+async obtenerTodas(req, res) {
+    try {
+        const clases = await service.obtenerTodas();
+        res.json({ ok: true, data: clases });
+    } catch (error) {
+        res.status(500).json({ ok: false, mensaje: error.message });
+    }
+},
 };
 
 module.exports = ClasesController;
