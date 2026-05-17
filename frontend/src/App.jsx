@@ -1,6 +1,8 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"//importar paginas
 
+import PaymentStatus from './pages/PaymentStatus';
+
 import Home from "./pages/Home.jsx"
 import Login from "./pages/Login.jsx"
 import Register from "./pages/Register.jsx"
@@ -35,6 +37,7 @@ function App() {
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
         <Route path="/editar-clase/:id" element={<RutaAdmin><EditarClase /></RutaAdmin>} />
         <Route path="/ver-clases-admin" element={<RutaAdmin><VerClasesAdmin /></RutaAdmin>} />
+        <Route path="/payment-status" element={<PaymentStatus />} />
       </Routes>
     </BrowserRouter>
   )

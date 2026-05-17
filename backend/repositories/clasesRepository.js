@@ -13,10 +13,12 @@ class ClasesRepository {
     return rows;
   }
 
-  async getPorDia(nombreDia) {
+async getPorDia(nombreDia) {
     const [rows] = await this.db.promise().execute(
       `SELECT * FROM clases 
-       WHERE dia = ? AND estado = 'activa' AND cupos_disponibles > 0`,
+       WHERE dia = ? 
+       AND estado = 'activa' 
+       AND (cupo_maximo - cantidad_inscriptos) > 0`,
       [nombreDia]
     );
     return rows;

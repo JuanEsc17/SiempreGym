@@ -1,18 +1,20 @@
 const express = require("express")
 const cors = require("cors")
 const path = require('path')
-
-
+require('dotenv').config();
 require("./src/db")
 const authRoutes = require("./src/routes/auth")
 const registerRoutes = require("./src/routes/register")
 const clasesRoutes = require("./src/routes/clasesRoutes")
 const reservasRoutes = require("./src/routes/reservasRoutes")
 const usuariosRoutes = require("./src/routes/usuariosRoutes")
+const paymentRoutes = require("./src/routes/paymentRoutes")
 
 const app = express()
 
-app.use('/uploads', express.static('uploads'))//para servir las imagenes de las clases
+
+
+app.use('/uploads', express.static('uploads'))
 app.use('/uploads', (req, res, next) => {
     res.setHeader('Content-Type', 'image/jpeg')
     next()
@@ -29,6 +31,7 @@ app.use("/api", registerRoutes)
 app.use("/api/clases", clasesRoutes)
 app.use("/api/reservas", reservasRoutes)
 app.use("/api/usuarios", usuariosRoutes)
+app.use("/api/payments", paymentRoutes)
 
 const PORT = 3000
 

@@ -184,19 +184,104 @@ console.log({
 }
 
 // ─── ModalDetalle ────────────────────────────────────
+// ─── ModalDetalle (ACTUALIZADO CON ESCUDO DE SEGURIDAD) ─────────────────────────
 function ModalDetalle({ clase, onCerrar, onReservaExitosa }) {
   const [tipoPago, setTipoPago] = useState(null);
   const [usarCredito, setUsarCredito] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [exito, setExito] = useState(false);
-
-  async function handleReservar() {
+  
+  // NUEVO ESTADO: Controla si el usuario ya se fue a Mercado Pago y espera confirmación
+  const [esperandoPago, setEsperandoPago] = useState(false);
+async function handleReservar() {
     setLoading(true);
     setMensaje(null);
     try {
       const pago = usarCredito ? 'CREDITO' : tipoPago;
-      if (!pago) { setMensaje('Debés elegir una forma de pago'); setLoading(false); return; }
+      if (!pago) { 
+        setMensaje('Debés elegir una forma de pago'); 
+        setLoading(false); 
+        return; 
+      }
+
+      // --- FLUJO MERCADO PAGO (Pago Total o Seña) ---
+      if (pago === 'TOTAL' || pago === 'SEÑA') {
+        
+        // Validar Escenario 11: No se puede reservar con seña el mismo día de la clase
+        if (pago === 'SEÑA') {
+          const hoyStr = new Date().toLocaleDateString('es-AR', { weekday: 'long' })
+            .toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+          const diaClase = clase.dia.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          
+          if (diaClase === hoyStr) {
+            setMensaje('No es posible reservar con seña el mismo día de la clase');
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Parche de seguridad por si la columna precio no está en la tabla clases
+        const precioTemporal = clase.precio || 2000; 
+        const montoFinal = pago === 'SEÑA' ? (precioTemporal / 2) : precioTemporal;
+        
+        const textoDescripcion = pago === 'SEÑA' 
+          ? `Seña 50% - Clase de ${clase.actividad}` 
+          : `Pago Total - Clase de ${clase.actividad}`;
+
+        // Le pegamos a nuestro Backend para crear la preferencia
+        const responsePref = await fetch('http://localhost:3000/api/payments/create-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipoPago: pago.toLowerCase(),
+            descripcion: textoDescripcion,
+            precio: montoFinal,
+            // 🔥 CAMBIO AQUÍ: Enviamos los IDs para que el backend arme la referencia única
+            id_usuario: CLIENTE_ID,        
+            id_clase: clase.id_clase       
+          })
+        });
+
+        if (!responsePref.ok) {
+          const errData = await responsePref.json();
+          setExito(false);
+          setMensaje(errData.error || 'El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
+          setLoading(false);
+          return;
+        }
+
+        const dataPref = await responsePref.json();
+
+        if (dataPref.init_point) {
+          // Guardamos los datos de la reserva latente
+          localStorage.setItem('pending_reservation', JSON.stringify({
+            id_usuario: CLIENTE_ID,
+            id_clase: clase.id_clase,
+            tipo_pago: pago,
+            precio_total: precioTemporal 
+          }));
+
+          // Guardamos el preference ID para usarlo en la validación manual
+          localStorage.setItem('last_preference_id', dataPref.id);
+
+          // Abre Mercado Pago en una PESTAÑA NUEVA sin romper el localhost
+          window.open(dataPref.init_point, '_blank', 'noopener,noreferrer');
+          
+          // Apagamos el loading para que el botón violeta no nazca trabado
+          setLoading(false);
+
+          // Activamos el estado para cambiar el botón principal por el de validación
+          setEsperandoPago(true);
+          return;
+        } else {
+          throw new Error('No init_point');
+        }
+      }
+
+      // --- FLUJO VIEJO (Solo si usa CRÉDITO) ---
       const response = await fetch(`${BASE_URL}/reservas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -211,13 +296,77 @@ function ModalDetalle({ clase, onCerrar, onReservaExitosa }) {
         setExito(false);
         setMensaje(resultado.mensaje);
       }
-    } catch {
-      setMensaje('Error al conectar con el servidor');
+    } catch (error) {
+      setExito(false);
+      setMensaje('El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
     } finally {
+      if (!usarCredito && (tipoPago === 'TOTAL' || tipoPago === 'SEÑA')) return;
       setLoading(false);
     }
   }
+async function confirmarReservaManual() {
+    setLoading(true);
+    setMensaje("Verificando tu pago en Mercado Pago... ⏳");
+    
+    const dataPendiente = localStorage.getItem('pending_reservation');
+    
+    // Buscamos el preference_id de la memoria de la reserva pendiente
+    const preferenceId = localStorage.getItem('last_preference_id');
 
+    if (!dataPendiente || !preferenceId) {
+      setMensaje('No se encontraron registros de una reserva pendiente.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const responseValidar = await fetch('http://localhost:3000/api/payments/validar-pago', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preference_id: preferenceId }) // Mandamos el id limpio
+      });
+
+      const resultadoValidacion = await responseValidar.json();
+
+      if (!resultadoValidacion.verificado) {
+        setExito(false);
+        setMensaje(resultadoValidacion.error || 'El pago no fue aprobado todavía.');
+        setLoading(false);
+        return; 
+      }
+
+      // Si Mercado Pago dio el OK, impactamos tu base de datos MySQL
+      const reserva = JSON.parse(dataPendiente);
+      const responseReserva = await fetch(`${BASE_URL}/reservas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_usuario: reserva.id_usuario,
+          id_clase: reserva.id_clase,
+          tipo_pago: reserva.tipo_pago
+        })
+      });
+
+      const resultadoReserva = await responseReserva.json();
+
+      if (resultadoReserva.ok) {
+        localStorage.removeItem('pending_reservation');
+        localStorage.removeItem('last_preference_id');
+        setExito(true);
+        setMensaje('¡Pago verificado y actividad reservada con éxito! 🎉');
+        setTimeout(() => onReservaExitosa(), 2000);
+      } else {
+        setExito(false);
+        setMenserva(resultadoReserva.mensaje || 'Error al guardar la reserva.');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error(error);
+      setExito(false);
+      setMensaje('Error de conexión al procesar la confirmación.');
+      setLoading(false);
+    }
+  }
   function toggleCredito() {
     setUsarCredito(!usarCredito);
     setTipoPago(null);
@@ -296,9 +445,10 @@ function ModalDetalle({ clase, onCerrar, onReservaExitosa }) {
                   { id: 'TOTAL', nombre: 'Pago total', monto: `$${clase.precio}`, extra: null },
                   { id: 'SEÑA', nombre: 'Seña 50%', monto: `$${clase.precio / 2} ahora`, extra: `$${clase.precio / 2} pendiente` }
                 ].map(opt => (
-                  <div key={opt.id} onClick={() => setTipoPago(opt.id)}
+                  <div key={opt.id} onClick={() => !esperandoPago && setTipoPago(opt.id)}
                     className={`border-2 rounded-xl p-3 cursor-pointer transition-all
-                      ${tipoPago === opt.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white'}`}>
+                      ${tipoPago === opt.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white'}
+                      ${esperandoPago ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <p className="text-sm font-medium text-gray-800">{opt.nombre}</p>
                     <p className="text-xs text-gray-500 mt-1">{opt.monto}</p>
                     {opt.extra && <p className="text-xs mt-1" style={{ color: '#f59e0b' }}>{opt.extra}</p>}
@@ -308,12 +458,22 @@ function ModalDetalle({ clase, onCerrar, onReservaExitosa }) {
             </div>
           )}
 
-          <button onClick={handleReservar}
-            disabled={loading || (!usarCredito && !tipoPago)}
-            className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: '#14b8a6' }}>
-            {loading ? 'Procesando...' : 'Reservar actividad'}
-          </button>
+          {/* RENDERING DINÁMICO DE BOTONES (SEGURIDAD) */}
+          {!esperandoPago ? (
+            <button onClick={handleReservar}
+              disabled={loading || (!usarCredito && !tipoPago)}
+              className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: '#14b8a6' }}>
+              {loading ? 'Procesando...' : 'Reservar actividad'}
+            </button>
+          ) : (
+            <button onClick={confirmarReservaManual}
+              disabled={loading}
+              className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all disabled:opacity-50"
+              style={{ background: '#8A0BD2', boxShadow: '0 4px 10px rgba(138,11,210,0.3)' }}>
+              {loading ? 'Verificando pago...' : 'Ya pagué, confirmar mi reserva 🚀'}
+            </button>
+          )}
         </div>
       </div>
     </div>
