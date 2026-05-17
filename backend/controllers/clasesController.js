@@ -29,7 +29,8 @@ const ClasesController = {
     async crearClase(req, res) {
     try {
         const { actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala } = req.body;
-
+        //console.log('body:', req.body)  // ← agregá esto
+        //console.log('file:', req.file)  // ← y esto
         if (!req.file) {
             return res.status(400).json({ ok: false, mensaje: 'Debe proporcionar una imagen' });
         }

@@ -35,22 +35,32 @@ class ClasesService {
     if (datos.cupo_maximo <= 0) throw { status: 400, mensaje: 'El cupo debe ser mayor a 0' };
     if (datos.duracion <= 0) throw { status: 400, mensaje: 'La duración debe ser mayor a 0' };
 
+    //console.log('chequeando profesor...')//debug
+    
+
     const profesorExiste = await this.repo.existeProfesor(datos.id_profesor);
     if (!profesorExiste) throw { status: 404, mensaje: 'El profesor no existe en el sistema' };
-
+    
+    //console.log('chequeando sala...')//debug
+    
+  
     const salaExiste = await this.repo.existeSala(datos.id_sala);
     if (!salaExiste) throw { status: 404, mensaje: 'La sala no existe en el sistema' };
+
+    //console.log('obteniendo sala...')//debug
+  
 
     // Cupo no puede superar la capacidad de la sala
     const sala = await this.repo.obtenerSalaPorId(datos.id_sala);
     if (datos.cupo_maximo > sala.capacidad) {
       throw { status: 400, mensaje: `El cupo no puede superar la capacidad de la sala (${sala.capacidad} personas)` };
     }
-    
-    const profOcupado = await this.repo.profesorOcupado(datos.id_profesor, datos.dia, datos.horario);
+    //console.log('chequeando profesor ocupado...')//debug
+    const profOcupado = await this.repo.profesorOcupado(datos.id_profesor, datos.dia, datos.horario, 0);
+    //const profOcupado = await this.repo.profesorOcupado(datos.id_profesor, datos.dia, datos.horario);
     if (profOcupado) throw { status: 409, mensaje: 'El profesor ya tiene una clase asignada en ese horario' };
 
-    const salaOcup = await this.repo.salaOcupada(datos.id_sala, datos.dia, datos.horario);
+    const salaOcup = await this.repo.salaOcupada(datos.id_sala, datos.dia, datos.horario, 0);
     if (salaOcup) throw { status: 409, mensaje: `La sala ya tiene una clase asignada el día ${datos.dia} ${datos.horario}` };
 
     const duplicada = await this.repo.claseExiste(datos.actividad, datos.dia, datos.horario, datos.id_profesor, datos.id_sala);
