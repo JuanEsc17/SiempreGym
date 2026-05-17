@@ -363,30 +363,40 @@ export default function EditarClase() {
               }}>
               {imagenPreview ? (
                 <>
-                  <img src={imagenPreview} alt="preview" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
-                  <div>
-                    <p className="text-sm text-white font-medium">{imagen.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      {(imagen.size / (1024 * 1024)).toFixed(2)} MB — click para cambiar
-                    </p>
-                  </div>
+                <img src={imagenPreview} alt="preview" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-white font-medium">{imagen.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  {(imagen.size / (1024 * 1024)).toFixed(2)} MB — click para cambiar
+                  </p>
+                </div>
                 </>
-              ) : (
+              ) : imagenActual ? (
                 <>
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(138,11,210,0.2)' }}>
-                    <span className="text-2xl">🖼️</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-white">
-                      {imagenActual ? `Imagen actual: ${imagenActual} — click para cambiar` : 'Subir imagen'}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      JPG, PNG, GIF, WEBP · Máx. {MAX_IMG_MB} MB · opcional
-                    </p>
-                  </div>
-                </>
-              )}
+                <img src={`http://localhost:3000/uploads/${imagenActual}`}
+                alt="imagen actual"
+                className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                <div>
+                <p className="text-sm text-white">Imagen actual</p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                Click para cambiar · Máx. {MAX_IMG_MB} MB
+                </p>
+              </div>
+              </>
+              ) : (
+  <>
+    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+      style={{ background: 'rgba(138,11,210,0.2)' }}>
+      <span className="text-2xl">🖼️</span>
+    </div>
+    <div>
+      <p className="text-sm text-white">Subir imagen</p>
+      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        JPG, PNG, GIF, WEBP · Máx. {MAX_IMG_MB} MB · opcional
+      </p>
+    </div>
+  </>
+)}
             </label>
             <input id="imagen-input" type="file" accept="image/*" onChange={handleImagen} />
           </Campo>
@@ -395,7 +405,7 @@ export default function EditarClase() {
           <div className="grid grid-cols-2 gap-4 mt-2">
             <button
               type="button"
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/ver-clases-admin')}
               className="py-3 rounded-xl font-medium text-sm border-none cursor-pointer transition-all"
               style={{ background: '#2d2d3a', color: 'rgba(255,255,255,0.7)' }}
             >

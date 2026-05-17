@@ -72,7 +72,7 @@ export default function VerClasesAdmin() {
           </button>
         </div>
 
-        {/* Buscador */}
+        {/* Buscador 
         <input
           type="text"
           placeholder="Buscar por actividad o día..."
@@ -83,7 +83,7 @@ export default function VerClasesAdmin() {
             background: '#2d2d3a',
             border: '1px solid rgba(255,255,255,0.1)',
           }}
-        />
+        />*/}
 
         {/* Lista */}
         {loading && (
@@ -107,13 +107,12 @@ export default function VerClasesAdmin() {
                 style={{ background: '#2d2d3a', borderLeft: '3px solid #8A0BD2' }}>
                 <div className="flex items-center gap-4">
                   {/* Ícono actividad */}
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(138,11,210,0.2)' }}>
-                    <span className="text-lg">
-                      {clase.actividad?.toLowerCase() === 'yoga' ? '🧘' :
-                       clase.actividad?.toLowerCase() === 'pilates' ? '🤸' : '💪'}
-                    </span>
-                  </div>
+                  <img 
+                      src={`http://localhost:3000/uploads/${clase.imagen}`}
+                      alt={clase.actividad}
+                      className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                      onError={(e) => { e.target.src = '' ; e.target.style.display='none' }}
+                      />
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-white font-medium capitalize">{clase.actividad}</p>

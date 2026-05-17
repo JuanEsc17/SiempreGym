@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+import { useParams, useNavigate } from 'react-router-dom';
+
 const BASE_URL = 'http://localhost:3000/api';
+
+
 
 const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 const DIAS_LABEL = {
@@ -135,7 +139,7 @@ export default function CrearClase() {
   const [profesores, setProfesores] = useState([]);
   const [salas, setSalas] = useState([]);
   const [cargandoDatos, setCargandoDatos] = useState(true);
-
+  const navigate = useNavigate();
   // ── Cargar profesores y salas ──
   useEffect(() => {
     async function cargar() {
@@ -277,7 +281,7 @@ export default function CrearClase() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
+          
           {/* Actividad */}
           <Campo label="Actividad" error={errores.actividad}>
             <StyledSelect name="actividad" value={form.actividad} onChange={handleChange} error={errores.actividad}>
@@ -421,19 +425,28 @@ export default function CrearClase() {
             />
           </Campo>
 
-          {/* Botón submit */}
-          <button
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <button
+              type="button"
+              onClick={() => navigate('/admin')}
+              className="py-3 rounded-xl font-medium text-sm border-none cursor-pointer transition-all"
+              style={{ background: '#2d2d3a', color: 'rgba(255,255,255,0.7)' }}
+              >
+              Cancelar
+            </button>
+            <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all mt-2"
+            className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all"
             style={{
-              background: loading ? 'rgba(138,11,210,0.5)' : '#8A0BD2',
-              boxShadow: loading ? 'none' : '0 4px 20px rgba(138,11,210,0.4)',
-              cursor: loading ? 'not-allowed' : 'pointer',
+            background: loading ? 'rgba(138,11,210,0.5)' : '#8A0BD2',
+            boxShadow: loading ? 'none' : '0 4px 20px rgba(138,11,210,0.4)',
+            cursor: loading ? 'not-allowed' : 'pointer',
             }}
-          >
+            >
             {loading ? 'Creando clase...' : 'Agregar actividad'}
-          </button>
+            </button>
+        </div>
 
         </form>
       </div>
