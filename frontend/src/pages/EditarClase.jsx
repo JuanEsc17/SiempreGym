@@ -226,7 +226,7 @@ export default function EditarClase() {
 
       if (res.data.ok) {
         setToast({ mensaje: 'Clase actualizada exitosamente', tipo: 'exito' });
-        setTimeout(() => navigate('/admin'), 2000);
+        setTimeout(() => navigate('/ver-clases-admin'), 2000);
       } else {
         setToast({ mensaje: res.data.mensaje, tipo: 'error' });
       }
@@ -385,7 +385,7 @@ export default function EditarClase() {
               </>
               ) : (
   <>
-    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
       style={{ background: 'rgba(138,11,210,0.2)' }}>
       <span className="text-2xl">🖼️</span>
     </div>

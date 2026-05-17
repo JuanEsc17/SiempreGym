@@ -49,18 +49,18 @@ async getPorDia(nombreDia) {
     return rows.length > 0;
   }
 
-  async profesorOcupado(id_profesor, dia, horario) {
+  async profesorOcupado(id_profesor, dia, horario, id_clase_excluir) {
     const [rows] = await this.db.promise().execute(
-      `SELECT id_clase FROM clases WHERE id_profesor = ? AND dia = ? AND horario = ? AND estado = 'activa'`,
-      [id_profesor, dia, horario]
+        `SELECT id_clase FROM clases WHERE id_profesor = ? AND dia = ? AND horario = ? AND estado = 'activa' AND id_clase != ?`,
+        [id_profesor, dia, horario, id_clase_excluir]
     );
     return rows.length > 0;
   }
 
-  async salaOcupada(id_sala, dia, horario) {
+  async salaOcupada(id_sala, dia, horario, id_clase_excluir) {
     const [rows] = await this.db.promise().execute(
-      `SELECT id_clase FROM clases WHERE id_sala = ? AND dia = ? AND horario = ? AND estado = 'activa'`,
-      [id_sala, dia, horario]
+        `SELECT id_clase FROM clases WHERE id_sala = ? AND dia = ? AND horario = ? AND estado = 'activa' AND id_clase != ?`,
+        [id_sala, dia, horario, id_clase_excluir]
     );
     return rows.length > 0;
   }

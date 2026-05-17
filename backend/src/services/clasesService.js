@@ -46,7 +46,7 @@ class ClasesService {
     if (datos.cupo_maximo > sala.capacidad) {
       throw { status: 400, mensaje: `El cupo no puede superar la capacidad de la sala (${sala.capacidad} personas)` };
     }
-
+    
     const profOcupado = await this.repo.profesorOcupado(datos.id_profesor, datos.dia, datos.horario);
     if (profOcupado) throw { status: 409, mensaje: 'El profesor ya tiene una clase asignada en ese horario' };
 
@@ -114,13 +114,13 @@ class ClasesService {
 
     // Profesor ocupado (ignorar si es el mismo que ya tiene la clase)
     if (datos.id_profesor !== clase.id_profesor || datos.dia !== clase.dia || datos.horario !== clase.horario) {
-        const profOcupado = await this.repo.profesorOcupado(datos.id_profesor, datos.dia, datos.horario);
+        const profOcupado = await this.repo.profesorOcupado(datos.id_profesor, datos.dia, datos.horario, id_clase);
         if (profOcupado) throw { status: 409, mensaje: 'El profesor ya tiene una clase asignada en ese horario' };
     }
 
     // Sala ocupada (ignorar si es la misma sala)
     if (datos.id_sala !== clase.id_sala || datos.dia !== clase.dia || datos.horario !== clase.horario) {
-        const salaOcup = await this.repo.salaOcupada(datos.id_sala, datos.dia, datos.horario);
+        const salaOcup = await this.repo.salaOcupada(datos.id_sala, datos.dia, datos.horario, id_clase);
         if (salaOcup) throw { status: 409, mensaje: `La sala ya está ocupada en ese horario` };
     }
 
