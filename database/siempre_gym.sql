@@ -92,7 +92,7 @@ CREATE TABLE `pagos` (
   `monto` decimal(10,2) NOT NULL,
   `estado` enum('pendiente','pagado','cancelado') DEFAULT 'pendiente',
   `metodo` enum('efectivo','tarjeta','transferencia') DEFAULT NULL,
-  `tipo` enum('membresia','clase') DEFAULT NULL,
+  `tipo` enum('mensual','individual') DEFAULT NULL,
   `fecha` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_pago`),
   KEY `id_usuario` (`id_usuario`),
@@ -110,31 +110,6 @@ LOCK TABLES `pagos` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `plan`
---
-
-DROP TABLE IF EXISTS `plan`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `plan` (
-  `id_plan` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) NOT NULL,
-  `precio` decimal(10,2) NOT NULL,
-  `duracion` int NOT NULL,
-  PRIMARY KEY (`id_plan`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `plan`
---
-
-LOCK TABLES `plan` WRITE;
-/*!40000 ALTER TABLE `plan` DISABLE KEYS */;
-/*!40000 ALTER TABLE `plan` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `reservas`
 --
 
@@ -145,6 +120,7 @@ CREATE TABLE `reservas` (
   `id_reserva` int NOT NULL AUTO_INCREMENT,
   `id_usuario` int NOT NULL,
   `id_clase` int NOT NULL,
+  `tipo_reserva` enum('individual','mensual') NOT NULL,
   `estado` enum('reservada','cancelada','asistio') DEFAULT 'reservada',
   `tipo_pago` enum('membresia','credito') DEFAULT NULL,
   `saldo_pendiente` tinyint(1) DEFAULT '0',
@@ -164,6 +140,51 @@ CREATE TABLE `reservas` (
 LOCK TABLES `reservas` WRITE;
 /*!40000 ALTER TABLE `reservas` DISABLE KEYS */;
 /*!40000 ALTER TABLE `reservas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `lista_espera`
+--
+
+DROP TABLE IF EXISTS `lista_espera`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `lista_espera` (
+  `id_lista` int NOT NULL AUTO_INCREMENT,
+  `id_usuario` int NOT NULL,
+  `id_clase` int NOT NULL,
+  `posicion` int NOT NULL,
+
+  `tipo_reserva`
+    enum('individual','mensual')
+    NOT NULL,
+
+  `fecha_ingreso`
+    timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id_lista`),
+
+  KEY `id_usuario` (`id_usuario`),
+  KEY `id_clase` (`id_clase`),
+
+  CONSTRAINT `lista_espera_ibfk_1`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `usuarios` (`id_usuario`),
+
+  CONSTRAINT `lista_espera_ibfk_2`
+    FOREIGN KEY (`id_clase`)
+    REFERENCES `clases` (`id_clase`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `lista_espera`
+--
+
+LOCK TABLES `lista_espera` WRITE;
+/*!40000 ALTER TABLE `lista_espera` DISABLE KEYS */;
+/*!40000 ALTER TABLE `lista_espera` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -209,7 +230,6 @@ CREATE TABLE `usuarios` (
   `fecha_nacimiento` date NOT NULL,
   `rol` enum('cliente','admin','profesor','empleado') DEFAULT 'cliente',
   `foto_autorizacion` varchar(255) DEFAULT NULL,
-  `fecha_vencimiento_plan` date DEFAULT NULL,
   `creditos` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_usuario`),
