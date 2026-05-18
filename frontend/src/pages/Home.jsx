@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 import gymImage from "../assets/hero.png"
 
 export default function Home() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
 
   return (
     <div className="min-h-screen bg-white">
@@ -15,18 +17,29 @@ export default function Home() {
               Tu destino para transformar tu cuerpo y tu vida. Entrena con los mejores profesionales y alcanza tus objetivos fitness.
             </p>
             <div className="flex gap-4">
-              <button
-                onClick={() => navigate("/login")}
-                className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
-              >
-                Entrar Ahora
-              </button>
-              <button
-                onClick={() => navigate("/register")}
-                className="px-8 py-3 rounded-lg border-2 border-white text-white font-bold text-lg hover:bg-white hover:text-[#5B0672] transition-colors"
-              >
-                Crear Cuenta
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => navigate("/actividades")}
+                  className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
+                >
+                  Ver Actividades
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
+                  >
+                    Entrar Ahora
+                  </button>
+                  <button
+                    onClick={() => navigate("/register")}
+                    className="px-8 py-3 rounded-lg border-2 border-white text-white font-bold text-lg hover:bg-white hover:text-[#5B0672] transition-colors"
+                  >
+                    Crear Cuenta
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <div className="hidden md:block">
@@ -107,22 +120,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-[#8A0BD2] to-[#5B0672] text-white py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-4xl font-bold mb-4">¿Listo para transformarte?</h3>
-          <p className="text-lg text-[#E2CEF6] mb-8">
-            Únete a miles de miembros que ya están logrando sus objetivos en SiempreGym
-          </p>
-          <button
-            onClick={() => navigate("/register")}
-            className="px-10 py-4 rounded-lg bg-[#AF50E5] text-white font-bold text-lg hover:bg-white hover:text-[#5B0672] transition-colors"
-          >
-            Comenzar Ahora
-          </button>
         </div>
       </section>
 

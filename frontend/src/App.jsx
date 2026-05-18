@@ -12,7 +12,17 @@ import AdminPanel from "./pages/AdminPanel.jsx"
 import EditarClase from "./pages/EditarClase.jsx"
 import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
 
-//para que si no es admin no pueda entrar a las rutas de admin
+// Ruta protegida para usuarios autenticados
+function RutaProtegida({ children }) {
+  const { isAuthenticated } = useAuth()
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+  return children
+}
+
+// Ruta protegida solo para administradores
 function RutaAdmin({ children }) {
   const { isAdmin, isAuthenticated } = useAuth()
   
@@ -48,7 +58,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/actividades" element={<Actividades />} />
+        <Route path="/actividades" element={<RutaProtegida><Actividades /></RutaProtegida>} />
 
         {/** Rutas de administración **/}
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />
