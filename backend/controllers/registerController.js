@@ -32,8 +32,7 @@ const register = async (req, res) => {
       !data.dni ||
       !data.telefono ||
       !data.fechaNacimiento ||
-      !data.password ||
-      !data.plan
+      !data.password 
     ) {
       return res.status(400).json({
         error: "Se deben ingresar todos los datos"
@@ -98,7 +97,7 @@ const register = async (req, res) => {
       });
     }
 
-    // verifico nombre max 50 caracteres (escenario 15)
+    // verifico nombre de usuario max 50 caracteres (escenario 15)
     if (data.username.length > 50) {
       return res.status(400).json({
         error: "El nombre de usuario no puede superar los 50 caracteres"
@@ -164,7 +163,6 @@ const register = async (req, res) => {
       dni: data.dni,
       telefono: data.telefono,
       fechaNacimiento: data.fechaNacimiento,
-      plan: data.plan,
       permiso: permisoPath
     });
 

@@ -14,8 +14,7 @@ export default function Register() {
     dni: "",
     telefono: "",
     fechaNacimiento: "",
-    password: "",
-    plan: ""
+    password: ""
     })
 
     const [errors, setErrors] = useState({})
@@ -187,11 +186,6 @@ export default function Register() {
       if (!passwordRegex.test(formData.password)) {
         newErrors.password = "La contraseña debe tener entre 9 y 20 caracteres, una mayúscula y un carácter especial"
       }
-    }
-
-  // plan obligatorio
-    if (!formData.plan) {
-        newErrors.plan = "Debes seleccionar un plan"
     }
 
     return newErrors
@@ -366,27 +360,7 @@ export default function Register() {
                 )}
               </div>
 
-              {/* PLAN */}
-              <div className="col-span-2">
-                <label className="block text-sm mb-1 text-[#5B0672]">
-                  Tipo de plan
-                </label>
-
-                <select
-                    name="plan"
-                    value={formData.plan}
-                    onChange={handleChange}
-                    className="w-full border-2 border-[#8A0BD2] rounded-md p-2 bg-transparent outline-none focus:border-[#AF50E5]"
-                >
-                  <option value="">Seleccionar plan</option>
-                  <option>Mensual</option>
-                  <option>Individual</option>
-                </select>
-                {errors.plan && (
-                    <p className="text-red-600 text-xs mt-1">{errors.plan}</p>
-                )}
-              </div>
-                // permiso
+              {/* permiso */}
               {age >= 14 && age < 18 && (
               <div className="col-span-2">
                 <label className="block text-sm mb-1 text-[#5B0672]">

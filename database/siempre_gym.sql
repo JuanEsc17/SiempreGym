@@ -209,7 +209,6 @@ CREATE TABLE `usuarios` (
   `fecha_nacimiento` date NOT NULL,
   `rol` enum('cliente','admin','profesor','empleado') DEFAULT 'cliente',
   `foto_autorizacion` varchar(255) DEFAULT NULL,
-  `tipo_plan` enum('mensual','individual','ninguno') DEFAULT 'ninguno',
   `fecha_vencimiento_plan` date DEFAULT NULL,
   `creditos` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -226,7 +225,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'Ana','Gomez','anag','ana@gmail.com','1234','12345678','2215555555','2000-05-10','cliente',NULL,'ninguno',NULL,0,'2026-05-10 20:16:25');
+INSERT INTO `usuarios` VALUES (1,'Ana','Gomez','anag','ana@gmail.com','1234','12345678','2215555555','2000-05-10','cliente',NULL,NULL,0,'2026-05-10 20:16:25');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
