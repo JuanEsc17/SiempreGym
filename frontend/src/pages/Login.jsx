@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 import gymImage from "../assets/hero.png"
 import { loginUser, verify2FA } from "../services/authService"
 
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({ email: "", password: "" })
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState("")
@@ -80,8 +82,7 @@ export default function Login() {
     // Login exitoso directo
     setErrors({})
     setServerError("")
-    localStorage.setItem("token", result.token)
-    localStorage.setItem("user", JSON.stringify(result.user))
+    login(result.user, result.token)
     console.log("Login exitoso:", result.user.email)
     setFormData({ email: "", password: "" })
     setIsLoading(false)
@@ -102,8 +103,7 @@ export default function Login() {
       return
     }
 
-    localStorage.setItem("token", result.token)
-    localStorage.setItem("user", JSON.stringify(result.user))
+    login(result.user, result.token)
     console.log("Login exitoso con 2FA")
     setShow2FA(false)
     setFormData({ email: "", password: "" })

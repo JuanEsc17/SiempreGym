@@ -27,3 +27,41 @@ export const verify2FA = async (email, code) => {
     return { success: false, message: "Error de conexión con el servidor" }
   }
 }
+
+export const logoutUser = async () => {
+  try {
+    const token = localStorage.getItem("token")
+    
+    // Llamar al endpoint de logout (opcional en este caso)
+    await fetch(`${API_URL}/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    }).catch(err => console.log("Error al notificar logout al servidor:", err))
+
+    // Limpiar datos locales
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    
+    return { success: true, message: "Sesión cerrada correctamente" }
+  } catch (error) {
+    console.error("Error en logout:", error)
+    return { success: false, message: "Error al cerrar sesión" }
+  }
+}
+
+export const getCurrentUser = () => {
+  try {
+    const user = localStorage.getItem("user")
+    return user ? JSON.parse(user) : null
+  } catch (error) {
+    console.error("Error al obtener usuario actual:", error)
+    return null
+  }
+}
+
+export const isAuthenticated = () => {
+  return !!localStorage.getItem("token")
+}

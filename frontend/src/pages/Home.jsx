@@ -1,14 +1,11 @@
 import { useNavigate } from "react-router-dom"
 import gymImage from "../assets/hero.png"
-import Header from "../components/Header"
 
 export default function Home() {
   const navigate = useNavigate()
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header/Navigation */}
-      <Header />
       {/* Hero Section */}
       <section className="bg-linear-to-r from-[#5B0672] via-[#8A0BD2] to-[#AF50E5] text-white py-20 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">

@@ -180,4 +180,22 @@ router.post("/verify-2fa", (req, res) => {
   })
 })
 
+// POST /api/auth/logout
+router.post("/logout", (req, res) => {
+  try {
+    // En una implementación con blacklist de tokens, aquí se agregaría el token a la lista negra
+    // Por ahora, simplemente respondemos confirmando el logout
+    res.status(200).json({
+      success: true,
+      message: "Sesión cerrada correctamente"
+    })
+  } catch (error) {
+    console.error("Error en logout:", error)
+    res.status(500).json({
+      success: false,
+      message: "Error al cerrar sesión"
+    })
+  }
+})
+
 module.exports = router
