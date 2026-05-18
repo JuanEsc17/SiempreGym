@@ -61,7 +61,7 @@ export default function VerClasesAdmin() {
             <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#8A0BD2' }}>
               Panel de administración
             </p>
-            <h1 className="text-3xl font-medium text-white">Editar clase</h1>
+            <h1 className="text-3xl font-medium text-white">Ver y editar clases</h1>
           </div>
           <button
             onClick={() => navigate('/admin')}
