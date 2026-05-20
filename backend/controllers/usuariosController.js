@@ -13,8 +13,27 @@ const UsuariosController = {
     } catch (error) {
       res.status(500).json({ ok: false, mensaje: error.message });
     }
+  },
+
+  async buscarPorUsernameOMail(req,res){
+    try{
+      const {query}=req.query;
+
+      if(!query){
+      return res.status(400).json({
+        ok:false,
+        mensaje:"Ingrese username o email"
+      });
+    }
+
+      const usuarios= await repo.buscarPorUsernameOMail(query);
+
+      res.json({ok:true,data:usuarios});
+    }
+    catch(error){
+
+    res.status(500).json({ok:false,mensaje:error.message});
+    }
   }
-
-};
-
+}
 module.exports = UsuariosController;
