@@ -52,6 +52,15 @@ LOCK TABLES `clases` WRITE;
 /*!40000 ALTER TABLE `clases` ENABLE KEYS */;
 UNLOCK TABLES;
 
+DROP TABLE IF EXISTS `instancias_clases`;
+CREATE TABLE `instancias_clases` (
+  `id_instancia` int NOT NULL AUTO_INCREMENT,
+  `id_clase` int NOT NULL,
+  `fecha_exacta` datetime NOT NULL, -- Ej: 2026-05-25 16:00:00 
+  PRIMARY KEY (`id_instancia`),
+  KEY `id_clase` (`id_clase`),
+  CONSTRAINT `instancias_clases_ibfk_1` FOREIGN KEY (`id_clase`) REFERENCES `clases` (`id_clase`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 --
 -- Table structure for table `codigos_confirmacion`
 --
@@ -121,14 +130,17 @@ CREATE TABLE `reservas` (
   `id_reserva` int NOT NULL AUTO_INCREMENT,
   `id_usuario` int NOT NULL,
   `id_clase` int NOT NULL,
+  `id_instancia` int NULL,
   `tipo_reserva` enum('individual','mensual') NOT NULL,
   `estado` enum('reservada','cancelada','asistio') DEFAULT 'reservada',
-  `tipo_pago` enum('membresia','credito') DEFAULT NULL,
+  `tipo_pago` enum('membresia','credito','total','seña') DEFAULT NULL,
   `saldo_pendiente` tinyint(1) DEFAULT '0',
   `fecha_reserva` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_clase` date NOT NULL,
   PRIMARY KEY (`id_reserva`),
   KEY `id_usuario` (`id_usuario`),
   KEY `id_clase` (`id_clase`),
+  CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`id_instancia`) REFERENCES `instancias_clases` (`id_instancia`),
   CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_clase`) REFERENCES `clases` (`id_clase`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -155,6 +167,7 @@ CREATE TABLE `lista_espera` (
   `id_usuario` int NOT NULL,
   `id_clase` int NOT NULL,
   `posicion` int NOT NULL,
+  `estado` enum('esperando', 'notificado', 'vencido', 'completado') DEFAULT 'esperando',
 
   `tipo_reserva`
     enum('individual','mensual')
@@ -162,6 +175,7 @@ CREATE TABLE `lista_espera` (
 
   `fecha_ingreso`
     timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_notificacion` timestamp NULL DEFAULT NULL,
 
   PRIMARY KEY (`id_lista`),
 
@@ -192,57 +206,8 @@ UNLOCK TABLES;
 -- Table structure for table `ofertas_lista_espera`
 --
 
-DROP TABLE IF EXISTS `ofertas_lista_espera`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ofertas_lista_espera` (
-
-  `id_oferta` int NOT NULL AUTO_INCREMENT,
-
-  `id_usuario` int NOT NULL,
-
-  `id_clase` int NOT NULL,
-
-  `tipo_reserva`
-      enum('individual','mensual')
-      NOT NULL,
-
-  `estado`
-      enum(
-      'pendiente',
-      'aceptada',
-      'rechazada',
-      'vencida'
-      )
-      DEFAULT 'pendiente',
-
-  `fecha_envio`
-      timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-
-  PRIMARY KEY (`id_oferta`),
-
-  KEY `id_usuario` (`id_usuario`),
-  KEY `id_clase` (`id_clase`),
-
-  CONSTRAINT `ofertas_lista_ibfk_1`
-      FOREIGN KEY (`id_usuario`)
-      REFERENCES `usuarios` (`id_usuario`),
-
-  CONSTRAINT `ofertas_lista_ibfk_2`
-      FOREIGN KEY (`id_clase`)
-      REFERENCES `clases` (`id_clase`)
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `ofertas_lista_espera`
---
-
-LOCK TABLES `ofertas_lista_espera` WRITE;
-/*!40000 ALTER TABLE `ofertas_lista_espera` DISABLE KEYS */;
-/*!40000 ALTER TABLE `ofertas_lista_espera` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `salas`
