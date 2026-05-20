@@ -14,9 +14,16 @@ class ClasesService {
     return await this.repo.getDisponibles();
   }
 
-  async getPorDia(dia) {
-    const nombreDia = diasMap[dia] || dia;
-    return await this.repo.getPorDia(nombreDia);
+  async getPorDia(dia, incluirCompletas = false, fecha = null) {
+  const diaLimpio = dia ? dia.toLowerCase().trim() : '';
+  const mapa = {
+    'lun': 'lunes', 'mar': 'martes', 'mie': 'miercoles',
+    'jue': 'jueves', 'vie': 'viernes', 'sab': 'sabado', 'dom': 'domingo'
+  };
+  const diaBusqueda = mapa[diaLimpio.substring(0, 3)] || diaLimpio;
+
+  if (incluirCompletas) return await this.repo.getPorDiaConLlenas(diaBusqueda, fecha);
+  return await this.repo.getPorDia(diaBusqueda);
   }
   
   // Chequeos para crear clase

@@ -4,7 +4,7 @@ const ClasesService = require('../src/services/clasesService');
 const service = new ClasesService(db);
 
 const ClasesController = {
-
+// Obtener clases disponibles para el frontend
   async getDisponibles(req, res) {
     try {
       const clases = await service.getDisponibles();
@@ -13,15 +13,18 @@ const ClasesController = {
       res.status(500).json({ ok: false, mensaje: error.message });
     }
   },
-
+// Obtener clases por día (para el calendario del frontend)
   async getPorDia(req, res) {
-    try {
-      const clases = await service.getPorDia(req.query.dia);
-      res.json({ ok: true, data: clases });
-    } catch (error) {
-      res.status(500).json({ ok: false, mensaje: error.message });
-    }
-    },
+  try {
+    const dia = req.query.dia;
+    const incluirCompletas = req.query.incluirCompletas === 'true';
+    const fecha = req.query.fecha || null; // 'YYYY-MM-DD' que manda el front
+    const clases = await service.getPorDia(dia, incluirCompletas, fecha);
+    res.json({ ok: true, data: clases });
+  } catch (error) {
+    res.status(500).json({ ok: false, mensaje: error.message });
+  }
+},
 
 
     //crear clase 

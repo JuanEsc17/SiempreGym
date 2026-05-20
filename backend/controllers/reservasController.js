@@ -1,47 +1,191 @@
-const db = require('../src/db');
-const ReservasService = require('../src/services/reservasService');
+const serviceMensual    = require('../src/services/reservaMensualService');
+const serviceIndividual = require('../src/services/reservaIndividualService');
+const reservasRepository = require('../repositories/reservasRepository');
 
-const service = new ReservasService(db);
+class ReservasController {
 
-const ReservasController = {
+  // ============================================================
+  // FLUJO MENSUAL
+  // ============================================================
 
-  async crearReserva(req, res) {
+  async verificarReservaMensual(req, res) {
     try {
-      // 1. Sumamos 'precio_total' que viene desde el Frontend al volver de Mercado Pago
-      const { id_usuario, id_clase, tipo_pago, precio_total } = req.body;
-      
-      // 2. Se lo pasamos al servicio (le agregamos el cuarto parámetro)
-      const resultado = await service.crearReserva(id_usuario, id_clase, tipo_pago, precio_total);
-      
-      // 3. Modificamos los mensajes de respuesta según las Historias de Usuario
-      let mensajeFinal = 'Reserva confirmada exitosamente';
-      
-      if (tipo_pago === 'SEÑA') {
-        const saldo = parseFloat(precio_total) / 2;
-        mensajeFinal = `¡Seña abonada con éxito! Queda un saldo pendiente de $${saldo} a pagar en el gimnasio.`;
-      } else if (resultado.aviso) {
-        mensajeFinal = 'Reserva confirmada. Recordá que tenés hasta el día 10 para regularizar tu plan.';
+      // FIX: ahora lee mes + anio del body (lo que manda el frontend)
+      const { id_clase, id_usuario, mes, anio } = req.body;
+
+      if (!id_clase || !id_usuario || !mes || !anio) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'Campos obligatorios: id_clase, id_usuario, mes, anio.'
+        });
       }
 
-      res.json({
-        ok: true,
-        mensaje: mensajeFinal,
-        ...resultado
-      });
-    } catch (error) {
-      res.status(error.status || 500).json({ ok: false, mensaje: error.mensaje || error.message });
-    }
-  },
+      // FIX: llamada correcta al service — pasa mes y anio (no clasesRepo)
+      const resultado = await serviceMensual.verificarYPresupuestarMensual(
+        id_usuario, id_clase, parseInt(mes), parseInt(anio)
+      );
 
+      if (resultado.status === 'SIN_CUPO_DISPONIBLE') {
+        return res.status(200).json({
+          ok: true,
+          status: 'OFRECER_LISTA_ESPERA_MENSUAL',
+          mensaje: resultado.mensaje
+        });
+      }
+
+      return res.status(200).json({
+        ok: true,
+        status: 'LISTO_PARA_PAGAR',
+        monto: resultado.monto,
+        fechas: resultado.fechas,                          // el frontend guarda esto para el POST de crear
+        clasesRestantes: resultado.clasesRestantesCount,
+        mensaje: `${resultado.clasesRestantesCount} clase${resultado.clasesRestantesCount !== 1 ? 's' : ''} disponibles. Total: $${resultado.monto.toFixed(2)}`
+      });
+
+    } catch (error) {
+      return res.status(400).json({ ok: false, mensaje: error.message });
+    }
+  }
+
+  // Registrar todas las reservas del mes (se llama después del pago en MP)
+  async crearReservaMensual(req, res) {
+    try {
+      const { id_usuario, id_clase, fechas, monto_total } = req.body;
+
+      if (!id_usuario || !id_clase || !fechas || !Array.isArray(fechas) || fechas.length === 0 || !monto_total) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'Campos obligatorios: id_usuario, id_clase, fechas (array), monto_total.'
+        });
+      }
+
+      // FIX: nombre correcto del método (antes llamaba a 'crearReserva' que no existía)
+      const resultado = await serviceMensual.crearReservaMensual(
+        id_usuario, id_clase, fechas, parseFloat(monto_total)
+      );
+
+      return res.status(200).json({
+        ok: true,
+        mensaje: `¡Reserva mensual confirmada! Se registraron ${resultado.reservasCreadas} clases exitosamente.`
+      });
+
+    } catch (error) {
+      return res.status(500).json({ ok: false, mensaje: error.message });
+    }
+  }
+
+  async confirmarListaEsperaMensual(req, res) {
+    try {
+      const { id_clase, id_usuario } = req.body;
+      if (!id_clase || !id_usuario) {
+        return res.status(400).json({ ok: false, mensaje: 'id_clase e id_usuario son obligatorios.' });
+      }
+      const resultado = await serviceMensual.ingresarListaEsperaMensual(id_usuario, id_clase);
+      return res.status(201).json({ ok: true, status: 'EXITO_LISTA_ESPERA', mensaje: resultado.mensaje });
+    } catch (error) {
+      return res.status(400).json({ ok: false, mensaje: error.message });
+    }
+  }
+
+  // ============================================================
+  // FLUJO INDIVIDUAL
+  // ============================================================
+
+  async verificarIndividual(req, res) {
+    try {
+      // FIX: ya no exige tipo_pago — el usuario todavía no eligió cómo pagar.
+      // Devuelve precio_base, precio_sena y puede_usar_sena para que el front maneje las opciones.
+      const { id_usuario, id_clase, fecha_clase } = req.body;
+
+      if (!id_usuario || !id_clase || !fecha_clase) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'Campos obligatorios: id_usuario, id_clase, fecha_clase.'
+        });
+      }
+
+      const resultado = await serviceIndividual.verificarYPresupuestarIndividual(
+        id_usuario, id_clase, fecha_clase
+      );
+
+      if (resultado.status === 'SIN_CUPO_DISPONIBLE') {
+        return res.status(200).json({
+          ok: true,
+          status: 'OFRECER_LISTA_ESPERA',
+          mensaje: resultado.mensaje
+        });
+      }
+
+      return res.status(200).json({
+        ok: true,
+        status: 'LISTO_PARA_RESERVAR',
+        id_instancia:      resultado.id_instancia,
+        monto:             resultado.precio_base,
+        precio_sena:       resultado.precio_sena,
+        puede_usar_sena:   resultado.puede_usar_sena,
+        creditos_usuario:  resultado.creditos_usuario,
+        mensaje:           resultado.mensaje
+      });
+
+    } catch (error) {
+      return res.status(400).json({ ok: false, mensaje: error.message });
+    }
+  }
+
+  // Crear reserva individual (post-pago en MP )
+  async confirmarReservaIndividual(req, res) {
+    try {
+      const { id_usuario, id_clase, id_instancia, fecha_clase, tipo_pago, precio_total } = req.body;
+
+      if (!id_usuario || !id_clase || !id_instancia || !fecha_clase || !tipo_pago) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'Campos obligatorios: id_usuario, id_clase, id_instancia, fecha_clase, tipo_pago.'
+        });
+      }
+
+      const resultado = await serviceIndividual.crearReservaIndividual(
+        id_usuario, id_clase, id_instancia, fecha_clase, tipo_pago, parseFloat(precio_total || 0)
+      );
+
+      let mensajeFinal = '¡Reserva confirmada exitosamente!';
+      if (resultado.saldoPendiente === 1) {
+        mensajeFinal = '¡Seña abonada! Recordá pagar el saldo restante presencialmente el día de la clase.';
+      } else if (tipo_pago === 'CREDITO') {
+        mensajeFinal = resultado.mensaje;
+      }
+
+      return res.status(200).json({ ok: true, mensaje: mensajeFinal, ...resultado });
+
+    } catch (error) {
+      return res.status(500).json({ ok: false, mensaje: error.message });
+    }
+  }
+
+  async confirmarListaEsperaIndividual(req, res) {
+    try {
+      const { id_usuario, id_clase } = req.body;
+      if (!id_usuario || !id_clase) {
+        return res.status(400).json({ ok: false, mensaje: 'id_usuario e id_clase son obligatorios.' });
+      }
+      const resultado = await serviceIndividual.ingresarListaEsperaIndividual(id_usuario, id_clase);
+      return res.status(201).json({ ok: true, mensaje: resultado.mensaje });
+    } catch (error) {
+      return res.status(400).json({ ok: false, mensaje: error.message });
+    }
+  }
+
+  // ============================================================
+  // HISTORIAL
+  // ============================================================
   async getMisReservas(req, res) {
     try {
-      const reservas = await service.getMisReservas(req.params.id);
+      const reservas = await reservasRepository.getReservasPorUsuario(req.params.id);
       res.json({ ok: true, data: reservas });
     } catch (error) {
       res.status(500).json({ ok: false, mensaje: error.message });
     }
   }
-
-};
+}
 
 module.exports = ReservasController;

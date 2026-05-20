@@ -3,26 +3,38 @@ class ClasesRepository {
     this.db = db;
   }
 
-  async getDisponibles() {
+  // Clases con cupo disponible (comportamiento original)
+  async getPorDia(nombreDia) {
     const [rows] = await this.db.promise().execute(
       `SELECT * FROM clases
-       WHERE fecha_hora_inicio > NOW()
-       AND cupos_disponibles > 0
-       ORDER BY fecha_hora_inicio ASC`
-    );
-    return rows;
-  }
-
-async getPorDia(nombreDia) {
-    const [rows] = await this.db.promise().execute(
-      `SELECT * FROM clases 
-       WHERE dia = ? 
-       AND estado = 'activa' 
-       AND (cupo_maximo - cantidad_inscriptos) > 0`,
+       WHERE dia = ? AND estado = 'activa' AND (cupo_maximo - cantidad_inscriptos) > 0
+       ORDER BY horario ASC`,
       [nombreDia]
     );
     return rows;
   }
+ 
+  async getPorDiaConLlenas(nombreDia, fecha) {
+  // Calcula los cupos reales contando reservas por instancia para esa fecha exacta
+  const query = `
+    SELECT c.*,
+      c.cupo_maximo - COALESCE(
+        (SELECT COUNT(*) 
+         FROM reservas r
+         JOIN instancias_clases ic ON r.id_instancia = ic.id_instancia
+         WHERE ic.id_clase = c.id_clase
+           AND DATE(ic.fecha_exacta) = ?
+           AND r.estado = 'reservada'),
+        0
+      ) AS cupos_disponibles
+    FROM clases c
+    WHERE c.dia = ? AND c.estado = 'activa'
+    ORDER BY c.horario ASC
+  `;
+  const [rows] = await this.db.promise().execute(query, [fecha, nombreDia]);
+  return rows;
+}
+  
 
   // cosas para crear clase
   async obtenerSalaPorId(id_sala) {

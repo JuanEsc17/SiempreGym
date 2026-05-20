@@ -4,7 +4,7 @@ const path = require('path')
 require('dotenv').config();
 require("./src/db")
 const authRoutes = require("./src/routes/auth")
-const registerRoutes = require("./src/routes/register")
+const registerRoutes = require("./src/routes/registerRoutes")
 const clasesRoutes = require("./src/routes/clasesRoutes")
 const reservasRoutes = require("./src/routes/reservasRoutes")
 const usuariosRoutes = require("./src/routes/usuariosRoutes")
