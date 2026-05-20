@@ -26,9 +26,9 @@ export default function PaymentStatus() {
         localStorage.removeItem('pending_reservation');
         return;
       }
-
+      //Aqui cambie cositass por que ahora depende de que reserva es para tomar una ruta u otra
       // 2. Si fue exitoso, recuperamos lo que dejamos anotado en Actividades.jsx
-      const pendingData = localStorage.getItem('pending_reservation');
+      const pendingData = sessionStorage.getItem('pendingReserva');
       
       if (!pendingData) {
         setExito(false);
@@ -36,43 +36,53 @@ export default function PaymentStatus() {
         setLoading(false);
         return;
       }
-
       try {
-        const reservaInfo = JSON.parse(pendingData);
+        const pending = JSON.parse(pendingData);
 
-        // 3. Le pegamos a nuestro backend para asentar la reserva real
-        // Reemplazá BASE_URL con tu URL correspondiente (ej: http://localhost:3000/api)
-        const response = await fetch('http://localhost:3000/api/reservas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id_usuario: reservaInfo.id_usuario,
-            id_clase: reservaInfo.id_clase,
-            tipo_pago: reservaInfo.tipo_pago, // 'TOTAL' o 'SEÑA'
-            precio_total: reservaInfo.precio_total // Sirve para que el backend calcule el saldo
-          })
-        });
+        let url, body;
+        if (pending.tipo === 'individual') {
+          url  = 'http://localhost:3000/api/reservas/crear';
+          body = {
+            id_usuario:   pending.id_usuario,
+            id_clase:     pending.id_clase,
+            id_instancia: pending.id_instancia,
+            fecha_clase:  pending.fecha_clase,
+            tipo_pago:    pending.tipo_pago,
+            precio_total: pending.precio_total
+        };
+      } else {
+        url  = 'http://localhost:3000/api/reservas/crear-mensual';
+        body = {
+        id_usuario:  pending.id_usuario,
+        id_clase:    pending.id_clase,
+        fechas:      pending.fechas,
+        monto_total: pending.monto_total
+    };
+  }
 
-        const resultado = await response.json();
+    const response  = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const resultado = await response.json();
 
-        if (resultado.ok) {
-          setExito(true);
-          setMensaje(resultado.mensaje || '¡Reserva confirmada con éxito!');
-          // Limpiamos el localStorage ya que se procesó correctamente
-          localStorage.removeItem('pending_reservation');
-        } else {
-          setExito(false);
-          setMensaje(resultado.mensaje || 'Hubo un problema al registrar tu reserva en el sistema.');
-        }
+  if (resultado.ok) {
+    setExito(true);
+    setMensaje(resultado.mensaje || '¡Reserva confirmada con éxito!');
+    sessionStorage.removeItem('pendingReserva');
+  } else {
+    setExito(false);
+    setMensaje(resultado.mensaje || 'Hubo un problema al registrar tu reserva.');
+  }
 
-      } catch (error) {
-        // Escenario 3: Si se cae la red justo al volver
-        setExito(false);
-        setMensaje('El servicio está interrumpido momentáneamente, pero tu pago fue procesado. Contactate con administración.');
-      } finally {
-        setLoading(false);
-      }
-    }
+  } catch (error) {
+    setExito(false);
+    setMensaje('El servicio está interrumpido momentáneamente, pero tu pago fue procesado. Contactate con administración.');
+  } finally {
+    setLoading(false);
+  }
+}
 
     confirmarReserva();
   }, [status, collectionStatus]);
