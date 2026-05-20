@@ -1,682 +1,669 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import yogaImg from '../assets/Yoga2.png';
 import pilatesImg from '../assets/Pilatesmq.png';
 import funcionalImg from '../assets/Funcional.png';
 
-const BASE_URL = 'http://localhost:3000/api';
-const CLIENTE_ID = 1;
-//const usuario = JSON.parse(localStorage.getItem('user'));
-//const CLIENTE_ID = usuario?.id;
+//lol q largo
+const getUsuarioId = () => JSON.parse(localStorage.getItem('user'))?.id || null;
+const BASE_URL   = 'http://localhost:3000/api';
+const id_usuario = getUsuarioId();
 
-const imagenesClase = {
-  yoga: yogaImg,
-  pilates: pilatesImg,
-  funcional: funcionalImg
-};
+const IMAGENES_CLASE = { yoga: yogaImg, pilates: pilatesImg, funcional: funcionalImg };
+const NOMBRES_DIAS   = ['DOM','LUN','MAR','MIE','JUE','VIE','SAB'];
+const MESES          = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_CORTO    = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-// ─── Sidebar ────────────────────────────────────────
-function Sidebar() {
+// ─── Helpers ─────────────────────────────────────────────────────
+const fechaISO    = (d) => d.toISOString().split('T')[0];
+const formatPrecio = (n) => n != null ? `$${Number(n).toLocaleString('es-AR')}` : '—';
+const formatCorta  = (iso) => { const [,m,d]=iso.split('-'); return `${+d} ${MESES_CORTO[+m-1]}`; };
+const fP = formatPrecio; 
+const apiFetch = (url, opts) => fetch(url, opts).then(r => r.json());
+
+
+// ─── Sidebar ─────────────────────────────────────────────────────
+function Sidebar({ isOpen, setIsOpen }) {
   return (
-    <div className="fixed top-0 left-0 h-screen w-14 flex flex-col items-center pt-5 z-50"
-      style={{ background: '#5B0672' }}>
-      <span className="text-white text-2xl cursor-pointer">☰</span>
+    <div className={`fixed top-0 left-0 h-screen z-50 flex flex-col shadow-2xl transition-all duration-300 ${isOpen?'w-56':'w-16'}`}
+         style={{background:'#4a0560'}}>
+      <div className="p-4 flex justify-center cursor-pointer hover:bg-white/10 transition-colors"
+           onClick={()=>setIsOpen(!isOpen)}>
+        <span className="text-white text-2xl">☰</span>
+      </div>
+      {isOpen && (
+        <div className="flex flex-col gap-1 p-3">
+          {[['📅','Mis Reservas'],['📋','Listas de Espera'],['🏷️','Mis Créditos']].map(([ic,lbl])=>(
+            <button key={lbl} className="text-left bg-transparent border-none text-white p-2 hover:bg-white/10 rounded-xl cursor-pointer text-sm">
+              {ic} {lbl}
+            </button>
+          ))}
+          <hr className="border-white/20 my-2" />
+          <button className="text-left bg-transparent border-none text-red-200 p-2 hover:bg-red-400/20 rounded-xl cursor-pointer text-sm">
+            🚪 Salir
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── DateSelector ────────────────────────────────────
-function DateSelector({ diaSeleccionado, onSeleccionar }) {
+// ─── DateSelector ─────────────────────────────────────────────────
+// Ahora trackea el Date real, no solo el nombre del día
+function DateSelector({ fechaSeleccionada, onSeleccionar }) {
   const [offset, setOffset] = useState(0);
-  const nombresDias = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
-  const dias = [];
-  const hoy = new Date();
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
 
-  for (let i = 0; i < 7; i++) {
-    const fecha = new Date(hoy);
-    fecha.setDate(hoy.getDate() + offset + i);
-    const dia = nombresDias[fecha.getDay()];
-    const numero = `${fecha.getDate()}/${fecha.getMonth() + 1}`;
-    dias.push({ dia, numero });
-  }
+  const dias = Array.from({length:7},(_,i)=>{
+    const f = new Date(hoy); f.setDate(hoy.getDate()+offset+i);
+    return { label:NOMBRES_DIAS[f.getDay()], numero:`${f.getDate()}/${f.getMonth()+1}`, fechaObj: new Date(f) };
+  });
+
+  const isSelected = (d) => fechaISO(d.fechaObj) === fechaISO(fechaSeleccionada);
 
   return (
-    <div className="flex items-center gap-2 mb-5 w-full">
-      <button onClick={() => setOffset(o => o - 1)}
-        className="text-white text-2xl opacity-70 hover:opacity-100 bg-transparent border-none cursor-pointer px-2">
-        ‹
-      </button>
-      {dias.map(d => (
-        <button
-          key={d.numero}
-          onClick={() => onSeleccionar(d.dia)}
-          className={`flex-1 text-center py-2 rounded-lg text-xs cursor-pointer border-none transition-all
-            ${diaSeleccionado === d.dia
-              ? 'text-white font-medium'
-              : 'text-white opacity-70 hover:opacity-100'}`}
-          style={{
-            background: diaSeleccionado === d.dia ? '#8A0BD2' : '#2d2d3a'
-          }}>
-          {d.dia} {d.numero}
+    <div className="flex items-center gap-1 mb-6 bg-white/5 p-2 rounded-2xl border border-white/5">
+      <button onClick={()=>setOffset(o=>Math.max(0,o-7))} disabled={offset===0}
+              className="text-white text-xl hover:bg-white/10 rounded-full w-9 h-9 border-none cursor-pointer flex-shrink-0 disabled:opacity-20">‹</button>
+      {dias.map(d=>(
+        <button key={fechaISO(d.fechaObj)}
+                onClick={()=>onSeleccionar(d.label, d.fechaObj)}
+                className="flex-1 text-center py-2.5 rounded-xl text-xs cursor-pointer border-none transition-all duration-200"
+                style={{ background: isSelected(d)?'#8A0BD2':'transparent', color: isSelected(d)?'white':'rgba(255,255,255,0.4)' }}>
+          <div className="font-bold">{d.label}</div>
+          <div className="text-[10px] opacity-70">{d.numero}</div>
         </button>
       ))}
-      <button onClick={() => setOffset(o => o + 1)}
-        className="text-white text-2xl opacity-70 hover:opacity-100 bg-transparent border-none cursor-pointer px-2">
-        ›
-      </button>
+      <button onClick={()=>setOffset(o=>o+7)}
+              className="text-white text-xl hover:bg-white/10 rounded-full w-9 h-9 border-none cursor-pointer flex-shrink-0">›</button>
     </div>
   );
 }
 
-// ─── ClaseCard ───────────────────────────────────────
+// ─── ClaseCard ────────────────────────────────────────────────────
 function ClaseCard({ clase, onReservar }) {
-  const imagen = imagenesClase[clase.actividad?.toLowerCase()] || funcionalImg;
-  const diasMap = {
-    lunes: 'Lun', martes: 'Mar', miercoles: 'Mié',
-    jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb', domingo: 'Dom'
-  };
-
-  const porcentaje = Math.round((clase.cupos_disponibles / clase.cupo_maximo) * 100);
-  const colorBarra = porcentaje > 50 ? '#4ade80' : porcentaje > 20 ? '#f59e0b' : '#f87171';
-  const labelCupos = porcentaje <= 20 ? '🔴 Casi lleno' : `👤 ${clase.cupos_disponibles} lugares disponibles`;
-
-const ahora = new Date();
-
-const diasSemana = [
-  'domingo',
-  'lunes',
-  'martes',
-  'miercoles',
-  'jueves',
-  'viernes',
-  'sabado'
-];
-
-const fechaClase = new Date();
-
-const partesHora = clase.horario?.slice(0, 5).split(':');
-
-fechaClase.setHours(
-  parseInt(partesHora[0]),
-  parseInt(partesHora[1]),
-  0,
-  0
-);
-
-const claseIniciada =
-  clase.dia?.toLowerCase() === diasSemana[ahora.getDay()] &&
-  ahora >= fechaClase;
-
-console.log({
-  clase: clase.actividad,
-  horario: clase.horario,
-  diaClase: clase.dia,
-  claseIniciada
-});
+  const img            = IMAGENES_CLASE[clase.actividad?.toLowerCase()] || funcionalImg;
+  const cuposLibres = clase.cupos_disponibles ?? 0;
+  const estaLlena      = cuposLibres === 0;
+  const pct            = Math.round((cuposLibres/clase.cupo_maximo)*100);
+  const colorBarra     = pct>50?'#4ade80':pct>20?'#f59e0b':'#f87171';
+  const borderColor    = estaLlena ? '#f59e0b' : '#8A0BD2';
+  const overlayColor   = estaLlena ? 'rgba(146,64,14,0.55)' : 'rgba(0,0,0,0.58)';
+  const overlayHover   = estaLlena ? 'rgba(146,64,14,0.35)' : 'rgba(0,0,0,0.38)';
 
   return (
-    <div
-  className={`rounded-2xl overflow-hidden flex h-28 cursor-pointer transition-all duration-300 hover:shadow-2xl
-      ${!claseIniciada && 'hover:scale-[1.02]'}`}
-      style={{
-        background: claseIniciada ? '#252532' : '#2d2d3a',
-        borderLeft: claseIniciada
-        ? '4px solid #6b7280'
-        : '4px solid #8A0BD2',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-        opacity: claseIniciada ? 0.6 : 1
-        }}>
-      <div className="flex flex-col justify-center px-3 min-w-[85px]">
-        <span className="text-xs opacity-50 text-white">{diasMap[clase.dia] || clase.dia}</span>
-        <span className="text-xl font-medium text-white leading-tight">{clase.horario?.slice(0, 5)}</span>
-        <span className="text-xs opacity-50 text-white mt-1">{clase.duracion} min</span>
+    <div onClick={onReservar}
+         className="group rounded-2xl overflow-hidden flex h-36 cursor-pointer transition-all duration-300 shadow-xl hover:scale-[1.02] relative"
+         style={{ background:'#252535', borderLeft:`5px solid ${borderColor}` }}>
+
+      {/* Badge lista de espera */}
+      {estaLlena && (
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
+             style={{background:'#f59e0b', color:'#451a00'}}>
+          ⏳ Lista de espera
+        </div>
+      )}
+
+      {/* Columna tiempo */}
+      <div className="flex flex-col justify-center px-4 min-w-[96px] flex-shrink-0 bg-black/20">
+        <span className="text-[9px] uppercase tracking-widest text-white/40">{clase.dia}</span>
+        <span className="text-2xl font-bold text-white">{clase.horario?.slice(0,5)}</span>
+        <span className="text-[10px] text-white/40">{clase.duracion} min</span>
       </div>
-      <div className="flex-1 relative overflow-hidden rounded-r-2xl"
-        style={{ backgroundImage: `url(${imagen})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        <div className="absolute inset-0"
-          style={{
-            background: claseIniciada
-            ? 'rgba(0,0,0,0.75)'
-            : 'rgba(0,0,0,0.5)'
-          }}
-        />
-        <div className="relative z-10 p-3 h-full flex flex-col justify-between">
-          <p className="text-xl font-medium text-white capitalize">{clase.actividad}</p>
-          {claseIniciada && (
-          <span
-              className="text-[10px] px-2 py-1 rounded-full w-fit mt-1"
-              style={{
-              background: 'rgba(239,68,68,0.2)',
-              color: '#fca5a5',
-              border: '1px solid rgba(239,68,68,0.4)'
-              }}
-            >
-            Clase iniciada
-          </span>
-          )}
+
+      {/* Imagen + info */}
+      <div className="flex-1 relative overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center transition-all"
+             style={{ backgroundImage:`url(${img})` }}>
+          <div className="absolute inset-0 transition-colors duration-300 group-hover:opacity-60"
+               style={{ background: overlayColor }} />
+        </div>
+        <div className="relative z-10 p-4 h-full flex flex-col justify-between">
           <div>
-            <p className="text-xs mb-1" style={{ color: colorBarra }}>{labelCupos}</p>
-            <div className="w-full h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              <div className="h-1 rounded-full transition-all"
-                style={{ width: `${porcentaje}%`, background: colorBarra }} />
+            <h3 className="text-xl font-bold text-white capitalize m-0 leading-tight drop-shadow">{clase.actividad}</h3>
+            {estaLlena && (
+              <span className="text-[9px] text-amber-300 mt-0.5 block">Tocá para anotarte</span>
+            )}
+          </div>
+          <div className="flex items-end justify-between">
+            <div className="w-2/3">
+              {estaLlena ? (
+                <p className="text-[10px] mb-1 text-amber-400 font-medium">Sin cupos disponibles</p>
+              ) : (
+                <>
+                  <p className="text-[10px] mb-1 font-medium" style={{color:colorBarra}}>
+                    {pct<=20?'🔥 ¡Últimos lugares!':`👤 ${cuposLibres} libre${cuposLibres!==1?'s':''}`}
+                  </p>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.1)'}}>
+                    <div className="h-full transition-all duration-700" style={{width:`${pct}%`, background:colorBarra}} />
+                  </div>
+                </>
+              )}
+            </div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg transition-all
+                            group-hover:scale-110 ${estaLlena?'':'group-hover:rotate-90'}`}
+                 style={{background: estaLlena?'#f59e0b':'#8A0BD2', fontSize:'20px', lineHeight:'1'}}>
+              {estaLlena ? '⏳' : '+'}
             </div>
           </div>
         </div>
-        <span className="absolute bottom-3 right-12 z-10 text-xs text-white opacity-80">Reservar</span>
-        <button onClick={() => {
-                if (claseIniciada) {
-                  alert('La actividad ya comenzó');
-                  return;
-                }
-                onReservar();
-          }}
-          className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center text-white text-xl border-none cursor-pointer transition-all hover:opacity-80 hover:scale-110"
-          style={{
-            background: claseIniciada ? '#6b7280' : '#f59e0b',
-            boxShadow: claseIniciada
-            ? 'none'
-            : '0 2px 8px rgba(245,158,11,0.5)'
-          }}>
-          +
-        </button>
       </div>
     </div>
   );
 }
 
-// ─── ModalDetalle ────────────────────────────────────
-// ─── ModalDetalle (ACTUALIZADO CON ESCUDO DE SEGURIDAD) ─────────────────────────
-function ModalDetalle({ clase, onCerrar, onReservaExitosa }) {
-  const [tipoPago, setTipoPago] = useState(null);
-  const [usarCredito, setUsarCredito] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [mensaje, setMensaje] = useState(null);
-  const [exito, setExito] = useState(false);
-  
-  // NUEVO ESTADO: Controla si el usuario ya se fue a Mercado Pago y espera confirmación
-  const [esperandoPago, setEsperandoPago] = useState(false);
-async function handleReservar() {
-    setLoading(true);
-    setMensaje(null);
-    try {
-      const pago = usarCredito ? 'CREDITO' : tipoPago;
-      if (!pago) { 
-        setMensaje('Debés elegir una forma de pago'); 
-        setLoading(false); 
-        return; 
-      }
+// ─── OpcionPago ───────────────────────────────────────────────────
+function OpcionPago({ icono, titulo, subtitulo, precio, seleccionado, onClick, disabled }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+            className="w-full text-left p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 mb-2 block"
+            style={{
+              background: seleccionado?'rgba(138,11,210,0.15)':'rgba(255,255,255,0.03)',
+              borderColor: seleccionado?'#8A0BD2':disabled?'rgba(255,255,255,0.05)':'rgba(255,255,255,0.1)',
+              opacity: disabled?0.4:1,
+              cursor: disabled?'not-allowed':'pointer',
+            }}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span style={{fontSize:'22px'}}>{icono}</span>
+          <div>
+            <p className="text-white font-bold text-sm m-0 leading-tight">{titulo}</p>
+            <p className="text-xs m-0 mt-0.5" style={{color:'rgba(255,255,255,0.45)'}}>{subtitulo}</p>
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-white font-bold text-sm m-0">{precio}</p>
+          {seleccionado && <span className="text-[10px]" style={{color:'#a855f7'}}>✓ elegida</span>}
+        </div>
+      </div>
+    </button>
+  );
+}
 
-      // --- FLUJO MERCADO PAGO (Pago Total o Seña) ---
-      if (pago === 'TOTAL' || pago === 'SEÑA') {
-        
-        // Validar Escenario 11: No se puede reservar con seña el mismo día de la clase
-        if (pago === 'SEÑA') {
-          const hoyStr = new Date().toLocaleDateString('es-AR', { weekday: 'long' })
-            .toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+// ─── ModalDetalle ─────────────────────────────────────────────────
+function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa }) {
+  const [modo, setModo]             = useState('INDIVIDUAL');
+  const [paso, setPaso]             = useState('cargando');
+  // 'cargando' | 'seleccionar_pago' | 'preview_mensual' | 'lista_espera' | 'lista_espera_mensual' | 'error'
+  const [tipoPago, setTipoPago]     = useState(null);
+  const [datosMensual, setDatosMensual] = useState(null);
+  const [montoPrecio, setMontoPrecio]   = useState(null);
+  const [errorMsg, setErrorMsg]         = useState(null);
+  const [procesando, setProcesando]     = useState(false);
+  const [idInstancia, setIdInstancia]       = useState(null);
+  const [puedeUsarSena, setPuedeUsarSena]   = useState(true);
+  const [creditosUsuario, setCreditosUsuario] = useState(0);
 
-          const diaClase = clase.dia.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          
-          if (diaClase === hoyStr) {
-            setMensaje('No es posible reservar con seña el mismo día de la clase');
-            setLoading(false);
-            return;
-          }
-        }
+  const PRECIO_BASE    = clase.precio || 2500;
+  const CREDITOS_USER  = 2; // TODO: traer del contexto de autenticación
+  const cuposLibres    = Math.max(0, clase.cupo_maximo - (clase.cantidad_inscriptos||0));
 
-        // Parche de seguridad por si la columna precio no está en la tabla clases
-        const precioTemporal = clase.precio || 2000; 
-        const montoFinal = pago === 'SEÑA' ? (precioTemporal / 2) : precioTemporal;
-        
-        const textoDescripcion = pago === 'SEÑA' 
-          ? `Seña 50% - Clase de ${clase.actividad}` 
-          : `Pago Total - Clase de ${clase.actividad}`;
+  useEffect(() => { setTipoPago(null); setErrorMsg(null); verificar(); }, [modo]);
 
-        // Le pegamos a nuestro Backend para crear la preferencia
-        const responsePref = await fetch('http://localhost:3000/api/payments/create-preference', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tipoPago: pago.toLowerCase(),
-            descripcion: textoDescripcion,
-            precio: montoFinal,
-            // 🔥 CAMBIO AQUÍ: Enviamos los IDs para que el backend arme la referencia única
-            id_usuario: CLIENTE_ID,        
-            id_clase: clase.id_clase       
-          })
-        });
+  const verificar = async () => {
+  setPaso('cargando');
 
-        if (!responsePref.ok) {
-          const errData = await responsePref.json();
-          setExito(false);
-          setMensaje(errData.error || 'El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
-          setLoading(false);
-          return;
-        }
+  try {
+    const id_usuario = getUsuarioId();
+    const body = modo === 'INDIVIDUAL'
+      ? { id_usuario, id_clase: clase.id_clase, fecha_clase: fechaISO(fechaSeleccionada) }
+      : { id_usuario, id_clase: clase.id_clase, mes: fechaSeleccionada.getMonth() + 1, anio: fechaSeleccionada.getFullYear() };
 
-        const dataPref = await responsePref.json();
+    const data = await apiFetch(`${BASE_URL}/reservas/verificar-${modo.toLowerCase()}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
 
-        if (dataPref.init_point) {
-          // Guardamos los datos de la reserva latente
-          localStorage.setItem('pending_reservation', JSON.stringify({
-            id_usuario: CLIENTE_ID,
-            id_clase: clase.id_clase,
-            tipo_pago: pago,
-            precio_total: precioTemporal 
-          }));
+    if (data.status === 'LISTO_PARA_RESERVAR' || data.status === 'LISTO_PARA_PAGAR') {
+      setMontoPrecio(data.monto);
 
-          // Guardamos el preference ID para usarlo en la validación manual
-          localStorage.setItem('last_preference_id', dataPref.id);
-
-          // Abre Mercado Pago en una PESTAÑA NUEVA sin romper el localhost
-          window.open(dataPref.init_point, '_blank', 'noopener,noreferrer');
-          
-          // Apagamos el loading para que el botón violeta no nazca trabado
-          setLoading(false);
-
-          // Activamos el estado para cambiar el botón principal por el de validación
-          setEsperandoPago(true);
-          return;
-        } else {
-          throw new Error('No init_point');
-        }
-      }
-
-      // --- FLUJO VIEJO (Solo si usa CRÉDITO) ---
-      const response = await fetch(`${BASE_URL}/reservas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_usuario: CLIENTE_ID, id_clase: clase.id_clase, tipo_pago: pago })
-      });
-      const resultado = await response.json();
-      if (resultado.ok) {
-        setExito(true);
-        setMensaje(resultado.mensaje);
-        setTimeout(() => onReservaExitosa(), 2000);
+      if (modo === 'INDIVIDUAL') {
+        // Guardamos los datos que vienen del backend
+        setIdInstancia(data.id_instancia);
+        setPuedeUsarSena(data.puede_usar_sena);
+        setCreditosUsuario(data.creditos_usuario);
+        setPaso('seleccionar_pago');
       } else {
-        setExito(false);
-        setMensaje(resultado.mensaje);
+        setDatosMensual(data); // data.fechas y data.monto ya vienen del backend
+        setPaso('preview_mensual');
       }
-    } catch (error) {
-      setExito(false);
-      setMensaje('El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
-    } finally {
-      if (!usarCredito && (tipoPago === 'TOTAL' || tipoPago === 'SEÑA')) return;
-      setLoading(false);
+    } else if (data.status?.includes('LISTA_ESPERA')) {
+      setPaso(modo === 'INDIVIDUAL' ? 'lista_espera' : 'lista_espera_mensual');
+    } else {
+      setErrorMsg(data.mensaje || 'No se puede procesar la solicitud');
+      setPaso('error');
     }
+  } catch {
+    setErrorMsg('Error al conectar con el servidor');
+    setPaso('error');
   }
-async function confirmarReservaManual() {
-    setLoading(true);
-    setMensaje("Verificando tu pago en Mercado Pago... ⏳");
-    
-    const dataPendiente = localStorage.getItem('pending_reservation');
-    
-    // Buscamos el preference_id de la memoria de la reserva pendiente
-    const preferenceId = localStorage.getItem('last_preference_id');
+};
 
-    if (!dataPendiente || !preferenceId) {
-      setMensaje('No se encontraron registros de una reserva pendiente.');
-      setLoading(false);
-      return;
-    }
+ const handleConfirmar = async () => {
+  if (modo === 'INDIVIDUAL' && !tipoPago) return;
+  setProcesando(true);
 
-    try {
-      const responseValidar = await fetch('http://localhost:3000/api/payments/validar-pago', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ preference_id: preferenceId }) // Mandamos el id limpio
-      });
+  const id_usuario = getUsuarioId();
 
-      const resultadoValidacion = await responseValidar.json();
-
-      if (!resultadoValidacion.verificado) {
-        setExito(false);
-        setMensaje(resultadoValidacion.error || 'El pago no fue aprobado todavía.');
-        setLoading(false);
-        return; 
-      }
-
-      // Si Mercado Pago dio el OK, impactamos tu base de datos MySQL
-      const reserva = JSON.parse(dataPendiente);
-      const responseReserva = await fetch(`${BASE_URL}/reservas`, {
+  try {
+    // ══ FLUJO 1: Crédito — llamada directa, sin Mercado Pago ══
+    if (tipoPago === 'CREDITO') {
+      const data = await apiFetch(`${BASE_URL}/reservas/crear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_usuario: reserva.id_usuario,
-          id_clase: reserva.id_clase,
-          tipo_pago: reserva.tipo_pago
+          id_usuario,
+          id_clase: clase.id_clase,
+          id_instancia: idInstancia,
+          fecha_clase: fechaISO(fechaSeleccionada),
+          tipo_pago: 'CREDITO',
+          precio_total: 0
         })
       });
-
-      const resultadoReserva = await responseReserva.json();
-
-      if (resultadoReserva.ok) {
-        localStorage.removeItem('pending_reservation');
-        localStorage.removeItem('last_preference_id');
-        setExito(true);
-        setMensaje('¡Pago verificado y actividad reservada con éxito! 🎉');
-        setTimeout(() => onReservaExitosa(), 2000);
-      } else {
-        setExito(false);
-        setMenserva(resultadoReserva.mensaje || 'Error al guardar la reserva.');
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error(error);
-      setExito(false);
-      setMensaje('Error de conexión al procesar la confirmación.');
-      setLoading(false);
+      if (data.ok) { alert(data.mensaje); onReservaExitosa(); }
+      else { setErrorMsg(data.mensaje); setPaso('error'); }
+      return;
     }
+
+    // ══ FLUJO 2: Individual con tarjeta (TOTAL o SEÑA) — redirige a MP ══
+    if (modo === 'INDIVIDUAL') {
+      const montoACobrar = tipoPago === 'SEÑA' ? montoPrecio / 2 : montoPrecio;
+
+      // Guardamos en sessionStorage para recuperarlo en PaymentStatus después del pago
+      sessionStorage.setItem('pendingReserva', JSON.stringify({
+        tipo: 'individual',
+        id_usuario,
+        id_clase: clase.id_clase,
+        id_instancia: idInstancia,
+        fecha_clase: fechaISO(fechaSeleccionada),
+        tipo_pago: tipoPago,
+        precio_total: montoACobrar
+      }));
+
+      const pref = await apiFetch(`${BASE_URL}/payments/create-preference`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipoPago: tipoPago === 'SEÑA' ? 'sena' : 'individual',
+          descripcion: `${clase.actividad} - ${fechaISO(fechaSeleccionada)}`,
+          precio: montoACobrar,
+          id_usuario,
+          id_clase: clase.id_clase
+        })
+      });
+      window.location.href = pref.init_point; // redirige a Mercado Pago
+      return;
+    }
+
+    // ══ FLUJO 3: Mensual con tarjeta — redirige a MP ══
+    if (modo === 'MENSUAL') {
+      sessionStorage.setItem('pendingReserva', JSON.stringify({
+        tipo: 'mensual',
+        id_usuario,
+        id_clase: clase.id_clase,
+        fechas: datosMensual.fechas,
+        monto_total: datosMensual.monto
+      }));
+
+      const pref = await apiFetch(`${BASE_URL}/payments/create-preference`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipoPago: 'mensual',
+          descripcion: `Reserva Mensual - ${clase.actividad}`,
+          precio: datosMensual.monto,
+          id_usuario,
+          id_clase: clase.id_clase
+        })
+      });
+      window.location.href = pref.init_point;
+    }
+
+  } catch {
+    setErrorMsg('Error al procesar la solicitud');
+    setPaso('error');
+  } finally {
+    setProcesando(false);
   }
-  function toggleCredito() {
-    setUsarCredito(!usarCredito);
-    setTipoPago(null);
-  }
+};
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.6)' }} onClick={onCerrar}>
-      <div className="rounded-2xl overflow-hidden w-80 max-h-[90vh] overflow-y-auto"
-        style={{ background: '#1e1e2e' }} onClick={e => e.stopPropagation()}>
-
-        {/* Hero */}
-        <div className="relative h-28 flex flex-col justify-end p-4"
-          style={{ background: 'linear-gradient(135deg, #5B0672, #8A0BD2)' }}>
-          <span className="absolute top-2 left-3 text-white text-xs px-3 py-1 rounded-full"
-            style={{ background: '#16a34a' }}>● Disponible</span>
-          <button onClick={onCerrar}
-            className="absolute top-2 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white text-xs border-none cursor-pointer"
-            style={{ background: 'rgba(0,0,0,0.35)' }}>✕</button>
-          <h2 className="text-xl font-medium text-white capitalize">{clase.actividad}</h2>
-        </div>
-
-        {/* Body */}
-        <div className="p-4 rounded-t-2xl" style={{ background: '#f8f8f8' }}>
-          <p className="text-sm font-medium text-gray-700 pb-2 border-b border-gray-200 mb-3">
-            ℹ Detalles de la actividad
-          </p>
-
-          <div className="flex flex-col gap-2 mb-3">
-            {[
-              { label: 'FECHA', valor: clase.dia },
-              { label: 'HORARIO', valor: `${clase.horario?.slice(0, 5)} hs` },
-              { label: 'DURACIÓN', valor: `${clase.duracion} min` },
-              { label: 'CAPACIDAD', valor: `${clase.cupos_disponibles} / ${clase.cupo_maximo} personas` }
-            ].map(({ label, valor }) => (
-              <div key={label} className="flex flex-col">
-                <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider">{label}</span>
-                <span className="text-sm font-medium text-gray-800 capitalize">{valor}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-xs font-medium mb-3" style={{ color: '#16a34a' }}>
-            ⚡ {clase.cupos_disponibles} lugares disponibles
-          </p>
-
-          {mensaje && (
-            <div className={`p-2 rounded-lg text-xs mb-3 ${exito ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              {mensaje}
-            </div>
-          )}
-
-          {/* Crédito */}
-          <div onClick={toggleCredito}
-            className={`flex items-center justify-between p-3 rounded-xl border-2 mb-3 cursor-pointer transition-all
-              ${usarCredito ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🏷️</span>
-              <div>
-                <p className="text-sm font-medium text-gray-800">Usar crédito</p>
-                <p className="text-xs text-gray-500">2 créditos disponibles</p>
-              </div>
-            </div>
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
-              ${usarCredito ? 'border-purple-600 bg-purple-600' : 'border-gray-300'}`}>
-              {usarCredito && <span className="text-white text-xs">✓</span>}
-            </div>
-          </div>
-
-          {/* Opciones de pago */}
-          {!usarCredito && (
-            <div className="mb-4">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Forma de pago</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: 'TOTAL', nombre: 'Pago total', monto: `$${clase.precio}`, extra: null },
-                  { id: 'SEÑA', nombre: 'Seña 50%', monto: `$${clase.precio / 2} ahora`, extra: `$${clase.precio / 2} pendiente` }
-                ].map(opt => (
-                  <div key={opt.id} onClick={() => !esperandoPago && setTipoPago(opt.id)}
-                    className={`border-2 rounded-xl p-3 cursor-pointer transition-all
-                      ${tipoPago === opt.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white'}
-                      ${esperandoPago ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                    <p className="text-sm font-medium text-gray-800">{opt.nombre}</p>
-                    <p className="text-xs text-gray-500 mt-1">{opt.monto}</p>
-                    {opt.extra && <p className="text-xs mt-1" style={{ color: '#f59e0b' }}>{opt.extra}</p>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* RENDERING DINÁMICO DE BOTONES (SEGURIDAD) */}
-          {!esperandoPago ? (
-            <button onClick={handleReservar}
-              disabled={loading || (!usarCredito && !tipoPago)}
-              className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: '#14b8a6' }}>
-              {loading ? 'Procesando...' : 'Reservar actividad'}
-            </button>
-          ) : (
-            <button onClick={confirmarReservaManual}
-              disabled={loading}
-              className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all disabled:opacity-50"
-              style={{ background: '#8A0BD2', boxShadow: '0 4px 10px rgba(138,11,210,0.3)' }}>
-              {loading ? 'Verificando pago...' : 'Ya pagué, confirmar mi reserva 🚀'}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── ModalReservas ───────────────────────────────────
-function ModalReservas({ onCerrar }) {
-  const [reservas, setReservas] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const estadoColor = {
-    CONFIRMADA: { bg: 'bg-green-100', color: 'text-green-800', texto: 'Confirmada' },
-    CANCELADA: { bg: 'bg-red-100', color: 'text-red-800', texto: 'Cancelada' },
-    PENDIENTE_PAGO: { bg: 'bg-yellow-100', color: 'text-yellow-800', texto: 'Pendiente de pago' }
-  };
-
-  const pagoIcono = {
-    PLAN: '📋 Plan mensual',
-    CREDITO: '🏷️ Crédito',
-    TOTAL: '💵 Pago total',
-    SEÑA: '💳 Seña 50%'
-  };
-
-  const diasMap = {
-    lunes: 'Lun', martes: 'Mar', miercoles: 'Mié',
-    jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb', domingo: 'Dom'
-  };
-
-  useEffect(() => {
-    fetch(`${BASE_URL}/reservas/usuario/${CLIENTE_ID}`)
-      .then(r => r.json())
-      .then(data => { if (data.ok) setReservas(data.data); })
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.6)' }} onClick={onCerrar}>
-      <div className="rounded-2xl overflow-hidden w-[500px] max-h-[80vh] flex flex-col"
-        style={{ background: '#1e1e2e' }} onClick={e => e.stopPropagation()}>
-
-        <div className="flex items-center justify-between p-5 rounded-t-2xl"
-          style={{ background: 'linear-gradient(135deg, #5B0672, #8A0BD2)' }}>
-          <h2 className="text-lg font-medium text-white">Mis Reservas</h2>
-          <button onClick={onCerrar}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs border-none cursor-pointer"
-            style={{ background: 'rgba(0,0,0,0.3)' }}>✕</button>
-        </div>
-
-        <div className="overflow-y-auto p-4 flex flex-col gap-3">
-          {loading && <p className="text-center py-10 text-white opacity-60">Cargando reservas...</p>}
-          {!loading && reservas.length === 0 && (
-            <div className="text-center py-10">
-              <p className="text-3xl mb-2">📅</p>
-              <p className="text-white opacity-60">No tenés reservas aún</p>
-            </div>
-          )}
-          {!loading && reservas.map(r => {
-            const est = estadoColor[r.estado] || estadoColor.CONFIRMADA;
-            const img = imagenesClase[r.actividad?.toLowerCase()] || funcionalImg;
-            return (
-              <div key={r.id_reserva} className="rounded-xl overflow-hidden flex h-24"
-                style={{ background: '#2d2d3a' }}>
-                <div className="w-28 relative flex-shrink-0"
-                  style={{ backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
-                  <span className="relative z-10 text-white text-sm font-medium p-2 capitalize block">{r.actividad}</span>
-                </div>
-                <div className="flex-1 p-3 flex flex-col justify-between">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-xs opacity-50 text-white capitalize">{diasMap[r.dia] || r.dia}</p>
-                      <p className="text-lg font-medium text-white leading-tight">{r.horario?.slice(0, 5)} hs</p>
-                      <p className="text-xs opacity-50 text-white">{r.duracion} min</p>
-                    </div>
-                    <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${est.bg} ${est.color}`}>
-                      {est.texto}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs opacity-60 text-white">{pagoIcono[r.tipo_pago] || r.tipo_pago}</span>
-                    {r.saldo_pendiente > 0 && (
-                      <span className="text-xs" style={{ color: '#f59e0b' }}>⚠ Saldo: ${r.saldo_pendiente}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Página principal ────────────────────────────────
-export default function Actividades() {
-  const [clases, setClases] = useState([]);
-  const [claseSeleccionada, setClaseSeleccionada] = useState(null);
-  const [mostrarReservas, setMostrarReservas] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const nombresDias = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
-  const [diaSeleccionado, setDiaSeleccionado] = useState(nombresDias[new Date().getDay()]);
-
-  useEffect(() => {
-    cargarClasesPorDia(diaSeleccionado);
-  }, [diaSeleccionado]);
-
-  async function cargarClasesPorDia(dia) {
+  const handleListaEspera = async () => {
+    setProcesando(true);
     try {
-      setLoading(true);
-      const diasMap = {
-        'DOM': 'domingo', 'LUN': 'lunes', 'MAR': 'martes',
-        'MIE': 'miercoles', 'JUE': 'jueves', 'VIE': 'viernes', 'SAB': 'sabado'
-      };
-      const response = await fetch(`${BASE_URL}/clases/por-dia?dia=${dia}`);
-      const data = await response.json();
-      if (data.ok) setClases(data.data);
-    } catch {
-      setError('Error al cargar las clases');
-    } finally {
-      setLoading(false);
+      const ep = modo==='INDIVIDUAL' ? `${BASE_URL}/reservas/lista-espera` : `${BASE_URL}/reservas/lista-espera-mensual`;
+      const body = { id_usuario: getUsuarioId(), id_clase: clase.id_clase,
+        ...(modo==='INDIVIDUAL'?{fecha_clase:fechaISO(fechaSeleccionada)}:{mes:fechaSeleccionada.getMonth()+1, anio:fechaSeleccionada.getFullYear()}) };
+      const data = await apiFetch(ep, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      if (data.ok) { alert(data.mensaje||'¡Anotado a la lista de espera!'); onReservaExitosa(); }
+      else { setErrorMsg(data.mensaje); setPaso('error'); }
+    } catch { setErrorMsg('Error al anotarse'); setPaso('error'); }
+    finally { setProcesando(false); }
+  };
+
+  // ── Render del contenido según el paso ──
+  const renderContenido = () => {
+    if (paso==='cargando') return (
+      <div className="flex flex-col items-center py-10">
+        <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin mb-4"
+             style={{borderColor:'rgba(138,11,210,0.3)', borderTopColor:'#8A0BD2'}}/>
+        <p style={{color:'rgba(255,255,255,0.4)', fontSize:'13px'}}>Verificando disponibilidad...</p>
+      </div>
+    );
+
+    if (paso==='error') return (
+      <div className="rounded-2xl p-4 text-center" style={{background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)'}}>
+        <span style={{fontSize:'36px', display:'block', marginBottom:'8px'}}>⚠️</span>
+        <p style={{color:'#f87171', fontSize:'13px', margin:0}}>{errorMsg}</p>
+      </div>
+    );
+
+    if (paso==='seleccionar_pago') {
+      const precio = montoPrecio||PRECIO_BASE;
+      return (
+        <div>
+          <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'12px'}}>
+            Elegí cómo pagar
+          </p>
+          <OpcionPago icono="💳" titulo="Pago total"
+            subtitulo="Abonás el total ahora vía Mercado Pago"
+            precio={formatPrecio(precio)}
+            seleccionado={tipoPago==='TOTAL'} onClick={()=>setTipoPago('TOTAL')} />
+          <OpcionPago icono="🤝" titulo="Reserva con seña"
+            subtitulo={puedeUsarSena
+              ? `${fP(montoPrecio/2)} ahora + ${fP(montoPrecio/2)} el día de la clase`
+              : 'No disponible el mismo día de la clase'}
+              precio={`50% = ${fP(montoPrecio/2)}`}
+              seleccionado={tipoPago === 'SEÑA'}
+              onClick={() => setTipoPago('SEÑA')}
+              disabled={!puedeUsarSena}   // ← viene del backend
+              />
+          <OpcionPago icono="🏷️" titulo="Usar crédito"
+            subtitulo={creditosUsuario > 0
+              ? `Tenés ${creditosUsuario} crédito${creditosUsuario !== 1 ? 's' : ''}`
+              : 'Sin créditos disponibles'}
+              precio="1 crédito"
+              seleccionado={tipoPago === 'CREDITO'}
+              onClick={() => setTipoPago('CREDITO')}
+              disabled={creditosUsuario === 0}   // ← viene del backend
+            />
+        </div>
+      );
     }
-  }
+
+    if (paso==='preview_mensual') {
+      const d         = datosMensual||{};
+      const fechas    = d.fechas||[];
+      const original  = d.monto_original||montoPrecio||0;
+      const final     = d.monto||montoPrecio||0;
+      const desc      = d.descuento||0;
+      const mesNombre = MESES[fechaSeleccionada.getMonth()];
+      return (
+        <div>
+          <div className="rounded-2xl p-4 mb-3" style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)'}}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-white font-bold text-sm m-0">📅 {mesNombre} {fechaSeleccionada.getFullYear()}</p>
+                <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>{fechas.length} clases incluidas</p>
+              </div>
+              {desc>0 && (
+                <span style={{background:'rgba(16,185,129,0.15)', color:'#34d399', border:'1px solid rgba(16,185,129,0.3)',
+                              fontSize:'11px', fontWeight:'bold', padding:'4px 10px', borderRadius:'999px'}}>
+                  -{desc}% OFF
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {fechas.map(f=>(
+                <span key={f} style={{background:'rgba(138,11,210,0.2)', border:'1px solid rgba(138,11,210,0.4)',
+                                      color:'white', fontSize:'10px', fontWeight:'600', padding:'4px 10px', borderRadius:'8px'}}>
+                  ✓ {formatCorta(f)}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl p-4" style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)'}}>
+            {desc>0 && (
+              <>
+                <div className="flex justify-between mb-1" style={{fontSize:'13px'}}>
+                  <span style={{color:'rgba(255,255,255,0.4)'}}>Precio regular</span>
+                  <span style={{color:'rgba(255,255,255,0.4)', textDecoration:'line-through'}}>{formatPrecio(original)}</span>
+                </div>
+                <div className="flex justify-between mb-2" style={{fontSize:'13px'}}>
+                  <span style={{color:'#34d399'}}>Descuento ({desc}%)</span>
+                  <span style={{color:'#34d399'}}>− {formatPrecio(original-final)}</span>
+                </div>
+              </>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-white font-bold" style={{fontSize:'14px'}}>Total a pagar</span>
+              <span style={{fontSize:'24px', fontWeight:'bold', color:'#2dd4bf'}}>{formatPrecio(final)}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (paso==='lista_espera'||paso==='lista_espera_mensual') {
+      const esMensual = paso==='lista_espera_mensual';
+      return (
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+               style={{background:'rgba(245,158,11,0.15)'}}>
+            <span style={{fontSize:'36px'}}>⏳</span>
+          </div>
+          <h3 className="text-white font-bold m-0 mb-2" style={{fontSize:'16px'}}>
+            {esMensual ? 'No hay cupos para todo el mes' : 'Esta clase está completa'}
+          </h3>
+          <p style={{color:'rgba(255,255,255,0.55)', fontSize:'13px', lineHeight:'1.6', marginBottom:'16px'}}>
+            {esMensual
+              ? 'Algunas clases del período no tienen cupos. Te notificamos si se libera disponibilidad completa.'
+              : 'Si alguien cancela, te avisamos y tendrás 24 horas para confirmar el pago y asegurar tu lugar.'}
+          </p>
+          <div className="rounded-xl p-3 text-left"
+               style={{background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)'}}>
+            <p style={{color:'#fbbf24', fontSize:'12px', margin:0}}>
+              ⚡ Tendrás <strong>24 hs</strong> para confirmar el pago una vez que se libere un lugar.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // ── Render del botón según el paso ──
+  const renderBoton = () => {
+    if (paso==='cargando') return null;
+    const base = "w-full py-3.5 rounded-2xl text-white font-bold border-none cursor-pointer transition-all active:scale-95 mt-4";
+    if (paso==='error')
+      return <button onClick={verificar} className={base} style={{background:'#8A0BD2'}}>Reintentar</button>;
+    if (paso==='lista_espera'||paso==='lista_espera_mensual')
+      return <button onClick={handleListaEspera} disabled={procesando} className={base}
+               style={{background:procesando?'rgba(245,158,11,0.4)':'#f59e0b', color:'#451a00'}}>
+               {procesando?'Anotando...':'⏳ Anotarme en lista de espera'}
+             </button>;
+    if (paso==='seleccionar_pago') {
+      const ok = tipoPago&&!procesando;
+      return <button onClick={handleConfirmar} disabled={!ok} className={base}
+               style={{background:ok?'#10b981':'rgba(255,255,255,0.07)', color:ok?'white':'rgba(255,255,255,0.3)',
+                       cursor:ok?'pointer':'not-allowed', boxShadow:ok?'0 4px 20px rgba(16,185,129,0.3)':'none'}}>
+               {procesando?'Procesando...'
+                :tipoPago?`Confirmar ${tipoPago==='TOTAL'?'pago total':tipoPago==='SEÑA'?'seña':'con crédito'} →`
+                :'Seleccioná un método de pago'}
+             </button>;
+    }
+    if (paso==='preview_mensual')
+      return <button onClick={handleConfirmar} disabled={procesando} className={base}
+               style={{background:procesando?'rgba(16,185,129,0.4)':'#10b981', boxShadow:'0 4px 20px rgba(16,185,129,0.3)'}}>
+               {procesando?'Procesando...':'Confirmar Reserva Mensual →'}
+             </button>;
+    return null;
+  };
+
+  const diasCompleto=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
   return (
-    <div className="flex min-h-screen" style={{ background: '#1a1a2e' }}>
-      <Sidebar />
-      <div className="flex-1 pl-20 pr-6 py-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+         style={{background:'rgba(0,0,0,0.85)', backdropFilter:'blur(6px)'}}
+         onClick={onCerrar}>
+      <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
+           style={{background:'#1a1a2e', maxHeight:'92vh', overflowY:'auto'}}
+           onClick={e=>e.stopPropagation()}>
 
         {/* Header */}
-        <div className="border-b pb-3 mb-5" style={{ borderColor: 'rgba(255,255,255,0.12)' }}>
-          <h1 className="text-3xl font-medium text-white">Actividades</h1>
+        <div className="p-6 text-white relative" style={{background:'linear-gradient(135deg,#4a0560,#7A0BC0)'}}>
+          <button onClick={onCerrar}
+                  className="absolute top-4 right-4 border-none w-8 h-8 rounded-full cursor-pointer transition-colors"
+                  style={{background:'rgba(0,0,0,0.25)', color:'white', fontSize:'14px'}}>✕</button>
+          <span style={{fontSize:'10px', background:'rgba(255,255,255,0.2)', padding:'3px 10px', borderRadius:'999px',
+                        textTransform:'uppercase', letterSpacing:'0.08em', display:'inline-block'}}>
+            {clase.actividad}
+          </span>
+          <h2 className="font-bold mt-2 m-0 capitalize" style={{fontSize:'20px'}}>
+            {diasCompleto[fechaSeleccionada.getDay()]}, {fechaSeleccionada.getDate()} de {MESES[fechaSeleccionada.getMonth()]}
+          </h2>
+          <p style={{color:'rgba(255,255,255,0.7)', fontSize:'13px', margin:'4px 0 0'}}>
+            {clase.horario?.slice(0,5)} hs • {clase.duracion} min
+          </p>
         </div>
 
-        {/* Top cards */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          <div onClick={() => setMostrarReservas(true)}
-            className="flex items-center gap-3 p-4 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
-            style={{ background: '#5B0672' }}>
-            <span className="text-2xl">📅</span>
-            <p className="text-sm font-medium text-white">Reservas</p>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
-            style={{ background: '#8A0BD2' }}>
-            <span className="text-2xl">📋</span>
-            <p className="text-sm font-medium text-white">Listas de espera</p>
-          </div>
-          <div className="flex items-center gap-3 p-4 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
-            style={{ background: '#AF50E5' }}>
-            <span className="text-2xl">🏷️</span>
-            <p className="text-sm font-medium text-white">Créditos</p>
-          </div>
-          <div className="flex flex-col justify-center p-4 rounded-xl"
-            style={{ background: '#2d2d3a' }}>
-            <p className="text-base font-medium text-white">Plan Mensual</p>
-            <p className="text-xs mt-1" style={{ color: '#4ade80' }}>Activa</p>
-          </div>
+        {/* Toggle Individual / Mensual */}
+        <div className="flex p-1 m-4 rounded-xl" style={{background:'rgba(0,0,0,0.25)'}}>
+          {['INDIVIDUAL','MENSUAL'].map(m=>(
+            <button key={m} onClick={()=>setModo(m)}
+                    className="flex-1 py-2 text-[10px] font-bold rounded-lg border-none cursor-pointer transition-all"
+                    style={{ background:modo===m?'#8A0BD2':'transparent', color:modo===m?'white':'rgba(255,255,255,0.35)' }}>
+              {m==='INDIVIDUAL'?'📌 UNA CLASE':'📅 PASE MENSUAL'}
+            </button>
+          ))}
         </div>
 
-        {/* Date selector */}
-        <DateSelector diaSeleccionado={diaSeleccionado} onSeleccionar={setDiaSeleccionado} />
-
-        {/* Clases */}
-        <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>Actividades Disponibles</p>
-
-        {loading && <p className="text-center py-10" style={{ color: 'rgba(255,255,255,0.6)' }}>Cargando clases...</p>}
-        {error && <p className="text-center py-10" style={{ color: '#f87171' }}>{error}</p>}
-
-        {!loading && !error && (
-          <div className="grid grid-cols-2 gap-3">
-            {clases.length === 0
-              ? <p className="text-center py-10 col-span-2" style={{ color: 'rgba(255,255,255,0.6)' }}>No hay clases disponibles</p>
-              : clases.map(clase => (
-                <ClaseCard
-                  key={clase.id_clase}
-                  clase={clase}
-                  onReservar={() => setClaseSeleccionada(clase)}
-                />
-              ))
-            }
-          </div>
-        )}
-
-        {/* Modales */}
-        {claseSeleccionada && (
-          <ModalDetalle
-            clase={claseSeleccionada}
-            onCerrar={() => setClaseSeleccionada(null)}
-            onReservaExitosa={() => {
-              setClaseSeleccionada(null);
-              cargarClasesPorDia(diaSeleccionado);
-            }}
-          />
-        )}
-
-        {mostrarReservas && (
-          <ModalReservas onCerrar={() => setMostrarReservas(false)} />
-        )}
-
+        <div className="px-5 pb-6">
+          {renderContenido()}
+          {renderBoton()}
+          <p style={{color:'rgba(255,255,255,0.2)', fontSize:'10px', textAlign:'center', marginTop:'14px',
+                     textTransform:'uppercase', letterSpacing:'0.1em'}}>
+            Al confirmar aceptás nuestras políticas de cancelación
+          </p>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Actividades (componente principal) ──────────────────────────
+export default function Actividades() {
+  const [clases, setClases]                   = useState([]);
+  const [claseSeleccionada, setClaseSelec]    = useState(null);
+  const [sidebarOpen, setSidebarOpen]         = useState(false);
+  const [loading, setLoading]                 = useState(true);
+  const [fechaSeleccionada, setFechaSelec]    = useState(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; });
+  const [diaSeleccionado, setDiaSel]          = useState(NOMBRES_DIAS[new Date().getDay()]);
+
+  useEffect(()=>{ cargarClases(); }, [fechaSeleccionada]);
+
+  const cargarClases = async () => {
+    setLoading(true);
+    try {
+      // NOTA BACKEND: el endpoint debe devolver TODAS las clases del día,
+      // incluyendo las que ya no tienen cupos (para mostrar lista de espera)
+     const data = await apiFetch(`${BASE_URL}/clases/por-dia?dia=${diaSeleccionado}&fecha=${fechaISO(fechaSeleccionada)}&incluirCompletas=true`);
+      if (data.ok) setClases(data.data);
+    } finally { setLoading(false); }
+  };
+
+  const handleSeleccionarDia = (diaAbrev, fechaObj) => {
+    setDiaSel(diaAbrev);
+    setFechaSelec(fechaObj);
+  };
+
+  const disponibles = clases.filter(c=>(c.cupo_maximo-(c.cantidad_inscriptos||0))>0).length;
+  const enEspera    = clases.filter(c=>(c.cupo_maximo-(c.cantidad_inscriptos||0))<=0).length;
+
+  return (
+    <div className="flex min-h-screen" style={{background:'#12121f', fontFamily:'system-ui,sans-serif'}}>
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+
+      <main className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen?'ml-56':'ml-16'}`}>
+
+        {/* Header */}
+        <header className="mb-7 flex justify-between items-start">
+          <div>
+            <h1 className="font-bold text-white m-0" style={{fontSize:'30px'}}>Actividades</h1>
+            <p style={{color:'rgba(255,255,255,0.4)', fontSize:'13px', margin:'4px 0 0'}}>
+              Gestioná tus clases y entrenamientos
+            </p>
+          </div>
+          <div className="rounded-full px-4 py-2 border border-white/10 text-white text-xs font-bold shadow"
+               style={{background:'#5B0672'}}>
+            👤 Hola, Usuario
+          </div>
+        </header>
+
+        {/* Stats */}
+        <div className="grid gap-4 mb-7" style={{gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))'}}>
+          {[
+            {label:'Mis Reservas', icon:'📅', color:'#5B0672'},
+            {label:'Lista Espera', icon:'📋', color:'#8A0BD2'},
+            {label:'Mis Créditos', icon:'🏷️', color:'#AF50E5'},
+            {label:'Plan Activo',  icon:'⚡', color:'#0d9488', sub:'Mensual'},
+          ].map(s=>(
+            <div key={s.label} className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
+                 style={{background:s.color, border:'1px solid rgba(255,255,255,0.08)'}}>
+              <span style={{fontSize:'26px'}}>{s.icon}</span>
+              <div>
+                <p className="text-white font-bold text-sm m-0 leading-tight">{s.label}</p>
+                {s.sub&&<p style={{color:'rgba(255,255,255,0.55)', fontSize:'10px', margin:0, textTransform:'uppercase', letterSpacing:'0.08em'}}>{s.sub}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <DateSelector fechaSeleccionada={fechaSeleccionada} onSeleccionar={handleSeleccionarDia} />
+
+        {/* Leyenda de estados */}
+        {!loading && clases.length>0 && (
+          <div className="flex gap-5 mb-5" style={{fontSize:'11px', color:'rgba(255,255,255,0.35)'}}>
+            <span className="flex items-center gap-1.5">
+              <span style={{width:10,height:10,borderRadius:3,background:'#8A0BD2',display:'inline-block'}}/>
+              {disponibles} con cupo
+            </span>
+            {enEspera>0&&(
+              <span className="flex items-center gap-1.5">
+                <span style={{width:10,height:10,borderRadius:3,background:'#f59e0b',display:'inline-block'}}/>
+                {enEspera} lista de espera
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Grilla de clases */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24" style={{opacity:0.5}}>
+            <div className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin mb-4"
+                 style={{borderColor:'rgba(138,11,210,0.3)', borderTopColor:'#8A0BD2'}}/>
+            <p className="text-white text-sm">Cargando actividades...</p>
+          </div>
+        ) : clases.length>0 ? (
+          <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
+            {clases.map(c=>(
+              <ClaseCard key={c.id_clase} clase={c} onReservar={()=>setClaseSelec(c)} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-24 rounded-3xl" style={{background:'rgba(255,255,255,0.03)', border:'1px dashed rgba(255,255,255,0.08)'}}>
+            <span style={{fontSize:'48px', display:'block', marginBottom:'12px'}}>💤</span>
+            <p style={{color:'rgba(255,255,255,0.35)'}}>No hay actividades programadas para este día.</p>
+          </div>
+        )}
+      </main>
+
+      {claseSeleccionada && (
+        <ModalDetalle
+          clase={claseSeleccionada}
+          fechaSeleccionada={fechaSeleccionada}
+          onCerrar={()=>setClaseSelec(null)}
+          onReservaExitosa={()=>{ setClaseSelec(null); cargarClases(); }}
+        />
+      )}
     </div>
   );
 }
