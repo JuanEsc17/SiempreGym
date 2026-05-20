@@ -9,6 +9,7 @@ const clasesRoutes = require("./src/routes/clasesRoutes")
 const reservasRoutes = require("./src/routes/reservasRoutes")
 const usuariosRoutes = require("./src/routes/usuariosRoutes")
 const paymentRoutes = require("./src/routes/paymentRoutes")
+const listaEsperaRoutes = require("./src/routes/listaEsperaRoutes")
 
 const app = express()
 
@@ -32,6 +33,7 @@ app.use("/api/clases", clasesRoutes)
 app.use("/api/reservas", reservasRoutes)
 app.use("/api/usuarios", usuariosRoutes)
 app.use("/api/payments", paymentRoutes)
+app.use("/lista-espera", listaEsperaRoutes)
 
 const PORT = 3000
 
