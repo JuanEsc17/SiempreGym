@@ -189,6 +189,62 @@ LOCK TABLES `lista_espera` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `ofertas_lista_espera`
+--
+
+DROP TABLE IF EXISTS `ofertas_lista_espera`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ofertas_lista_espera` (
+
+  `id_oferta` int NOT NULL AUTO_INCREMENT,
+
+  `id_usuario` int NOT NULL,
+
+  `id_clase` int NOT NULL,
+
+  `tipo_reserva`
+      enum('individual','mensual')
+      NOT NULL,
+
+  `estado`
+      enum(
+      'pendiente',
+      'aceptada',
+      'rechazada',
+      'vencida'
+      )
+      DEFAULT 'pendiente',
+
+  `fecha_envio`
+      timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id_oferta`),
+
+  KEY `id_usuario` (`id_usuario`),
+  KEY `id_clase` (`id_clase`),
+
+  CONSTRAINT `ofertas_lista_ibfk_1`
+      FOREIGN KEY (`id_usuario`)
+      REFERENCES `usuarios` (`id_usuario`),
+
+  CONSTRAINT `ofertas_lista_ibfk_2`
+      FOREIGN KEY (`id_clase`)
+      REFERENCES `clases` (`id_clase`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ofertas_lista_espera`
+--
+
+LOCK TABLES `ofertas_lista_espera` WRITE;
+/*!40000 ALTER TABLE `ofertas_lista_espera` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ofertas_lista_espera` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `salas`
 --
 
