@@ -252,6 +252,7 @@ CREATE TABLE `usuarios` (
   `fecha_nacimiento` date NOT NULL,
   `rol` enum('cliente','admin','profesor','empleado') DEFAULT 'cliente',
   `foto_autorizacion` varchar(255) DEFAULT NULL,
+  `estado_permiso` enum('pendiente','aprobado','rechazado') DEFAULT 'pendiente',
   `creditos` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_usuario`),
