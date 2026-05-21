@@ -95,16 +95,21 @@ const reservasRepository = {
 
   // ─── HISTORIAL ────────────────────────────────────────────────
   getReservasPorUsuario: async (id_usuario) => {
-    const [rows] = await db.promise().execute(
-      `SELECT r.*, c.actividad, c.dia, c.horario, c.duracion
-       FROM reservas r
-       JOIN clases c ON r.id_clase = c.id_clase
-       WHERE r.id_usuario = ?
-       ORDER BY r.fecha_clase DESC`,
-      [id_usuario]
-    );
-    return rows;
-  }
+  const [rows] = await db.promise().execute(
+    `SELECT r.*,
+            c.actividad, c.dia, c.horario, c.duracion, c.imagen,
+            CONCAT(u.nombre, ' ', u.apellido) AS nombre_profesor,
+            s.nombre AS nombre_sala
+     FROM reservas r
+     JOIN      clases   c ON r.id_clase    = c.id_clase
+     LEFT JOIN usuarios u ON c.id_profesor = u.id_usuario
+     LEFT JOIN salas    s ON c.id_sala     = s.id_sala
+     WHERE r.id_usuario = ?
+     ORDER BY r.fecha_clase DESC`,
+    [id_usuario]
+  );
+  return rows;
+  },
 };
 
 module.exports = reservasRepository;
