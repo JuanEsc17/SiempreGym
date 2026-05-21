@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import yogaImg from '../assets/Yoga2.png';
 import pilatesImg from '../assets/Pilatesmq.png';
 import funcionalImg from '../assets/Funcional.png';
@@ -21,7 +22,7 @@ const fP = formatPrecio;
 const apiFetch = (url, opts) => fetch(url, opts).then(r => r.json());
 
 
-// ─── Sidebar ─────────────────────────────────────────────────────
+/* ─── Sidebar ─────────────────────────────────────────────────────
 function Sidebar({ isOpen, setIsOpen }) {
   return (
     <div className={`fixed top-0 left-0 h-screen z-50 flex flex-col shadow-2xl transition-all duration-300 ${isOpen?'w-56':'w-16'}`}
@@ -45,7 +46,7 @@ function Sidebar({ isOpen, setIsOpen }) {
       )}
     </div>
   );
-}
+}*/
 
 // ─── DateSelector ─────────────────────────────────────────────────
 // Ahora trackea el Date real, no solo el nombre del día
@@ -551,12 +552,14 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa }) 
 
 // ─── Actividades (componente principal) ──────────────────────────
 export default function Actividades() {
+  const navigate = useNavigate();
   const [clases, setClases]                   = useState([]);
   const [claseSeleccionada, setClaseSelec]    = useState(null);
-  const [sidebarOpen, setSidebarOpen]         = useState(false);
+  //const [sidebarOpen, setSidebarOpen]         = useState(false);
   const [loading, setLoading]                 = useState(true);
   const [fechaSeleccionada, setFechaSelec]    = useState(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; });
   const [diaSeleccionado, setDiaSel]          = useState(NOMBRES_DIAS[new Date().getDay()]);
+  const [creditos, setCreditos]            = useState(null);
 
   useEffect(()=>{ cargarClases(); }, [fechaSeleccionada]);
 
@@ -570,6 +573,14 @@ export default function Actividades() {
     } finally { setLoading(false); }
   };
 
+  useEffect(() => {
+  const id = getUsuarioId();
+  if (!id) return;
+  apiFetch(`${BASE_URL}/usuarios/${id}`)
+    .then(d => { if (d.ok) setCreditos(d.data?.creditos ?? 0); })
+    .catch(() => {});
+  }, []);
+
   const handleSeleccionarDia = (diaAbrev, fechaObj) => {
     setDiaSel(diaAbrev);
     setFechaSelec(fechaObj);
@@ -580,9 +591,9 @@ export default function Actividades() {
 
   return (
     <div className="flex min-h-screen" style={{background:'#12121f', fontFamily:'system-ui,sans-serif'}}>
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+  
 
-      <main className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen?'ml-56':'ml-16'}`}>
+      <main className={"flex-1 p-6 lg:px-12 lg:pt-10"}>
 
         {/* Header */}
         <header className="mb-7 flex justify-between items-start">
@@ -593,29 +604,69 @@ export default function Actividades() {
             </p>
           </div>
           <div className="rounded-full px-4 py-2 border border-white/10 text-white text-xs font-bold shadow"
-               style={{background:'#5B0672'}}>
-            👤 Hola, Usuario
+               style={{background:'#f3e5ffd3'}}>
+            👤 
           </div>
         </header>
-
+          {/* Stats + Créditos */}
         {/* Stats */}
-        <div className="grid gap-4 mb-7" style={{gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))'}}>
-          {[
-            {label:'Mis Reservas', icon:'📅', color:'#5B0672'},
-            {label:'Lista Espera', icon:'📋', color:'#8A0BD2'},
-            {label:'Mis Créditos', icon:'🏷️', color:'#AF50E5'},
-            {label:'Plan Activo',  icon:'⚡', color:'#0d9488', sub:'Mensual'},
-          ].map(s=>(
-            <div key={s.label} className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
-                 style={{background:s.color, border:'1px solid rgba(255,255,255,0.08)'}}>
-              <span style={{fontSize:'26px'}}>{s.icon}</span>
-              <div>
-                <p className="text-white font-bold text-sm m-0 leading-tight">{s.label}</p>
-                {s.sub&&<p style={{color:'rgba(255,255,255,0.55)', fontSize:'10px', margin:0, textTransform:'uppercase', letterSpacing:'0.08em'}}>{s.sub}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
+<div className="grid grid-cols-4 gap-4 mb-7">
+
+  <div onClick={() => navigate('/mis-reservas')}
+       className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
+       style={{background:'#5B0672', border:'1px solid rgba(139,92,246,0.25)'}}>
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+         style={{background:'#6a0785'}}>
+      <span style={{fontSize:'20px'}}>🗓️</span>
+    </div>
+    <div>
+      <p className="text-white font-bold text-sm m-0">Mis Reservas</p>
+      <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Ver mis clases</p>
+    </div>
+  </div>
+
+  <div onClick={() => navigate('/lista-espera')}
+       className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
+       style={{background:'#8A0BD2', border:'1px solid rgba(99,102,241,0.25)'}}>
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+         style={{background:'#970ee7'}}>
+      <span style={{fontSize:'20px'}}>👥</span>
+    </div>
+    <div>
+      <p className="text-white font-bold text-sm m-0">Lista Espera</p>
+      <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Clases en espera</p>
+    </div>
+  </div>
+
+  <div className="p-4 rounded-2xl flex items-center gap-3"
+       style={{background:'#AF50E5', border:'1px solid rgba(168,85,247,0.25)'}}>
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+         style={{background:'#bb59f3'}}>
+      <span style={{fontSize:'20px'}}>⭐</span>
+    </div>
+    <div>
+      <p className="text-white font-bold text-sm m-0">Créditos</p>
+      <p style={{color:'white', fontSize:'15px', fontWeight:'bold', margin:0}}>
+        {creditos !== null ? creditos : '—'}
+        <span style={{color:'rgba(255,255,255,0.6)', fontSize:'11px', fontWeight:'normal'}}> disp.</span>
+      </p>
+    </div>
+  </div>
+  <div onClick={() => navigate('/plan')}
+       className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
+       style={{background:'#0d9488', border:'1px solid rgba(20,184,166,0.25)'}}>
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+         style={{background:'#12aea1'}}>
+      <span style={{fontSize:'20px'}}>⚡</span>
+    </div>
+    <div>
+      <p className="text-white font-bold text-sm m-0">Plan Activo</p>
+      <span style={{background:'rgba(20,184,166,0.2)', color:'#2dd4bf', fontSize:'10px',
+        fontWeight:'bold', padding:'2px 8px', borderRadius:999, textTransform:'uppercase',
+        letterSpacing:'0.06em', display:'inline-block', marginTop:2}}>Mensual</span>
+    </div>
+  </div>
+</div>
 
         <DateSelector fechaSeleccionada={fechaSeleccionada} onSeleccionar={handleSeleccionarDia} />
 
