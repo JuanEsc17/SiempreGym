@@ -1,536 +1,743 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+//import axios from "axios";
 
-const clasesMock = [
-  {
-    id: 1,
-    actividad: 'Yoga',
-    profesor: 'Carla Gómez',
-    horario: '08:00',
-    cupos: 8,
-    color: '#8A0BD2'
-  },
-  {
-    id: 2,
-    actividad: 'Funcional',
-    profesor: 'Lucas Pérez',
-    horario: '10:00',
-    cupos: 2,
-    color: '#14b8a6'
-  },
-  {
-    id: 3,
-    actividad: 'Pilates',
-    profesor: 'Ana Torres',
-    horario: '18:00',
-    cupos: 0,
-    color: '#f59e0b'
-  }
-];
+//const BASE_URL = "http://localhost:3000/api";
 
 export default function ReservaPresencial() {
-  const [claseSeleccionada, setClaseSeleccionada] = useState(null);
-
-  return (
-    <div
-      className="
-        min-h-screen
-        text-white
-        p-6
-      "
-      style={{
-        background:
-          'linear-gradient(135deg, #12061b 0%, #1e1b4b 45%, #0f172a 100%)'
-      }}
-    >
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">
-            Reserva Presencial
-          </h1>
-
-          <p className="text-slate-300 mt-2 text-lg">
-            Gestión manual de reservas y pagos
-          </p>
-        </div>
-
-        <div
-          className="
-            px-6
-            py-3
-            rounded-3xl
-            border
-            backdrop-blur-xl
-          "
-          style={{
-            background: 'rgba(138,11,210,0.15)',
-            borderColor: 'rgba(255,255,255,0.08)'
-          }}
-        >
-          <p className="text-sm text-slate-400">
-            Sistema
-          </p>
-
-          <p className="font-semibold text-lg">
-            SiempreGym
-          </p>
-        </div>
-
-      </div>
-
-      {/* Layout */}
-      <div className="flex gap-6">
-
-        {/* IZQUIERDA */}
-        <div
-          className="
-            w-[40%]
-            rounded-[34px]
-            p-6
-            border
-            backdrop-blur-xl
-          "
-          style={{
-            background: 'rgba(15,23,42,0.75)',
-            borderColor: 'rgba(255,255,255,0.06)'
-          }}
-        >
-
-          <div className="flex items-center justify-between mb-6">
-
-            <div>
-              <h2 className="text-2xl font-semibold">
-                Clases disponibles
-              </h2>
-
-              <p className="text-slate-400 text-sm mt-1">
-                Seleccioná una clase
-              </p>
-            </div>
-
-            <div
-              className="
-                px-4
-                py-2
-                rounded-2xl
-                text-sm
-                font-medium
-              "
-              style={{
-                background: 'rgba(138,11,210,0.18)',
-                color: '#d8b4fe'
-              }}
-            >
-              Hoy
-            </div>
-
-          </div>
-
-          <div className="flex flex-col gap-4">
-
-            {clasesMock.map(clase => {
-
-              const activa =
-                claseSeleccionada?.id === clase.id;
-
-              return (
-                <div
-                  key={clase.id}
-                  onClick={() => setClaseSeleccionada(clase)}
-                  className="
-                    rounded-3xl
-                    p-5
-                    cursor-pointer
-                    transition-all
-                    duration-300
-                    border
-                    hover:scale-[1.015]
-                  "
-                  style={{
-                    background: activa
-                      ? 'rgba(255,255,255,0.08)'
-                      : 'rgba(15,23,42,0.55)',
-
-                    borderColor: activa
-                      ? clase.color
-                      : 'rgba(255,255,255,0.05)',
-
-                    boxShadow: activa
-                      ? `0 0 30px ${clase.color}30`
-                      : 'none'
-                  }}
-                >
-
-                  <div className="flex justify-between items-start">
-
-                    <div>
-
-                      <p className="text-2xl font-semibold">
-                        {clase.actividad}
-                      </p>
-
-                      <p className="text-slate-400 text-sm mt-1">
-                        Prof. {clase.profesor}
-                      </p>
-
-                    </div>
-
-                    <div
-                      className="
-                        px-4
-                        py-2
-                        rounded-2xl
-                        text-sm
-                        font-semibold
-                      "
-                      style={{
-                        background: clase.color
-                      }}
-                    >
-                      {clase.horario}
-                    </div>
-
-                  </div>
-
-                  <div className="mt-6">
-
-                    <div className="flex justify-between mb-2">
-
-                      <p className="text-sm text-slate-400">
-                        Cupos
-                      </p>
-
-                      <p
-                        className="
-                          text-sm
-                          font-semibold
-                        "
-                        style={{
-                          color:
-                            clase.cupos <= 0
-                              ? '#f87171'
-                              : clase.cupos <= 3
-                              ? '#facc15'
-                              : '#4ade80'
-                        }}
-                      >
-                        {clase.cupos <= 0
-                          ? 'Sin lugares'
-                          : `${clase.cupos} disponibles`}
-                      </p>
-
-                    </div>
-
-                    <div className="w-full h-2 rounded-full bg-slate-700 overflow-hidden">
-
-                      <div
-                        className="h-2 rounded-full"
-                        style={{
-                          width: `${(clase.cupos / 10) * 100}%`,
-                          background: clase.color
-                        }}
-                      />
-
-                    </div>
-
-                  </div>
-
-                </div>
-              );
-            })}
-
-          </div>
-
-        </div>
-
-        {/* DERECHA */}
-        <div
-          className="
-            flex-1
-            rounded-[34px]
-            p-7
-            border
-            backdrop-blur-xl
-          "
-          style={{
-            background: 'rgba(15,23,42,0.75)',
-            borderColor: 'rgba(255,255,255,0.06)'
-          }}
-        >
-
-          {!claseSeleccionada && (
-
-            <div className="
-              h-full
-              flex
-              flex-col
-              items-center
-              justify-center
-              text-center
-            ">
-
-              <div
-                className="
-                  w-28
-                  h-28
-                  rounded-full
-                  flex
-                  items-center
-                  justify-center
-                  text-5xl
-                  mb-6
-                "
-                style={{
-                  background:
-                    'linear-gradient(135deg,#8A0BD2,#14b8a6)'
-                }}
-              >
-                📅
-              </div>
-
-              <h2 className="text-3xl font-semibold mb-3">
-                Seleccioná una clase
-              </h2>
-
-              <p className="text-slate-400 max-w-sm leading-relaxed">
-                Elegí una actividad del panel izquierdo
-                para comenzar una nueva reserva presencial.
-              </p>
-
-            </div>
-          )}
-
-          {claseSeleccionada && (
-
-            <div>
-
-              {/* TOP */}
-              <div className="flex justify-between items-start mb-8">
-
-                <div>
-
-                  <h2 className="text-4xl font-bold">
-                    {claseSeleccionada.actividad}
-                  </h2>
-
-                  <p className="text-slate-400 mt-2">
-                    Profesor {claseSeleccionada.profesor}
-                  </p>
-
-                </div>
-
-                <div
-                  className="
-                    px-5
-                    py-3
-                    rounded-3xl
-                    text-lg
-                    font-bold
-                  "
-                  style={{
-                    background: claseSeleccionada.color
-                  }}
-                >
-                  {claseSeleccionada.horario}
-                </div>
-
-              </div>
-
-              {/* INFO */}
-              <div className="grid grid-cols-2 gap-4 mb-8">
-
-                <div
-                  className="
-                    rounded-3xl
-                    p-5
-                    border
-                  "
-                  style={{
-                    background: 'rgba(138,11,210,0.10)',
-                    borderColor: 'rgba(138,11,210,0.15)'
-                  }}
-                >
-
-                  <p className="text-xs text-slate-400 mb-2">
-                    HORARIO
-                  </p>
-
-                  <p className="text-2xl font-semibold">
-                    {claseSeleccionada.horario} hs
-                  </p>
-
-                </div>
-
-                <div
-                  className="
-                    rounded-3xl
-                    p-5
-                    border
-                  "
-                  style={{
-                    background: 'rgba(20,184,166,0.10)',
-                    borderColor: 'rgba(20,184,166,0.15)'
-                  }}
-                >
-
-                  <p className="text-xs text-slate-400 mb-2">
-                    CUPOS DISPONIBLES
-                  </p>
-
-                  <p className="text-2xl font-semibold">
-                    {claseSeleccionada.cupos}
-                  </p>
-
-                </div>
-
-              </div>
-
-              {/* BUSCADOR */}
-              <div className="mb-8">
-
-                <p className="text-sm text-slate-300 mb-3">
-                  Buscar cliente
-                </p>
-
-                <input
-                  type="text"
-                  placeholder="Nombre, apellido o email"
-                  className="
-                    w-full
-                    rounded-3xl
-                    px-5
-                    py-4
-                    outline-none
-                    border
-                    transition-all
-                    placeholder:text-slate-500
-                  "
-                  style={{
-                    background: 'rgba(15,23,42,0.7)',
-                    borderColor: 'rgba(255,255,255,0.08)'
-                  }}
-                />
-
-              </div>
-
-              {/* ALERTA */}
-              <div
-                className="
-                  rounded-3xl
-                  p-5
-                  mb-8
-                  border
-                "
-                style={{
-                  background: 'rgba(245,158,11,0.10)',
-                  borderColor: 'rgba(245,158,11,0.15)'
-                }}
-              >
-
-                <p className="font-semibold text-amber-300 mb-1">
-                  ⚠ Cliente con plan vencido
-                </p>
-
-                <p className="text-sm text-amber-100/70">
-                  Debe regularizar el pago para continuar.
-                </p>
-
-              </div>
-
-              {/* PAGOS */}
-              <div className="mb-8">
-
-                <p className="text-sm text-slate-300 mb-3">
-                  Forma de pago
-                </p>
-
-                <div className="grid grid-cols-2 gap-4">
-
-                  <button
-                    className="
-                      py-4
-                      rounded-3xl
-                      font-semibold
-                      transition-all
-                      hover:scale-[1.02]
-                    "
-                    style={{
-                      background:
-                        'linear-gradient(135deg,#8A0BD2,#AF50E5)'
-                    }}
-                  >
-                    Pago total
-                  </button>
-
-                  <button
-                    className="
-                      py-4
-                      rounded-3xl
-                      font-semibold
-                      transition-all
-                      hover:scale-[1.02]
-                    "
-                    style={{
-                      background:
-                        'linear-gradient(135deg,#14b8a6,#0f766e)'
-                    }}
-                  >
-                    Pago con seña
-                  </button>
-
-                </div>
-
-              </div>
-
-              {/* BOTONES */}
-              <div className="flex gap-4">
-
-                <button
-                  className="
-                    flex-1
-                    py-4
-                    rounded-3xl
-                    font-semibold
-                    border
-                    transition-all
-                    hover:bg-white/5
-                  "
-                  style={{
-                    borderColor: 'rgba(255,255,255,0.08)'
-                  }}
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  className="
-                    flex-1
-                    py-4
-                    rounded-3xl
-                    font-bold
-                    text-lg
-                    transition-all
-                    hover:scale-[1.01]
-                  "
-                  style={{
-                    background:
-                      'linear-gradient(135deg,#8A0BD2,#14b8a6)'
-                  }}
-                >
-                  Confirmar reserva
-                </button>
-
-              </div>
-
-            </div>
-          )}
-
-        </div>
-
-      </div>
-
-    </div>
+
+  const [clases,setClases]=useState([]);
+  const [claseSeleccionada,setClaseSeleccionada]= useState(null);
+
+  const [busqueda,setBusqueda]=useState("");
+  const [usuarios,setUsuarios]=useState([]);
+  const [usuarioSeleccionado,setUsuarioSeleccionado]=useState(null);
+
+  const [tipoReserva,setTipoReserva]=useState("INDIVIDUAL");
+  const [tipoPago,setTipoPago]=useState("TOTAL");
+
+  const [resultado,setResultado]=useState(null);
+
+
+
+  //=============================
+  // TRAER CLASES REALES
+  //=============================
+
+  useEffect(()=>{
+
+    const obtenerClases=async()=>{
+
+      try{
+
+        const response=
+        await fetch(
+        "http://localhost:3000/api/clases/todas"
+        );
+
+        const data=
+        await response.json();
+
+        if(data.ok){
+
+          setClases(data.data);
+          console.log(data.data);
+
+        }
+
+      }
+      catch(error){
+
+        console.log(
+        "Error clases:",
+        error
+        );
+
+      }
+
+    }
+
+    obtenerClases();
+
+  },[]);
+
+
+
+  //=============================
+  // BUSCADOR USUARIOS
+  //=============================
+
+  useEffect(()=>{
+
+    const buscarUsuario=async()=>{
+
+      if(busqueda.length<3){
+
+        setUsuarios([]);
+        return;
+
+      }
+
+      try{
+
+        const response=
+        await fetch(
+        `http://localhost:3000/api/usuarios/buscar?query=${busqueda}`
+        );
+
+        const data=
+        await response.json();
+
+        if(data.ok){
+
+          setUsuarios(data.data);
+
+        }
+
+      }
+
+      catch(error){
+
+        console.log(error);
+
+      }
+
+    }
+
+    const timer=
+    setTimeout(
+      buscarUsuario,
+      400
+    );
+
+    return()=>clearTimeout(timer);
+
+  },[busqueda]);
+
+  //
+  // CALCULAR PRÓXIMA OCURRENCIA
+  //
+
+  const obtenerProximaFecha = (diaClase) => {
+
+  const dias = {
+    domingo:0,
+    lunes:1,
+    martes:2,
+    miercoles:3,
+    jueves:4,
+    viernes:5,
+    sabado:6
+  };
+
+  const hoy = new Date();
+
+  const fecha = new Date();
+
+  let diferencia =
+    dias[diaClase.toLowerCase()] -
+    hoy.getDay();
+
+  if(diferencia <= 0){
+    diferencia += 7;
+  }
+
+  fecha.setDate(
+    hoy.getDate()+diferencia
   );
+
+  return fecha
+    .toISOString()
+    .split("T")[0];
+  };
+
+
+
+  //=============================
+  // VERIFICAR
+  //=============================
+
+  const verificarReserva=async()=>{
+
+    try{
+
+      if(!usuarioSeleccionado){
+
+        alert(
+        "Seleccione un usuario"
+        );
+
+        return;
+
+      }
+
+      if(!claseSeleccionada){
+
+        alert(
+        "Seleccione una clase"
+        );
+
+        return;
+
+      }
+
+      let endpoint="";
+      let body={};
+
+      if(
+      tipoReserva==="INDIVIDUAL"
+      ){
+
+        endpoint=
+        "http://localhost:3000/api/reservas/verificar-individual";
+
+        body={
+
+          id_usuario:
+          usuarioSeleccionado.id_usuario,
+
+          id_clase:
+          claseSeleccionada.id_clase,
+
+          fecha_clase:
+          obtenerProximaFecha(
+          claseSeleccionada.dia
+          )
+
+        };
+
+      }
+
+      else{
+
+        const hoy=
+        new Date();
+
+        endpoint=
+        "http://localhost:3000/api/reservas/verificar-mensual";
+
+        body={
+
+          id_usuario:
+          usuarioSeleccionado.id_usuario,
+
+          id_clase:
+          claseSeleccionada.id_clase,
+
+          mes:
+          hoy.getMonth()+1,
+
+          anio:
+          hoy.getFullYear()
+
+        };
+
+      }
+
+      const response=
+      await fetch(
+      endpoint,
+      {
+
+      method:"POST",
+
+      headers:{
+      "Content-Type":
+      "application/json"
+      },
+
+      body:
+      JSON.stringify(body)
+
+      });
+
+      const data=
+      await response.json();
+
+      setResultado(data);
+
+      alert(data.mensaje);
+
+    }
+
+    catch(error){
+
+      console.log(error);
+
+    }
+
+  };
+
+
+
+  //=============================
+  // CONFIRMAR
+  //=============================
+
+  const confirmarReserva=async()=>{
+
+    try{
+
+      let endpoint="";
+      let body={};
+
+      if(
+      tipoReserva==="INDIVIDUAL"
+      ){
+
+        endpoint=
+        "http://localhost:3000/api/reservas/crear";
+
+        body={
+
+          id_usuario:
+          usuarioSeleccionado.id_usuario,
+
+          id_clase:
+          claseSeleccionada.id_clase,
+
+          id_instancia:
+          resultado.id_instancia,
+
+          fecha_clase:
+          obtenerProximaFecha(
+          claseSeleccionada.dia
+          ),
+
+          tipo_pago:
+          tipoPago,
+
+          precio_total:
+          resultado.monto
+
+        };
+
+      }
+
+      else{
+
+        endpoint=
+        "http://localhost:3000/api/reservas/crear-mensual";
+
+        body={
+
+          id_usuario:
+          usuarioSeleccionado.id_usuario,
+
+          id_clase:
+          claseSeleccionada.id_clase,
+
+          fechas:
+          resultado.fechas,
+
+          monto_total:
+          resultado.monto
+
+        };
+
+      }
+
+      const response=
+      await fetch(
+      endpoint,
+      {
+
+      method:"POST",
+
+      headers:{
+      "Content-Type":
+      "application/json"
+      },
+
+      body:
+      JSON.stringify(body)
+
+      });
+
+      const data=
+      await response.json();
+
+      alert(
+      data.mensaje
+      );
+
+    }
+
+    catch(error){
+
+      console.log(error);
+
+    }
+
+  };
+
+
+
+return (
+
+<div
+className="
+min-h-screen
+text-white
+font-[Roboto]
+p-6
+"
+style={{
+background:
+'linear-gradient(135deg,#5B0672 0%,#8A0BD2 50%,#12061b 100%)'
+}}
+>
+
+<div className="flex gap-6">
+
+{/* PANEL IZQUIERDO */}
+
+<div
+className="
+w-[40%]
+rounded-[34px]
+p-6
+backdrop-blur-xl
+"
+style={{
+background:'rgba(255,255,255,.05)'
+}}
+>
+
+<h2
+className="
+text-3xl
+font-bold
+mb-6
+"
+>
+Clases disponibles
+</h2>
+
+<div
+className="
+flex
+flex-col
+gap-4
+"
+>
+
+{clases.map(clase => (
+
+<div
+key={clase.id_clase}
+onClick={()=>
+setClaseSeleccionada(clase)
+}
+className="
+rounded-3xl
+p-5
+cursor-pointer
+transition-all
+"
+style={{
+background:
+claseSeleccionada?.id_clase===clase.id_clase
+? 'rgba(226,206,246,.18)'
+: 'rgba(255,255,255,.04)'
+}}
+>
+
+<img
+src={`http://localhost:3000/uploads/${clase.imagen}`}
+alt={clase.actividad}
+className="
+w-full
+h-40
+rounded-2xl
+object-cover
+mb-4
+"
+onError={(e)=>{
+e.target.style.display='none'
+}}
+/>
+
+<h2
+className="
+text-2xl
+font-bold
+"
+>
+{clase.actividad}
+</h2>
+
+<p className="text-[#E2CEF6]">
+{clase.dia} · {clase.horario?.slice(0,5)} hs
+</p>
+
+<div
+className="
+flex
+justify-between
+mt-4
+"
+>
+
+<p>
+Duración: {clase.duracion} min
+</p>
+
+<p>
+Cupos: {clase.cupo_maximo}
+</p>
+
+</div>
+
+</div>
+
+))}
+
+</div>
+
+</div>
+
+
+{/* PANEL DERECHO */}
+
+<div
+className="
+flex-1
+rounded-[34px]
+p-7
+backdrop-blur-xl
+"
+style={{
+background:'rgba(255,255,255,.05)'
+}}
+>
+
+<h1
+className="
+text-4xl
+font-bold
+mb-6
+"
+>
+Reserva presencial
+</h1>
+
+<input
+placeholder="Username o email"
+value={busqueda}
+onChange={(e)=>
+setBusqueda(e.target.value)
+}
+className="
+w-full
+rounded-3xl
+px-5
+py-4
+text-white
+outline-none
+"
+style={{
+background:'rgba(255,255,255,.06)'
+}}
+/>
+
+
+{usuarios.map(usuario=>(
+
+<div
+key={usuario.id_usuario}
+
+onClick={()=>{
+
+setUsuarioSeleccionado(usuario);
+setBusqueda(usuario.username);
+setUsuarios([]);
+
+}}
+
+className="
+p-4
+mt-2
+rounded-2xl
+cursor-pointer
+"
+
+style={{
+background:'rgba(217,128,249,.15)'
+}}
+>
+
+{usuario.username}
+
+<span className="text-[#E2CEF6]">
+({usuario.email})
+</span>
+
+</div>
+
+))}
+
+
+{usuarioSeleccionado&&(
+
+<div
+className="
+mt-5
+p-4
+rounded-3xl
+"
+style={{
+background:'rgba(138,11,210,.25)'
+}}
+>
+
+Cliente:
+
+<b>
+{usuarioSeleccionado.username}
+</b>
+
+</div>
+
+)}
+
+
+<div className="mt-5">
+
+<select
+
+value={tipoReserva}
+
+onChange={(e)=>
+setTipoReserva(e.target.value)
+}
+
+className="
+w-full
+rounded-3xl
+p-4
+text-white
+"
+
+style={{
+background:'#5B0672'
+}}
+>
+
+<option value="INDIVIDUAL">
+Individual
+</option>
+
+<option value="MENSUAL">
+Mensual
+</option>
+
+</select>
+
+</div>
+
+
+{tipoReserva==="INDIVIDUAL" && (
+
+<div className="mt-5">
+
+<select
+
+value={tipoPago}
+
+onChange={(e)=>
+setTipoPago(e.target.value)
+}
+
+className="
+w-full
+rounded-3xl
+p-4
+text-white
+"
+
+style={{
+background:'#8A0BD2'
+}}
+>
+
+<option value="TOTAL">
+Pago total
+</option>
+
+<option value="SEÑA">
+Pago con seña
+</option>
+
+</select>
+
+</div>
+
+)}
+
+
+<div
+className="
+flex
+gap-4
+mt-8
+"
+>
+
+<button
+
+onClick={verificarReserva}
+
+className="
+flex-1
+py-4
+rounded-3xl
+font-bold
+"
+
+style={{
+background:
+'linear-gradient(135deg,#AF50E5,#8A0BD2)'
+}}
+>
+
+Verificar
+
+</button>
+
+
+{resultado?.ok&&(
+
+<button
+
+onClick={confirmarReserva}
+
+className="
+flex-1
+py-4
+rounded-3xl
+font-bold
+"
+
+style={{
+background:
+'linear-gradient(135deg,#D980F9,#AF50E5)'
+}}
+>
+
+Confirmar
+
+</button>
+
+)}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+);
+
 }

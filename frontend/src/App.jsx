@@ -11,6 +11,7 @@ import CrearClase from "./pages/CrearClase.jsx"
 import AdminPanel from "./pages/AdminPanel.jsx"
 import EditarClase from "./pages/EditarClase.jsx"
 import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
+import ReservaPresencial from "./pages/ReservaPresencial.jsx"
 
 // Ruta protegida para usuarios autenticados
 function RutaProtegida({ children }) {
@@ -65,6 +66,7 @@ function AppContent() {
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
         <Route path="/editar-clase/:id" element={<RutaAdmin><EditarClase /></RutaAdmin>} />
         <Route path="/ver-clases-admin" element={<RutaAdmin><VerClasesAdmin /></RutaAdmin>} />
+        <Route path="/reserva-presencial" element={<RutaAdmin><ReservaPresencial /></RutaAdmin>}/>
         <Route path="/payment-status" element={<PaymentStatus />} />
       </Routes>
     </>
