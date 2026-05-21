@@ -34,8 +34,8 @@ class RegisterRepository {
   async create(cliente) {
     const query = `
       INSERT INTO usuarios
-      (nombre, apellido, username, email, dni, telefono, fecha_nacimiento,password, foto_autorizacion)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (nombre, apellido, username, email, dni, telefono, fecha_nacimiento,password, foto_autorizacion, estado_permiso)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -47,7 +47,8 @@ class RegisterRepository {
       cliente.telefono,
       cliente.fechaNacimiento,
       cliente.password,
-      cliente.permiso || null
+      cliente.permiso || null,
+      cliente.estado_permiso
     ];
 
     const [result] = await this.db.promise().execute(query, values);

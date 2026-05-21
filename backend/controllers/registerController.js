@@ -116,6 +116,13 @@ const register = async (req, res) => {
 
     // verifico edad
     const age = calcularEdad(data.fechaNacimiento);
+    let estado_permiso;
+
+    if (age < 18) {
+      estado_permiso = "pendiente";
+    } else {
+        estado_permiso = "aprobado";
+      }
 
     // que sea mayor d 14 años (escenario 4)
     if (age < 14) {
@@ -163,7 +170,8 @@ const register = async (req, res) => {
       dni: data.dni,
       telefono: data.telefono,
       fechaNacimiento: data.fechaNacimiento,
-      permiso: permisoPath
+      permiso: permisoPath,
+      estado_permiso: estado_permiso
     });
 
     return res.status(201).json({

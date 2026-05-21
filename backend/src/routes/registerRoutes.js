@@ -5,9 +5,19 @@ const multer = require("multer");
 const RegisterController = require("../../controllers/registerController");
 
 // configuración simple de multer
-const upload = multer({
+/*const upload = multer({
     dest: "uploads/"
 });
+*/
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    const ext = file.originalname.split(".").pop();
+    cb(null, Date.now() + "." + ext);
+  }
+});
+
+const upload = multer({ storage });
 
 // POST /api/register
 router.post("/register", upload.single("permiso"), RegisterController.register);
