@@ -16,11 +16,32 @@ import PermisosAdmin from "./pages/PermisosAdmin";
 
 // Ruta protegida para usuarios autenticados
 function RutaProtegida({ children }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />
   }
+  
+  // Bloquear acceso a admins en rutas de usuario regular
+  if (isAdmin) {
+    return <Navigate to="/admin" />
+  }
+  
+  return children
+}
+
+// Ruta protegida para usuarios no admin
+function RutaUsuario({ children }) {
+  const { isAuthenticated, isAdmin } = useAuth()
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+  
+  if (isAdmin) {
+    return <Navigate to="/admin" />
+  }
+  
   return children
 }
 
@@ -60,7 +81,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/actividades" element={<RutaProtegida><Actividades /></RutaProtegida>} />
+        <Route path="/actividades" element={<RutaUsuario><Actividades /></RutaUsuario>} />
 
         {/** Rutas de administración **/}
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />
