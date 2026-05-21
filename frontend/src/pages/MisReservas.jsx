@@ -1,0 +1,281 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import yogaImg     from '../assets/Yoga2.png';
+import pilatesImg  from '../assets/Pilatesmq.png';
+import funcionalImg from '../assets/Funcional.png';
+
+const BASE_URL     = 'http://localhost:3000/api';
+const UPLOADS_URL  = 'http://localhost:3000/uploads';
+const getUsuarioId = () => JSON.parse(localStorage.getItem('user') || '{}')?.id || null;
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto',
+               'Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+const COLORES_CLASE = { yoga:'#4a0560', pilates:'#0d5555', funcional:'#7c2d12' };
+//const EMOJIS_CLASE  = { yoga:'🧘', pilates:'🤸', funcional:'💪' };
+const IMAGENES_CLASE = { yoga: yogaImg, pilates: pilatesImg, funcional: funcionalImg };
+
+// FIX: maneja ISO string, datetime string y date string
+const formatFecha = (valor) => {
+  if (!valor) return '—';
+  const limpio = String(valor).split('T')[0].split(' ')[0];
+  const [anio, mes, dia] = limpio.split('-').map(Number);
+  if (!anio || isNaN(anio) || !mes || !dia) return '—';
+  const d = new Date(anio, mes - 1, dia);
+  return `${DIAS[d.getDay()]} ${dia} de ${MESES[mes - 1]}`;
+};
+
+const getPagoInfo = (r) => {
+  if (r.tipo_reserva === 'mensual') return 'Recurrente';
+  if (r.tipo_pago === 'credito')    return 'Con crédito';
+  if (r.saldo_pendiente)            return 'Pago con seña';
+  return 'Pago total';
+};
+
+const getEstado = (r) => {
+  if (r.estado === 'cancelada')
+    return { label:'Cancelada',         icon:'✕', color:'#ef4444', bg:'rgba(239,68,68,0.12)', desc:'Cancelada por vos' };
+  if (r.estado === 'asistio')
+    return { label:'Asistió',           icon:'✓', color:'#6366f1', bg:'rgba(99,102,241,0.12)', desc:'Clase completada' };
+  if (r.estado === 'pendiente')
+    return { label:'Pendiente de pago', icon:'⏳', color:'#f59e0b', bg:'rgba(245,158,11,0.12)', desc:'pendiente' };
+  if (r.saldo_pendiente)
+    return { label:'Seña pagada',       icon:'🤝', color:'#f97316', bg:'rgba(249,115,22,0.12)', desc:'Saldo pendiente a pagar en el gimnasio' };
+  return   { label:'Confirmada',        icon:'✓', color:'#10b981', bg:'rgba(16,185,129,0.12)', desc: null };
+};
+
+function Countdown() {
+  const [tiempo, setTiempo] = useState('');
+  useEffect(() => {
+    const calc = () => {
+      const ahora = new Date();
+      const vence = new Date(ahora.getFullYear(), ahora.getMonth(), 11, 0, 5, 0);
+      const diff  = vence - ahora;
+      if (diff <= 0) { setTiempo('Vencido'); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTiempo(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <span style={{ fontFamily:'monospace', fontWeight:'bold' }}>{tiempo}</span>;
+}
+
+export default function MisReservas() {
+  const navigate = useNavigate();
+  const [reservas, setReservas]         = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [filtroTipo, setFiltroTipo]     = useState('todos');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+
+  useEffect(() => { cargar(); }, []);
+
+  const cargar = async () => {
+    const id = getUsuarioId();
+    if (!id) return;
+    setLoading(true);
+    try {
+      const data = await fetch(`${BASE_URL}/reservas/usuario/${id}`).then(r => r.json());
+      if (data.ok) setReservas(data.data);
+    } finally { setLoading(false); }
+  };
+
+  const filtradas = reservas.filter(r => {
+    if (filtroTipo !== 'todos' && r.tipo_reserva !== filtroTipo) return false;
+    if (filtroEstado !== 'todos') {
+      const map = {
+        confirmada: r.estado === 'reservada' && !r.saldo_pendiente,
+        sena:       r.estado === 'reservada' && !!r.saldo_pendiente,
+        pendiente:  r.estado === 'pendiente',
+        asistio:    r.estado === 'asistio',
+        cancelada:  r.estado === 'cancelada',
+      };
+      if (!map[filtroEstado]) return false;
+    }
+    return true;
+  });
+
+  const selectStyle = {
+    background:'#1a1a2e', border:'1px solid rgba(255,255,255,0.12)',
+    borderRadius:10, color:'white', padding:'8px 14px',
+    fontSize:13, cursor:'pointer', outline:'none', minWidth:160,
+  };
+
+  return (
+    <div style={{ minHeight:'100vh', background:'#12121f', padding:'32px 40px', fontFamily:'system-ui,sans-serif' }}>
+
+      <button onClick={() => navigate(-1)}
+        style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)',
+          cursor:'pointer', fontSize:13, marginBottom:20, padding:0,
+          display:'flex', alignItems:'center', gap:6 }}>
+        ← Volver
+      </button>
+
+      <h1 style={{ color:'white', fontSize:26, fontWeight:'bold', margin:'0 0 4px' }}>Mis Reservas</h1>
+      <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:'0 0 28px' }}>
+        Administrá tus clases reservadas
+      </p>
+
+      <div style={{ display:'flex', gap:20, marginBottom:28, flexWrap:'wrap' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+          <label style={{ color:'rgba(255,255,255,0.35)', fontSize:10, textTransform:'uppercase', letterSpacing:'0.1em' }}>
+            Tipo de reserva
+          </label>
+          <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} style={selectStyle}>
+            <option value="todos">Todos los tipos</option>
+            <option value="individual">Individual</option>
+            <option value="mensual">Mensual</option>
+          </select>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+          <label style={{ color:'rgba(255,255,255,0.35)', fontSize:10, textTransform:'uppercase', letterSpacing:'0.1em' }}>
+            Estado
+          </label>
+          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} style={selectStyle}>
+            <option value="todos">Todos los estados</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="sena">Seña pagada</option>
+            <option value="pendiente">Pendiente de pago</option>
+            <option value="asistio">Asistió</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+      </div>
+
+      <p style={{ color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600, marginBottom:14 }}>
+        Todas mis reservas
+        <span style={{ color:'rgba(255,255,255,0.25)', fontWeight:'normal', marginLeft:8 }}>({filtradas.length})</span>
+      </p>
+
+      {loading ? (
+        <div style={{ textAlign:'center', paddingTop:80, opacity:0.4 }}>
+          <div style={{ width:38, height:38, border:'3px solid rgba(138,11,210,0.25)',
+            borderTopColor:'#8A0BD2', borderRadius:'50%', margin:'0 auto 12px',
+            animation:'spin 1s linear infinite' }} />
+          <p style={{ color:'white', fontSize:13 }}>Cargando reservas...</p>
+        </div>
+      ) : filtradas.length === 0 ? (
+        <div style={{ textAlign:'center', paddingTop:80, opacity:0.4 }}>
+          <span style={{ fontSize:44, display:'block', marginBottom:12 }}>📭</span>
+          <p style={{ color:'white', fontSize:14 }}>
+            No tenés reservas{filtroTipo !== 'todos' || filtroEstado !== 'todos' ? ' con ese filtro' : ''}.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {filtradas.map(r => {
+            const estado     = getEstado(r);
+            const colorClase = COLORES_CLASE[r.actividad?.toLowerCase()] || '#5B0672';
+            const imgClase = IMAGENES_CLASE[r.actividad?.toLowerCase()] || null;
+            const imagenUrl  = r.imagen ? `${UPLOADS_URL}/${r.imagen}` : null;
+            const puedeCanc  = r.estado === 'reservada' || r.estado === 'pendiente';
+            // Dentro del .map(), antes del return:
+            return (
+              <div key={r.id_reserva}
+                style={{ background:'#1a1a2e', borderRadius:14, overflow:'hidden',
+                  border:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'stretch' }}>
+
+                {/* Imagen */}
+                <div style={{ width:130, flexShrink:0, background:colorClase, position:'relative',
+                  display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+                <img src={imagenUrl || imgClase || ''}
+                    alt={r.actividad}
+                    style={{ width:'100%', height:'100%', objectFit:'cover', position:'absolute', inset:0 }}
+                    onError={e => {
+                    if (imgClase) e.target.src = imgClase;
+                    else e.target.style.display = 'none';
+                    }}
+                />
+                <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)' }} />
+                    <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)' }} />
+                </div>
+
+                {/* Info */}
+                <div style={{ flex:1, padding:'14px 20px', display:'flex',
+                  alignItems:'center', gap:20, flexWrap:'wrap' }}>
+                    {/* Nombre y fecha */}
+                <div style={{ minWidth:190, flex:1 }}>
+                    <div style={{ display:'flex', alignItems:'baseline', gap:12, marginBottom:8 }}>
+                        <p style={{ color:'white', fontWeight:'bold', fontSize:18, margin:0,
+                            textTransform:'capitalize' }}>
+                            {r.actividad}
+                        </p>
+                    <p style={{ color:'rgba(255,255,255,0.6)', fontSize:15, margin:0, fontWeight:500 }}>
+                        {formatFecha(r.fecha_clase)} • {r.horario?.slice(0,5)} hs
+                    </p>
+                    </div>
+                    {(r.nombre_sala || r.nombre_profesor) && (
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        {r.nombre_sala && (
+                        <span style={{ background:'rgba(138,11,210,0.2)', border:'1px solid rgba(138,11,210,0.35)',
+                        color:'#c084fc', fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:6 }}>
+                        🏛️ Sala {r.nombre_sala}
+                        </span>
+                    )}
+                    {r.nombre_profesor && (
+                    <span style={{ background:'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)',
+                        color:'#a5b4fc', fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:6 }}>
+                        👤 Prof. {r.nombre_profesor.split(' ')[0]}
+                    </span>
+                    )}
+                </div>
+            )}
+        </div>
+
+                  {/* Tipo pago */}
+                  <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:130 }}>
+                    <span style={{ fontSize:20, opacity:0.5 }}>📅</span>
+                    <div>
+                      <p style={{ color:'rgba(255,255,255,0.7)', fontSize:13, margin:'0 0 1px',
+                        textTransform:'capitalize', fontWeight:600 }}>
+                        {r.tipo_reserva}
+                      </p>
+                      <p style={{ color:'rgba(255,255,255,0.35)', fontSize:12, margin:0 }}>
+                        {getPagoInfo(r)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Estado */}
+                  <div style={{ minWidth:170 }}>
+                    <div style={{ display:'inline-flex', alignItems:'center', gap:6,
+                      background:estado.bg, color:estado.color, fontSize:12,
+                      fontWeight:'bold', padding:'5px 12px', borderRadius:999, marginBottom:5 }}>
+                      {estado.icon} {estado.label}
+                    </div>
+                    {r.estado === 'pendiente' && (
+                      <p style={{ color:'rgba(255,255,255,0.4)', fontSize:12, margin:0 }}>
+                        Te quedan <Countdown /> para confirmar
+                      </p>
+                    )}
+                    {r.estado !== 'pendiente' && estado.desc && (
+                      <p style={{ color:'rgba(255,255,255,0.3)', fontSize:12, margin:0 }}>{estado.desc}</p>
+                    )}
+                  </div>
+
+                  {/* Cancelar */}
+                  <div style={{ flexShrink:0, minWidth:90 }}>
+                    {puedeCanc && (
+                      <button style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.3)',
+                        color:'#ef4444', borderRadius:10, padding:'8px 16px', fontSize:12,
+                        fontWeight:'bold', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+                        🗑️ Cancelar
+                      </button>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  );
+}
