@@ -10,6 +10,5 @@ console.log("¿Existe validarPago?:", typeof paymentController.validarPago);
 
 // Definición de las rutas
 router.post('/create-preference', paymentController.createPreference);
-router.post('/validar-pago', paymentController.validarPago);
-
+router.get('/payment-status', paymentController.paymentStatus);
 module.exports = router;

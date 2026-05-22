@@ -1,7 +1,7 @@
 const db = require('../db');
 const reservasRepository = require('../../repositories/reservasRepository');
 const ClasesRepository = require('../../repositories/clasesRepository');
-
+const { sendPagoConfirmado } = require('./emailService');// mail de pago
 const reservaIndividualService = {
 
   // ─── PASO A: Verificar disponibilidad ────────────────────────
@@ -19,6 +19,25 @@ const reservaIndividualService = {
     );
     if (userRows.length === 0) throw new Error('El usuario especificado no existe.');
     const creditosDisponibles = userRows[0].creditos || 0;
+  
+    // REGLA DE NEGOCIO:
+      // solo clientes NO abonados pueden pagar individual
+
+    const [mensualRows] = await db.promise().execute(`
+      SELECT id_reserva
+      FROM reservas
+        WHERE id_usuario = ?
+          AND tipo_reserva = 'mensual'
+          AND MONTH(fecha_clase) = MONTH(CURDATE())
+          AND YEAR(fecha_clase) = YEAR(CURDATE())
+        LIMIT 1
+      `, [id_usuario]);
+
+      if (mensualRows.length > 0) {
+        throw new Error(
+          'El usuario ya posee una membresía mensual activa.'
+        );
+      }
 
     // Escenario 10: clase ya iniciada o pasada
     const ahora = new Date();
@@ -104,6 +123,24 @@ const reservaIndividualService = {
     // Escenarios 1 y 2: pago total o seña vía Mercado Pago
     // FIX: tipo_pago en reservas = NULL para pagos con tarjeta (no es 'membresia' ni 'credito')
     await reservasRepository.insertarPago(id_usuario, monto_pagado, 'pagado', 'tarjeta', 'individual');
+    const [usuarioRows] = await db.promise().execute(
+      `
+      SELECT nombre, apellido, email
+      FROM usuarios
+      WHERE id_usuario = ?
+      `,
+      [id_usuario]
+    );
+
+    const usuario = usuarioRows[0];
+
+    await sendPagoConfirmado(
+      usuario.email,
+      `${usuario.nombre} ${usuario.apellido}`,
+      clase.actividad,
+      fecha_clase_str,
+      monto_pagado
+    );
 
     const saldoPendiente = tipo_pago === 'SEÑA' ? 1 : 0;
     const id_reserva = await reservasRepository.insertarReserva(
