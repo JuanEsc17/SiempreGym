@@ -1,6 +1,12 @@
 const serviceMensual    = require('../src/services/reservaMensualService');
 const serviceIndividual = require('../src/services/reservaIndividualService');
 const reservasRepository = require('../repositories/reservasRepository');
+// cambio marian
+const UsuariosRepository = require('../repositories/usuariosRepository');
+const db = require('../src/db');
+
+const userRepo = new UsuariosRepository(db);
+// fin cambio marian
 
 class ReservasController {
 
@@ -19,6 +25,24 @@ class ReservasController {
           mensaje: 'Campos obligatorios: id_clase, id_usuario, mes, anio.'
         });
       }
+
+      // cambio marian: para q menores con permisos no autorizados no puedan reservar 
+      const usuario = await userRepo.buscarPorId(id_usuario);
+
+      if (usuario.estado_permiso === 'pendiente') {
+          return res.status(403).json({
+          ok: false,
+          mensaje: "Debes esperar la aprobación del permiso para reservar"
+        });
+      }
+
+      if (usuario.estado_permiso === 'rechazado') {
+          return res.status(403).json({
+          ok: false,
+          mensaje: "Tu permiso fue rechazado"
+        });
+      }
+      // fin cambio marian
 
       // FIX: llamada correcta al service — pasa mes y anio (no clasesRepo)
       const resultado = await serviceMensual.verificarYPresupuestarMensual(
@@ -103,6 +127,24 @@ class ReservasController {
           mensaje: 'Campos obligatorios: id_usuario, id_clase, fecha_clase.'
         });
       }
+
+      // cambio marian: para que menores con permisos no autorizados no puedan reservar
+      const usuario = await userRepo.buscarPorId(id_usuario);
+
+      if (usuario.estado_permiso === 'pendiente') {
+          return res.status(403).json({
+          ok: false,
+          mensaje: "Debes esperar la aprobación del permiso para reservar"
+        });
+      }
+
+      if (usuario.estado_permiso === 'rechazado') {
+          return res.status(403).json({
+          ok: false,
+          mensaje: "Tu permiso fue rechazado"
+        });
+      }
+      // fin cambio marian
 
       const resultado = await serviceIndividual.verificarYPresupuestarIndividual(
         id_usuario, id_clase, fecha_clase

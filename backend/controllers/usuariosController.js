@@ -34,6 +34,33 @@ const UsuariosController = {
 
     res.status(500).json({ok:false,mensaje:error.message});
     }
+  },
+
+  async getMenoresPendientes(req, res) {
+  try {
+    const data = await repo.getMenoresPendientes();
+    res.json({ ok: true, data });
+  } catch (error) {
+    res.status(500).json({ ok: false, mensaje: error.message });
   }
+},
+
+async aprobarPermiso(req, res) {
+  try {
+    await repo.aprobarPermiso(req.params.id);
+    res.json({ ok: true, mensaje: "Permiso aprobado" });
+  } catch (error) {
+    res.status(500).json({ ok: false, mensaje: error.message });
+  }
+},
+
+async rechazarPermiso(req, res) {
+  try {
+    await repo.rechazarPermiso(req.params.id);
+    res.json({ ok: true, mensaje: "Permiso rechazado" });
+  } catch (error) {
+    res.status(500).json({ ok: false, mensaje: error.message });
+  }
+}
 }
 module.exports = UsuariosController;

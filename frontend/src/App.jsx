@@ -12,15 +12,40 @@ import AdminPanel from "./pages/AdminPanel.jsx"
 import EditarClase from "./pages/EditarClase.jsx"
 import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
 import ReservaPresencial from "./pages/ReservaPresencial.jsx"
+<<<<<<< HEAD
 import MisReservas from './pages/MisReservas';
+=======
+import PermisosAdmin from "./pages/PermisosAdmin";
+>>>>>>> 9db4e6d24e80e5b22a320a51f96a1bf19c543a84
 
 // Ruta protegida para usuarios autenticados
 function RutaProtegida({ children }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />
   }
+  
+  // Bloquear acceso a admins en rutas de usuario regular
+  if (isAdmin) {
+    return <Navigate to="/admin" />
+  }
+  
+  return children
+}
+
+// Ruta protegida para usuarios no admin
+function RutaUsuario({ children }) {
+  const { isAuthenticated, isAdmin } = useAuth()
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+  
+  if (isAdmin) {
+    return <Navigate to="/admin" />
+  }
+  
   return children
 }
 
@@ -60,8 +85,12 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+<<<<<<< HEAD
         <Route path="/actividades" element={<RutaProtegida><Actividades /></RutaProtegida>} />
         <Route path="/mis-reservas" element={<RutaProtegida><MisReservas /></RutaProtegida>} />
+=======
+        <Route path="/actividades" element={<RutaUsuario><Actividades /></RutaUsuario>} />
+>>>>>>> 9db4e6d24e80e5b22a320a51f96a1bf19c543a84
 
         {/** Rutas de administración **/}
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />
@@ -70,6 +99,7 @@ function AppContent() {
         <Route path="/ver-clases-admin" element={<RutaAdmin><VerClasesAdmin /></RutaAdmin>} />
         <Route path="/reserva-presencial" element={<RutaAdmin><ReservaPresencial /></RutaAdmin>}/>
         <Route path="/payment-status" element={<PaymentStatus />} />
+        <Route path="/admin/permisos" element={<PermisosAdmin />} />
       </Routes>
     </>
   )

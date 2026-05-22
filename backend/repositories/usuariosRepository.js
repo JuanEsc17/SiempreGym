@@ -25,6 +25,30 @@ class UsuariosRepository {
 
     return rows;
   }
+
+  async getMenoresPendientes() {
+    const [rows] = await this.db.promise().execute(
+      `SELECT id_usuario, nombre, apellido, email, fecha_nacimiento, foto_autorizacion, estado_permiso
+       FROM usuarios
+       WHERE estado_permiso = 'pendiente'
+       AND TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) < 18`
+    );
+    return rows;
+  }
+
+  async aprobarPermiso(id_usuario) {
+    await this.db.promise().execute(
+      `UPDATE usuarios SET estado_permiso = 'aprobado' WHERE id_usuario = ?`,
+      [id_usuario]
+    );
+  }
+
+  async rechazarPermiso(id_usuario) {
+    await this.db.promise().execute(
+      `UPDATE usuarios SET estado_permiso = 'rechazado' WHERE id_usuario = ?`,
+      [id_usuario]
+    );
+  }
 }
 
 module.exports = UsuariosRepository;
