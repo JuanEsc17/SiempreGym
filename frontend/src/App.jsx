@@ -16,9 +16,9 @@ import MisReservas from './pages/MisReservas'
 import PermisosAdmin from "./pages/PermisosAdmin";
 import EmpleadoPanel from "./pages/EmpleadoPanel"
 
-// Ruta protegida para usuarios autenticados
+// Ruta protegida para usuarios autenticados (solo clientes regulares)
 function RutaProtegida({ children }) {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, isEmpleado } = useAuth()
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />
@@ -29,12 +29,17 @@ function RutaProtegida({ children }) {
     return <Navigate to="/admin" />
   }
   
+  // Bloquear acceso a empleados en rutas de cliente
+  if (isEmpleado) {
+    return <Navigate to="/empleado" />
+  }
+  
   return children
 }
 
-// Ruta protegida para usuarios no admin
+// Ruta protegida para usuarios no admin y no empleado (solo clientes)
 function RutaUsuario({ children }) {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, isEmpleado } = useAuth()
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />
@@ -42,6 +47,10 @@ function RutaUsuario({ children }) {
   
   if (isAdmin) {
     return <Navigate to="/admin" />
+  }
+  
+  if (isEmpleado) {
+    return <Navigate to="/empleado" />
   }
   
   return children

@@ -4,7 +4,7 @@ import gymImage from "../assets/hero.png"
 
 export default function Home() {
   const navigate = useNavigate()
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, isEmpleado } = useAuth()
 
   return (
     <div className="min-h-screen bg-white">
@@ -24,6 +24,13 @@ export default function Home() {
                     className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
                   >
                     Panel Admin
+                  </button>
+                ) : isEmpleado ? (
+                  <button
+                    onClick={() => navigate("/empleado")}
+                    className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
+                  >
+                    Panel Empleado
                   </button>
                 ) : (
                   <button
