@@ -15,6 +15,7 @@ export default function PaymentStatus() {
   const [exito, setExito] = useState(null);
 
   const status = searchParams.get('status');
+  const status_detail = searchParams.get('status_detail');
 
   useEffect(() => {
 
@@ -23,58 +24,64 @@ export default function PaymentStatus() {
 
     async function confirmarReserva() {
 
-      // ─────────────────────────────
-      // Pago rechazado o pendiente
-      // ─────────────────────────────
-      if (status !== 'approved') {
-
-        setExito(false);
-
-        setMensaje(
-          'El pago no fue aprobado.'
-        );
-
-        sessionStorage.removeItem('pendingReserva');
-
-        setLoading(false);
-
-        return;
-      }
-
-      // ─────────────────────────────
-      // Buscar reserva pendiente
-      // ─────────────────────────────
-      const pendingData =
-        sessionStorage.getItem('pendingReserva');
-
-      if (!pendingData) {
-
-        setExito(false);
-
-        setMensaje(
-          'No se encontró una reserva pendiente.'
-        );
-
-        setLoading(false);
-
-        return;
-      }
-
       try {
 
-        const pending = JSON.parse(pendingData);
+        // ─────────────────────────────
+        // 1. CANCELADO / NO APROBADO
+        // ─────────────────────────────
+        if (!status || status === 'null' || status === 'cancelled') {
 
-        let url;
-        let body;
+          setExito(false);
+          setMensaje('Operación cancelada');
+          setLoading(false);
+          return;
+        }
 
         // ─────────────────────────────
-        // Reserva individual
+        // 2. RECHAZADO POR FONDOS
         // ─────────────────────────────
-        if (pending.tipo === 'individual') {
+        if (
+          status === 'rejected' &&
+          status_detail === 'cc_rejected_insufficient_amount'
+        ) {
 
-          url = `${BASE_URL}/reservas/crear`;
+          setExito(false);
+          setMensaje('La cuenta no tiene fondos suficientes, reintente');
+          setLoading(false);
+          return;
+        }
 
-          body = {
+        // ─────────────────────────────
+        // 3. PAGO PENDIENTE
+        // ─────────────────────────────
+        if (status === 'pending') {
+
+          setExito(false);
+          setMensaje('El pago quedó pendiente de aprobación');
+          setLoading(false);
+          return;
+        }
+
+        // ─────────────────────────────
+        // 4. PAGO EXITOSO
+        // ─────────────────────────────
+        if (status === 'approved') {
+
+          const pendingData =
+            sessionStorage.getItem('pendingReserva');
+
+          if (!pendingData) {
+
+            setExito(false);
+            setMensaje('No se encontró la reserva pendiente');
+            setLoading(false);
+            return;
+          }
+
+          const pending = JSON.parse(pendingData);
+
+          let url = `${BASE_URL}/reservas/crear`;
+          let body = {
             id_usuario: pending.id_usuario,
             id_clase: pending.id_clase,
             id_instancia: pending.id_instancia,
@@ -83,64 +90,45 @@ export default function PaymentStatus() {
             precio_total: pending.precio_total
           };
 
-        } else {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          });
 
-          // ─────────────────────────────
-          // Reserva mensual
-          // ─────────────────────────────
-          url = `${BASE_URL}/reservas/crear-mensual`;
+          const resultado = await response.json();
 
-          body = {
-            id_usuario: pending.id_usuario,
-            id_clase: pending.id_clase,
-            fechas: pending.fechas,
-            monto_total: pending.monto_total
-          };
-        }
+          if (!response.ok) {
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(body)
-        });
-
-        const resultado = await response.json();
-
-        if (resultado.ok) {
+            setExito(false);
+            setMensaje(resultado?.mensaje || 'No se pudo registrar la reserva');
+            setLoading(false);
+            return;
+          }
 
           setExito(true);
-
-          setMensaje(
-            resultado.mensaje ||
-            'Reserva confirmada correctamente.'
-          );
+          setMensaje(resultado?.mensaje || 'Pago realizado con éxito');
 
           sessionStorage.removeItem('pendingReserva');
-
-        } else {
-
-          setExito(false);
-
-          setMensaje(
-            resultado.mensaje ||
-            'No se pudo registrar la reserva.'
-          );
+          setLoading(false);
+          return;
         }
+
+        // ─────────────────────────────
+        // fallback general
+        // ─────────────────────────────
+        setExito(false);
+        setMensaje('No se pudo procesar el pago');
+        setLoading(false);
 
       } catch (error) {
 
         console.error(error);
 
         setExito(false);
-
-        setMensaje(
-          'Ocurrió un error al registrar la reserva.'
-        );
-
-      } finally {
-
+        setMensaje('Error de conexión con el servidor');
         setLoading(false);
       }
     }
@@ -180,9 +168,7 @@ export default function PaymentStatus() {
             </span>
 
             <h2 className="text-xl font-semibold mb-3 text-white">
-              {exito
-                ? '¡Pago exitoso!'
-                : 'Hubo un problema'}
+              {exito ? '¡Pago exitoso!' : 'Hubo un problema'}
             </h2>
 
             <p className="text-sm opacity-80 mb-6 text-white leading-relaxed">
@@ -191,7 +177,7 @@ export default function PaymentStatus() {
 
             <button
               onClick={() => navigate('/actividades')}
-              className="w-full py-3 rounded-xl text-white font-medium text-sm border-none cursor-pointer transition-all"
+              className="w-full py-3 rounded-xl text-white font-medium text-sm"
               style={{ background: '#14b8a6' }}
             >
               Volver a Actividades
