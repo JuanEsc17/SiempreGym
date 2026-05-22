@@ -13,7 +13,6 @@ import EditarClase from "./pages/EditarClase.jsx"
 import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
 import ReservaPresencial from "./pages/ReservaPresencial.jsx"
 import MisReservas from './pages/MisReservas'
-import PermisosAdmin from "./pages/PermisosAdmin"
 import PermisosAdmin from "./pages/PermisosAdmin";
 import EmpleadoPanel from "./pages/EmpleadoPanel"
 
