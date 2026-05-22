@@ -4,7 +4,7 @@ import gymImage from "../assets/hero.png"
 
 export default function Home() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
 
   return (
     <div className="min-h-screen bg-white">
@@ -18,12 +18,21 @@ export default function Home() {
             </p>
             <div className="flex gap-4">
               {isAuthenticated ? (
-                <button
-                  onClick={() => navigate("/actividades")}
-                  className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
-                >
-                  Ver Actividades
-                </button>
+                isAdmin ? (
+                  <button
+                    onClick={() => navigate("/admin")}
+                    className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
+                  >
+                    Panel Admin
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate("/actividades")}
+                    className="px-8 py-3 rounded-lg bg-white text-[#5B0672] font-bold text-lg hover:bg-[#E2CEF6] transition-colors"
+                  >
+                    Ver Actividades
+                  </button>
+                )
               ) : (
                 <>
                   <button
