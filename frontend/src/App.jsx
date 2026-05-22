@@ -14,6 +14,8 @@ import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
 import ReservaPresencial from "./pages/ReservaPresencial.jsx"
 import MisReservas from './pages/MisReservas'
 import PermisosAdmin from "./pages/PermisosAdmin"
+import PermisosAdmin from "./pages/PermisosAdmin";
+import EmpleadoPanel from "./pages/EmpleadoPanel"
 
 // Ruta protegida para usuarios autenticados
 function RutaProtegida({ children }) {
@@ -56,6 +58,31 @@ function RutaAdmin({ children }) {
   return children
 }
 
+// ruta para empleados
+function RutaEmpleado({ children }) {
+  const { user, isAuthenticated, isLoading } = useAuth()
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Cargando...</p>
+      </div>
+    )
+  }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+  if (
+    user.rol !== "empleado" &&
+    user.rol !== "admin"
+  ) {
+    return <Navigate to="/" />
+  }
+  return children
+}
+
 function AppContent() {
   const { isLoading } = useAuth()
   const location = useLocation()
@@ -89,12 +116,15 @@ function AppContent() {
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
         <Route path="/editar-clase/:id" element={<RutaAdmin><EditarClase /></RutaAdmin>} />
-        <Route path="/ver-clases-admin" element={<RutaAdmin><VerClasesAdmin /></RutaAdmin>} />
-        <Route path="/reserva-presencial" element={<RutaAdmin><ReservaPresencial /></RutaAdmin>}/>
+        <Route path="/ver-clases-admin" element={<RutaEmpleado><VerClasesAdmin /></RutaEmpleado>} />
+        <Route path="/reserva-presencial" element={<RutaEmpleado><ReservaPresencial /></RutaEmpleado>}/>
         <Route path="/payment-status" element={<PaymentStatus />} />
         <Route path="/admin/permisos" element={<PermisosAdmin />} />
+
+        {/** Rutas para empleado */}
+        <Route path="/empleado" element={<RutaEmpleado><EmpleadoPanel /></RutaEmpleado>}/>
       </Routes>
-    </>
+      </>
   )
 }
 

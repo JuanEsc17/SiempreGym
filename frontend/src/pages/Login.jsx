@@ -27,6 +27,7 @@ export default function Login() {
   const getRedirectPath = (rol) => {
     if (rol === "cliente") return "/actividades"
     if (rol === "admin") return "/admin"
+    if (rol === "empleado") return "/empleado" // agrego para empleado (marian)
     return "/"
   }
 

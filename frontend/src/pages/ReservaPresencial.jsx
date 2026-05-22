@@ -275,6 +275,8 @@ export default function ReservaPresencial() {
 
   const confirmarReserva=async()=>{
 
+    console.log("RESULTADO VERIFICAR:", resultado);
+
     try{
 
       let endpoint="";
