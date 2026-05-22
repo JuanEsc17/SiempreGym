@@ -47,6 +47,25 @@ function Sidebar({ isOpen, setIsOpen }) {
     </div>
   );
 }*/
+//Modicacion alert
+function Toast({ mensaje, onClose }) {
+  useEffect(() => {
+    const id = setTimeout(onClose, 4000);
+    return () => clearTimeout(id);
+  }, []);
+  return (
+    <div style={{
+      position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)',
+      background:'#1e1e2e', border:'1px solid rgba(16,185,129,0.4)',
+      borderLeft:'4px solid #10b981', borderRadius:14, padding:'14px 20px',
+      color:'white', fontSize:14, fontWeight:500, zIndex:9999,
+      boxShadow:'0 8px 32px rgba(0,0,0,0.4)', maxWidth:400, textAlign:'center',
+      animation:'slideUp 0.3s ease'
+    }}>
+      ✅ {mensaje}
+    </div>
+  );
+}
 
 // ─── DateSelector ─────────────────────────────────────────────────
 // Ahora trackea el Date real, no solo el nombre del día
@@ -81,37 +100,55 @@ function DateSelector({ fechaSeleccionada, onSeleccionar }) {
 }
 
 // ─── ClaseCard ────────────────────────────────────────────────────
-function ClaseCard({ clase, onReservar }) {
-  const img            = IMAGENES_CLASE[clase.actividad?.toLowerCase()] || funcionalImg;
+function ClaseCard({ clase, fechaSeleccionada, onReservar }) {
+  const img         = IMAGENES_CLASE[clase.actividad?.toLowerCase()] || funcionalImg;
   const cuposLibres = clase.cupos_disponibles ?? 0;
-  const estaLlena      = cuposLibres === 0;
-  const pct            = Math.round((cuposLibres/clase.cupo_maximo)*100);
-  const colorBarra     = pct>50?'#4ade80':pct>20?'#f59e0b':'#f87171';
-  const borderColor    = estaLlena ? '#f59e0b' : '#8A0BD2';
-  const overlayColor   = estaLlena ? 'rgba(146,64,14,0.55)' : 'rgba(0,0,0,0.58)';
-  const overlayHover   = estaLlena ? 'rgba(146,64,14,0.35)' : 'rgba(0,0,0,0.38)';
+  const estaLlena   = cuposLibres === 0;
+  const pct         = Math.round((cuposLibres / clase.cupo_maximo) * 100);
+  const colorBarra  = pct > 50 ? '#4ade80' : pct > 20 ? '#f59e0b' : '#f87171';
+
+  const ahora      = new Date();
+  const hoyISO     = fechaISO(ahora);
+  const fechaClase = fechaISO(fechaSeleccionada);
+  let yaInicio = false;
+  if (fechaClase < hoyISO) {
+    yaInicio = true;
+  } else if (fechaClase === hoyISO) {
+    const [h, m]   = clase.horario.split(':').map(Number);
+    const minClase = h * 60 + m;
+    const minAhora = ahora.getHours() * 60 + ahora.getMinutes();
+    yaInicio = minAhora >= minClase;
+  }
+
+  const borderColor  = yaInicio ? '#374151' : estaLlena ? '#f59e0b' : '#8A0BD2';
+  const overlayColor = yaInicio ? 'rgba(0,0,0,0.65)' : estaLlena ? 'rgba(146,64,14,0.55)' : 'rgba(0,0,0,0.58)';
 
   return (
-    <div onClick={onReservar}
-         className="group rounded-2xl overflow-hidden flex h-36 cursor-pointer transition-all duration-300 shadow-xl hover:scale-[1.02] relative"
-         style={{ background:'#252535', borderLeft:`5px solid ${borderColor}` }}>
+    <div
+      onClick={yaInicio ? undefined : onReservar}
+      className={`group rounded-2xl overflow-hidden flex h-36 transition-all duration-300 shadow-xl relative
+        ${yaInicio ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}`}
+      style={{ background:'#252535', borderLeft:`5px solid ${borderColor}` }}>
 
-      {/* Badge lista de espera */}
-      {estaLlena && (
+      {yaInicio && (
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
+             style={{background:'#374151', color:'#9ca3af'}}>
+          🔒 Clase iniciada
+        </div>
+      )}
+      {!yaInicio && estaLlena && (
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
              style={{background:'#f59e0b', color:'#451a00'}}>
           ⏳ Lista de espera
         </div>
       )}
 
-      {/* Columna tiempo */}
       <div className="flex flex-col justify-center px-4 min-w-[96px] flex-shrink-0 bg-black/20">
         <span className="text-[9px] uppercase tracking-widest text-white/40">{clase.dia}</span>
         <span className="text-2xl font-bold text-white">{clase.horario?.slice(0,5)}</span>
         <span className="text-[10px] text-white/40">{clase.duracion} min</span>
       </div>
 
-      {/* Imagen + info */}
       <div className="flex-1 relative overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center transition-all"
              style={{ backgroundImage:`url(${img})` }}>
@@ -121,7 +158,7 @@ function ClaseCard({ clase, onReservar }) {
         <div className="relative z-10 p-4 h-full flex flex-col justify-between">
           <div>
             <h3 className="text-xl font-bold text-white capitalize m-0 leading-tight drop-shadow">{clase.actividad}</h3>
-            {estaLlena && (
+            {estaLlena && !yaInicio && (
               <span className="text-[9px] text-amber-300 mt-0.5 block">Tocá para anotarte</span>
             )}
           </div>
@@ -181,7 +218,7 @@ function OpcionPago({ icono, titulo, subtitulo, precio, seleccionado, onClick, d
 }
 
 // ─── ModalDetalle ─────────────────────────────────────────────────
-function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa }) {
+function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, onToast }) {
   const [modo, setModo]             = useState('INDIVIDUAL');
   const [paso, setPaso]             = useState('cargando');
   // 'cargando' | 'seleccionar_pago' | 'preview_mensual' | 'lista_espera' | 'lista_espera_mensual' | 'error'
@@ -259,7 +296,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa }) 
           precio_total: 0
         })
       });
-      if (data.ok) { alert(data.mensaje); onReservaExitosa(); }
+      if (data.ok) { onToast(data.mensaje); onReservaExitosa(); }
       else { setErrorMsg(data.mensaje); setPaso('error'); }
       return;
     }
@@ -330,13 +367,21 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa }) 
     setProcesando(true);
     try {
       const ep = modo==='INDIVIDUAL' ? `${BASE_URL}/reservas/lista-espera` : `${BASE_URL}/reservas/lista-espera-mensual`;
-      const body = { id_usuario: getUsuarioId(), id_clase: clase.id_clase,
-        ...(modo==='INDIVIDUAL'?{fecha_clase:fechaISO(fechaSeleccionada)}:{mes:fechaSeleccionada.getMonth()+1, anio:fechaSeleccionada.getFullYear()}) };
+      const body = {
+        id_usuario: getUsuarioId(), id_clase: clase.id_clase,
+        ...(modo === 'INDIVIDUAL'
+          ? { fecha_clase: fechaISO(fechaSeleccionada) }
+          : { mes: fechaSeleccionada.getMonth()+1, anio: fechaSeleccionada.getFullYear() })
+      };
       const data = await apiFetch(ep, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-      if (data.ok) { alert(data.mensaje||'¡Anotado a la lista de espera!'); onReservaExitosa(); }
+      if (data.ok) { onToast(data.mensaje || '¡Anotado a la lista de espera!'); onReservaExitosa(); }
       else { setErrorMsg(data.mensaje); setPaso('error'); }
-    } catch { setErrorMsg('Error al anotarse'); setPaso('error'); }
-    finally { setProcesando(false); }
+    } catch {
+      setErrorMsg('Error al anotarse');
+      setPaso('error');
+    } finally {
+      setProcesando(false);
+    }
   };
 
   // ── Render del contenido según el paso ──
@@ -560,6 +605,8 @@ export default function Actividades() {
   const [fechaSeleccionada, setFechaSelec]    = useState(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; });
   const [diaSeleccionado, setDiaSel]          = useState(NOMBRES_DIAS[new Date().getDay()]);
   const [creditos, setCreditos]            = useState(null);
+  const [toast, setToast] = useState(null);
+  const mostrarToast = (msg) => setToast(msg);
 
   useEffect(()=>{ cargarClases(); }, [fechaSeleccionada]);
 
@@ -696,7 +743,7 @@ export default function Actividades() {
         ) : clases.length>0 ? (
           <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
             {clases.map(c=>(
-              <ClaseCard key={c.id_clase} clase={c} onReservar={()=>setClaseSelec(c)} />
+              <ClaseCard key={c.id_clase} clase={c} fechaSeleccionada={fechaSeleccionada} onReservar={()=>setClaseSelec(c)} />
             ))}
           </div>
         ) : (
@@ -713,8 +760,16 @@ export default function Actividades() {
           fechaSeleccionada={fechaSeleccionada}
           onCerrar={()=>setClaseSelec(null)}
           onReservaExitosa={()=>{ setClaseSelec(null); cargarClases(); }}
+          onToast={mostrarToast}
         />
       )}
+      {toast && <Toast mensaje={toast} onClose={() => setToast(null)} />}
+      <style>{`
+          @keyframes slideUp {
+          from { opacity:0; transform:translateX(-50%) translateY(20px); }
+          to   { opacity:1; transform:translateX(-50%) translateY(0); }
+          }
+      `}</style>
     </div>
   );
 }
