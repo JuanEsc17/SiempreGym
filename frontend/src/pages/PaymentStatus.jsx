@@ -67,7 +67,7 @@ export default function PaymentStatus() {
         // ─────────────────────────────
         if (status === 'approved') {
 
-          const pendingData = sessionStorage.getItem('pendingReserva');
+          const pendingData = localStorage.getItem('pendingReserva');
 
           if (!pendingData) {
             setExito(false);
@@ -143,7 +143,7 @@ export default function PaymentStatus() {
             : 'Reserva creada con éxito'
         );
 
-          sessionStorage.removeItem('pendingReserva');
+          localStorage.removeItem('pendingReserva');
           setLoading(false);
           return;
         }

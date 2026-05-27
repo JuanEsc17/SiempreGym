@@ -305,8 +305,8 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
     if (modo === 'INDIVIDUAL') {
       const montoACobrar = tipoPago === 'SEÑA' ? montoPrecio / 2 : montoPrecio;
 
-      // Guardamos en sessionStorage para recuperarlo en PaymentStatus después del pago
-      sessionStorage.setItem('pendingReserva', JSON.stringify({
+      // Guardamos en localStorage para recuperarlo en PaymentStatus después del pago
+      localStorage.setItem('pendingReserva', JSON.stringify({
         tipo: 'individual',
         id_usuario,
         id_clase: clase.id_clase,
@@ -334,7 +334,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
     // ══ FLUJO 3: Mensual con tarjeta — redirige a MP ══
     if (modo === 'MENSUAL') {
       
-      sessionStorage.setItem("pendingReserva", JSON.stringify({
+      localStorage.setItem("pendingReserva", JSON.stringify({
           tipo: 'mensual',
           id_usuario,
           id_clase:clase.id_clase,
