@@ -76,7 +76,7 @@ class ReservasController {
     try {
       const { id_usuario, id_clase, fechas, monto_total } = req.body;
 
-      if (!id_usuario || !id_clase || !fechas || !Array.isArray(fechas) || fechas.length === 0 || !monto_total) {
+      if (!id_usuario || !id_clase || !fechas || !Array.isArray(fechas) || fechas.length === 0 || monto_total == null) { // cambié !monto_total por monto_total == null porq sino no tomaba el 0
         return res.status(400).json({
           ok: false,
           mensaje: 'Campos obligatorios: id_usuario, id_clase, fechas (array), monto_total.'
@@ -97,6 +97,32 @@ class ReservasController {
       return res.status(500).json({ ok: false, mensaje: error.message });
     }
   }
+
+  // cambio marian: método para reserva mensual presencial
+  async crearReservaMensualPresencial(req,res){
+    try{
+      const {
+        id_usuario,
+        id_clase,
+        fechas,
+        monto_total
+      }=req.body;
+
+      const resultado=await serviceMensual.crearReservaMensualPresencial(id_usuario,id_clase,fechas,parseFloat(monto_total));
+
+      return res.status(200).json({
+        ok:true,
+        mensaje:`Reserva mensual presencial creada`
+      }); 
+
+    } catch(error){
+
+        return res.status(500).json({
+          ok:false,
+          mensaje:error.message
+        });
+      }
+  } // fin cambio marian
 
   async confirmarListaEsperaMensual(req, res) {
     try {

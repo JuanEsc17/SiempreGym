@@ -12,6 +12,10 @@ router.post('/verificar-mensual', (req, res) => ctrl.verificarReservaMensual(req
 //    Body: { id_usuario, id_clase, fechas: [...], monto_total }
 router.post('/crear-mensual', (req, res) => ctrl.crearReservaMensual(req, res));
 
+// marian presencial
+router.post('/crear-mensual-presencial',(req,res)=>ctrl.crearReservaMensualPresencial(req,res));
+// fin marian
+
 //  Ingresar a lista de espera mensual
 //    Body: { id_usuario, id_clase }
 router.post('/lista-espera-mensual', (req, res) => ctrl.confirmarListaEsperaMensual(req, res));
