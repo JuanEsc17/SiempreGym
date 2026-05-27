@@ -133,6 +133,75 @@ const reservaMensualService = {
     }
   },
 
+  // ─── Reservar mensual presencial (cambio marian) ──────────────
+  crearReservaMensualPresencial: async (id_usuario, id_clase, fechasArray, monto_total) => {
+
+    const clasesRepo = new ClasesRepository(db);
+
+    const clase = await clasesRepo.obtenerClasePorId(id_clase);
+
+    if(!clase){
+      throw new Error('Clase inexistente');
+    }
+
+    await db.promise().execute(
+      `INSERT INTO pagos
+      (id_usuario,monto,estado,metodo,tipo)
+      VALUES(?,?,?,?,?)`,
+      [
+        id_usuario,
+        monto_total,
+        'pagado',
+        'efectivo', // todas las presenciales quedan conefectivo VER
+        'mensual'
+      ]
+    );
+
+    for(const fecha_clase_str of fechasArray){
+
+    const fechaExactaStr= `${fecha_clase_str} ${clase.horario}`;
+
+    let instancia= await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
+
+    if(!instancia){
+
+      const [insResult]=
+      await db.promise().execute(
+      `INSERT INTO instancias_clases
+      (id_clase,fecha_exacta)
+      VALUES (?,?)`,
+      [
+        id_clase,
+        fechaExactaStr
+      ]
+      );
+
+      instancia={
+       id_instancia:
+       insResult.insertId
+      };
+    }
+
+    await reservasRepository.insertarReserva(
+      id_usuario,
+      id_clase,
+      instancia.id_instancia,
+      "reservada",
+      "mensual",
+      null,
+      fecha_clase_str,
+      0
+    );
+  }
+
+  return{
+   success:true,
+   reservasCreadas:
+   fechasArray.length
+  };
+
+}, // fin cambio marian
+
   // ─── PASO C: Ingresar a lista de espera mensual ──────────────
   ingresarListaEsperaMensual: async (id_usuario, id_clase) => {
     const yaEsta = await reservasRepository.verificarYaEnListaEspera(id_usuario, id_clase, 'mensual');

@@ -318,7 +318,7 @@ export default function ReservaPresencial() {
       else{
 
         endpoint=
-        "http://localhost:3000/api/reservas/crear-mensual";
+        "http://localhost:3000/api/reservas/crear-mensual-presencial";
 
         body={
 
