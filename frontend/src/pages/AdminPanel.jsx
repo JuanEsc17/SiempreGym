@@ -33,17 +33,6 @@ export default function AdminPanel() {
               <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Ver y editar clases</p>
             </div>
           </div>
-          <div onClick={() => navigate("/reserva-presencial")}
-            className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
-            style={{background:'#AF50E5'}}>
-            <span className="text-3xl">📅</span>
-            <div>
-              <p className="text-white font-medium">Reserva presencial</p>
-              <p
-                className="text-xs mt-1"
-                style={{color:'rgba(255,255,255,0.6)'}}>Registrar reservas para clientes</p>
-            </div>
-          </div>
 
           <div onClick={() => navigate("/admin/permisos")}
             className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"

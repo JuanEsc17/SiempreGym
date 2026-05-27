@@ -49,6 +49,7 @@ export function AuthProvider({ children }) {
 
   const isAuthenticated = !!token && !!user
   const isAdmin = user?.rol === "admin"
+  const isEmpleado = user?.rol === "empleado"
 
   return (
     <AuthContext.Provider value={{
@@ -57,6 +58,7 @@ export function AuthProvider({ children }) {
       isLoading,
       isAuthenticated,
       isAdmin,
+      isEmpleado,
       login,
       logout
     }}>

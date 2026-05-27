@@ -13,11 +13,12 @@ import EditarClase from "./pages/EditarClase.jsx"
 import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
 import ReservaPresencial from "./pages/ReservaPresencial.jsx"
 import MisReservas from './pages/MisReservas'
-import PermisosAdmin from "./pages/PermisosAdmin"
+import PermisosAdmin from "./pages/PermisosAdmin";
+import EmpleadoPanel from "./pages/EmpleadoPanel"
 
-// Ruta protegida para usuarios autenticados
+// Ruta protegida para usuarios autenticados (solo clientes regulares)
 function RutaProtegida({ children }) {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, isEmpleado } = useAuth()
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />
@@ -28,12 +29,17 @@ function RutaProtegida({ children }) {
     return <Navigate to="/admin" />
   }
   
+  // Bloquear acceso a empleados en rutas de cliente
+  if (isEmpleado) {
+    return <Navigate to="/empleado" />
+  }
+  
   return children
 }
 
-// Ruta protegida para usuarios no admin
+// Ruta protegida para usuarios no admin y no empleado (solo clientes)
 function RutaUsuario({ children }) {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, isEmpleado } = useAuth()
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />
@@ -41,6 +47,10 @@ function RutaUsuario({ children }) {
   
   if (isAdmin) {
     return <Navigate to="/admin" />
+  }
+  
+  if (isEmpleado) {
+    return <Navigate to="/empleado" />
   }
   
   return children
@@ -52,6 +62,31 @@ function RutaAdmin({ children }) {
   
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to="/login" />
+  }
+  return children
+}
+
+// ruta para empleados
+function RutaEmpleado({ children }) {
+  const { user, isAuthenticated, isLoading } = useAuth()
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Cargando...</p>
+      </div>
+    )
+  }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />
+  }
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+  if (
+    user.rol !== "empleado" &&
+    user.rol !== "admin"
+  ) {
+    return <Navigate to="/" />
   }
   return children
 }
@@ -89,12 +124,15 @@ function AppContent() {
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
         <Route path="/editar-clase/:id" element={<RutaAdmin><EditarClase /></RutaAdmin>} />
-        <Route path="/ver-clases-admin" element={<RutaAdmin><VerClasesAdmin /></RutaAdmin>} />
-        <Route path="/reserva-presencial" element={<RutaAdmin><ReservaPresencial /></RutaAdmin>}/>
+        <Route path="/ver-clases-admin" element={<RutaEmpleado><VerClasesAdmin /></RutaEmpleado>} />
+        <Route path="/reserva-presencial" element={<RutaEmpleado><ReservaPresencial /></RutaEmpleado>}/>
         <Route path="/payment-status" element={<PaymentStatus />} />
         <Route path="/admin/permisos" element={<PermisosAdmin />} />
+
+        {/** Rutas para empleado */}
+        <Route path="/empleado" element={<RutaEmpleado><EmpleadoPanel /></RutaEmpleado>}/>
       </Routes>
-    </>
+      </>
   )
 }
 
