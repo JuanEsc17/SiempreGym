@@ -86,53 +86,49 @@ const reservaMensualService = {
   // ─── PASO B: Crear todas las reservas del mes (post-pago) ────
   // FIX: nombre correcto del método (el controller llamaba a 'crearReserva' que no existía)
   crearReservaMensual: async (id_usuario, id_clase, fechasArray, monto_total) => {
-    const clasesRepo = new ClasesRepository(db);
-    const clase = await clasesRepo.obtenerClasePorId(id_clase);
-    if (!clase) throw new Error('La clase seleccionada no existe.');
+  const clasesRepo = new ClasesRepository(db);
+  const clase = await clasesRepo.obtenerClasePorId(id_clase);
 
-    const connection = await db.promise().getConnection();
-    try {
-      await connection.beginTransaction();
+  if (!clase) {
+    throw new Error('La clase seleccionada no existe.');
+  }
 
-      // Un único pago para todo el mes
-      await connection.execute(
-        'INSERT INTO pagos (id_usuario, monto, estado, metodo, tipo) VALUES (?, ?, ?, ?, ?)',
-        [id_usuario, monto_total, 'pagado', 'tarjeta', 'mensual']
-      );
+  // 1. Insertar pago (igual que individual)
+  await db.promise().execute(
+    'INSERT INTO pagos (id_usuario, monto, estado, metodo, tipo) VALUES (?, ?, ?, ?, ?)',
+    [id_usuario, monto_total, 'pagado', 'tarjeta', 'mensual']
+  );
 
-      // Una reserva por cada fecha del mes
-      for (const fecha_clase_str of fechasArray) {
-        const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
+  // 2. Crear reservas una por una
+  for (const fecha_clase_str of fechasArray) {
 
-        let instancia = await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
-        if (!instancia) {
-          const [insResult] = await connection.execute(
-            'INSERT INTO instancias_clases (id_clase, fecha_exacta) VALUES (?, ?)',
-            [id_clase, fechaExactaStr]
-          );
-          instancia = { id_instancia: insResult.insertId };
-        }
+    const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
 
-        // FIX: tipo_pago = NULL para pagos con tarjeta (enum solo acepta 'membresia'|'credito')
-        await connection.execute(
-          `INSERT INTO reservas
-             (id_usuario, id_clase, id_instancia, estado, tipo_reserva, tipo_pago, fecha_clase)
-           VALUES (?, ?, ?, 'reservada', 'mensual', NULL, ?)`,
-          [id_usuario, id_clase, instancia.id_instancia, fecha_clase_str]
-        );
-      }
+    // obtener o crear instancia
+    let instancia = await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
 
-      await connection.commit();
-      return { success: true, reservasCreadas: fechasArray.length };
-
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
+    if (!instancia) {
+      const nuevoId = await reservasRepository.crearInstanciaClase(id_clase, fechaExactaStr);
+      instancia = { id_instancia: nuevoId };
     }
-  },
 
+    // insertar reserva
+    await reservasRepository.insertarReserva(
+      id_usuario,
+      id_clase,
+      instancia.id_instancia,
+      'reservada',
+      'mensual',
+      null,          // tipo_pago (NULL como ya lo venías usando)
+      fecha_clase_str
+    );
+  }
+
+  return {
+    success: true,
+    reservasCreadas: fechasArray.length
+  };
+},
   // ─── PASO C: Ingresar a lista de espera mensual ──────────────
   ingresarListaEsperaMensual: async (id_usuario, id_clase) => {
     const yaEsta = await reservasRepository.verificarYaEnListaEspera(id_usuario, id_clase, 'mensual');

@@ -142,10 +142,25 @@ const reservaIndividualService = {
       monto_pagado
     );
 
-    const saldoPendiente = tipo_pago === 'SEÑA' ? 1 : 0;
-    const id_reserva = await reservasRepository.insertarReserva(
-      id_usuario, id_clase, id_instancia, 'reservada', 'individual', null, fecha_clase_str, saldoPendiente
-    );
+    const saldoPendiente =
+      tipo_pago === 'SEÑA' ? 1 : 0;
+
+    const tipoPagoReserva =
+      tipo_pago === 'SEÑA'
+        ? 'seña'
+        : 'total';
+
+    const id_reserva =
+      await reservasRepository.insertarReserva(
+        id_usuario,
+        id_clase,
+        id_instancia,
+        'reservada',
+        'individual',
+        tipoPagoReserva,
+        fecha_clase_str,
+        saldoPendiente
+      );
 
     return { success: true, id_reserva, saldoPendiente };
   },

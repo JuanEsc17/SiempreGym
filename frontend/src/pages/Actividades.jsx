@@ -333,27 +333,30 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
 
     // ══ FLUJO 3: Mensual con tarjeta — redirige a MP ══
     if (modo === 'MENSUAL') {
-      sessionStorage.setItem('pendingReserva', JSON.stringify({
-        tipo: 'mensual',
-        id_usuario,
-        id_clase: clase.id_clase,
-        fechas: datosMensual.fechas,
-        monto_total: datosMensual.monto
-      }));
+      
+      sessionStorage.setItem("pendingReserva", JSON.stringify({
+          tipo: 'mensual',
+          id_usuario,
+          id_clase:clase.id_clase,
+          fechas: datosMensual.fechas,
+          precio_total: datosMensual.monto
+        }));
 
       const pref = await apiFetch(`${BASE_URL}/payments/create-preference`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tipoPago: 'mensual',
-          descripcion: `Reserva Mensual - ${clase.actividad}`,
-          precio: datosMensual.monto,
-          id_usuario,
-          id_clase: clase.id_clase
-        })
-      });
-      window.location.href = pref.init_point;
-    }
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      tipoPago: 'mensual',
+      descripcion: `Reserva Mensual - ${clase.actividad}`,
+      precio: datosMensual.monto,
+      id_usuario,
+      id_clase:clase.id_clase//
+
+    })
+  });
+
+  window.location.href = pref.init_point;
+}
 
   } catch {
     setErrorMsg('Error al procesar la solicitud');

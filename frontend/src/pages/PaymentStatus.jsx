@@ -67,30 +67,57 @@ export default function PaymentStatus() {
         // ─────────────────────────────
         if (status === 'approved') {
 
-          const pendingData =
-            sessionStorage.getItem('pendingReserva');
+          const pendingData = sessionStorage.getItem('pendingReserva');
 
           if (!pendingData) {
-
             setExito(false);
-            setMensaje('No se encontró la reserva pendiente');
+            setMensaje('No se encontró la operación pendiente');
             setLoading(false);
             return;
           }
 
           const pending = JSON.parse(pendingData);
 
-          let url = `${BASE_URL}/reservas/crear`;
-          let body = {
-            id_usuario: pending.id_usuario,
-            id_clase: pending.id_clase,
-            id_instancia: pending.id_instancia,
-            fecha_clase: pending.fecha_clase,
-            tipo_pago: pending.tipo_pago,
-            precio_total: pending.precio_total
-          };
+          let url = '';
+          let body = {};
 
+          // ─────────────────────────────
+          // 🟢 CASO 1: SUSCRIPCIÓN MENSUAL
+          // ─────────────────────────────
+          if (pending.tipo === 'mensual') {
+
+            url = `${BASE_URL}/reservas/crear-mensual`;//bver esto
+             body = {
+              id_usuario: pending.id_usuario,
+              id_clase: pending.id_clase,
+              fechas: pending.fechas,
+              monto_total: pending.precio_total
+            };
+        }
+
+          // ─────────────────────────────
+          // 🔵 CASO 2: INDIVIDUAL
+          // ─────────────────────────────
+          else {
+
+            url = `${BASE_URL}/reservas/crear`;
+
+            body = {
+              id_usuario: pending.id_usuario,
+              id_clase: pending.id_clase,
+              id_instancia: pending.id_instancia,
+              fecha_clase: pending.fecha_clase,
+              tipo_pago: pending.tipo_pago,
+              precio_total: pending.precio_total
+            };
+
+          }
+          console.log('BODY MENSUAL:', body);//
+          // ─────────────────────────────
+          // 🔁 REQUEST UNIFICADO
+          // ─────────────────────────────
           const response = await fetch(url, {
+
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -103,19 +130,23 @@ export default function PaymentStatus() {
           if (!response.ok) {
 
             setExito(false);
-            setMensaje(resultado?.mensaje || 'No se pudo registrar la reserva');
+            setMensaje(resultado?.mensaje || 'No se pudo procesar el pago');
             setLoading(false);
             return;
           }
 
           setExito(true);
-          setMensaje(resultado?.mensaje || 'Pago realizado con éxito');
+
+          setMensaje(
+          pending.tipo === 'mensual'
+            ? 'Suscripción mensual activada con éxito'
+            : 'Reserva creada con éxito'
+        );
 
           sessionStorage.removeItem('pendingReserva');
           setLoading(false);
           return;
         }
-
         // ─────────────────────────────
         // fallback general
         // ─────────────────────────────

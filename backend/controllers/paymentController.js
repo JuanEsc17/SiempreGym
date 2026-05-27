@@ -93,7 +93,7 @@ const createPreference = async (req, res) => {
 const paymentStatus = async (req, res) => {
 
   try {
-
+    console.log("aca")
     const {
       status,
       status_detail,
