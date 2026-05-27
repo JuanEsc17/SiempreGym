@@ -61,13 +61,13 @@ const createPreference = async (req, res) => {
 
         back_urls: {
           success:
-            "https://bucktooth-unnamed-survey.ngrok-free.dev/payment-status",
+            `${process.env.NGROK_URL}/payment-status`,
 
           failure:
-            "https://bucktooth-unnamed-survey.ngrok-free.dev/payment-status",
+            `${process.env.NGROK_URL}/payment-status`,
 
           pending:
-            "https://bucktooth-unnamed-survey.ngrok-free.dev/payment-status"
+            `${process.env.NGROK_URL}/payment-status`
         }
       }
     });

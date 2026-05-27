@@ -142,11 +142,11 @@ const reservaIndividualService = {
       monto_pagado
     );
 
-    const saldoPendiente =
-      tipo_pago === 'SEÑA' ? 1 : 0;
+    const esSeña = tipo_pago && tipo_pago.toLowerCase() === 'sena';
+    
+    const saldoPendiente = esSeña ? 1 : 0;
 
-    const tipoPagoReserva =
-      tipo_pago === 'SEÑA'
+    const tipoPagoReserva = esSeña
         ? 'seña'
         : 'total';
 

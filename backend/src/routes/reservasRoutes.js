@@ -13,7 +13,7 @@ router.post('/verificar-mensual', (req, res) => ctrl.verificarReservaMensual(req
 router.post('/crear-mensual', (req, res) => ctrl.crearReservaMensual(req, res));
 
 // marian presencial
-router.post('/crear-mensual-presencial',(req,res)=>ctrl.crearReservaMensualPresencial(req,res));
+router.post('/crear-mensual',(req,res)=>ctrl.crearReservaMensual(req,res));
 // fin marian
 
 //  Ingresar a lista de espera mensual

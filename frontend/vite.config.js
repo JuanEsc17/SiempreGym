@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-
 export default defineConfig({
   plugins: [
     react(),
@@ -10,7 +9,7 @@ export default defineConfig({
 
   server: {
     allowedHosts: [
-      'bucktooth-unnamed-survey.ngrok-free.dev'
+      'swirl-reclining-bling.ngrok-free.dev'
     ]
   }
 })
