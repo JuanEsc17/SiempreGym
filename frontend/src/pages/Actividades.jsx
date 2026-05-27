@@ -504,7 +504,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
           <p style={{color:'rgba(255,255,255,0.55)', fontSize:'13px', lineHeight:'1.6', marginBottom:'16px'}}>
             {esMensual
               ? 'Algunas clases del período no tienen cupos. Te notificamos si se libera disponibilidad completa.'
-              : 'Si alguien cancela, te avisamos y tendrás 24 horas para confirmar el pago y asegurar tu lugar.'}
+              : 'Si alguien cancela, te avisamos y tendrás hasta el inicio de la clase para asegurar tu lugar.'}
           </p>
           <div className="rounded-xl p-3 text-left"
                style={{background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)'}}>

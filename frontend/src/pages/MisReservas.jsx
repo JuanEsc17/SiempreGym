@@ -27,10 +27,11 @@ const formatFecha = (valor) => {
 };
 
 const getPagoInfo = (r) => {
-  if (r.tipo_reserva === 'mensual') return 'Recurrente';
+  if (r.tipo_reserva === 'mensual') return 'Membresía';
   if (r.tipo_pago === 'credito')    return 'Con crédito';
-  if (r.saldo_pendiente)            return 'Pago con seña';
-  return 'Pago total';
+  if (r.tipo_pago === 'seña')       return 'Pago con seña';
+  if (r.tipo_pago === 'total')      return 'Pago total';
+  return r.tipo_pago || 'Pago total';
 };
 
 const getEstado = (r) => {
@@ -40,9 +41,16 @@ const getEstado = (r) => {
     return { label:'Asistió',           icon:'✓', color:'#6366f1', bg:'rgba(99,102,241,0.12)', desc:'Clase completada' };
   if (r.estado === 'pendiente')
     return { label:'Pendiente de pago', icon:'⏳', color:'#f59e0b', bg:'rgba(245,158,11,0.12)', desc:'pendiente' };
-  if (r.saldo_pendiente)
-    return { label:'Seña pagada',       icon:'🤝', color:'#f97316', bg:'rgba(249,115,22,0.12)', desc:'Saldo pendiente a pagar en el gimnasio' };
-  return   { label:'Confirmada',        icon:'✓', color:'#10b981', bg:'rgba(16,185,129,0.12)', desc: null };
+  // Seña pagada con saldo pendiente
+  if (r.tipo_pago === 'seña' && r.saldo_pendiente)
+    return { label:'Seña pagada',       icon:'🤝', color:'#f97316', bg:'rgba(249,115,22,0.12)', desc:'Saldo pendiente a completar' };
+  // Pago con crédito
+  if (r.tipo_pago === 'credito')
+    return { label:'Confirmada',icon:'✓', color:'#10b981', bg:'rgba(16,185,129,0.12)', desc:'Reserva confirmada' };
+  // Pago total
+  if (r.tipo_pago === 'total')
+    return { label:'Confirmada',        icon:'✓', color:'#10b981', bg:'rgba(16,185,129,0.12)', desc:'Reserva confirmada' };
+  return   { label:'Confirmada',        icon:'✓', color:'#10b981', bg:'rgba(16,185,129,0.12)', desc: 'Reserva confirmada' };
 };
 
 function Countdown() {
@@ -83,6 +91,53 @@ export default function MisReservas() {
       if (data.ok) setReservas(data.data);
     } finally { setLoading(false); }
   };
+
+  const completarPagoSena = async (reserva) => {
+  if (!reserva.id_reserva || !reserva.id_clase) {
+    alert('Faltan datos de la reserva');
+    return;
+  }
+
+  // Calcular precio del saldo pendiente
+  const precioTotal = reserva.precio_individual || 0;
+  const mitadPrecio = precioTotal / 2;
+
+  try {
+    // Guardar en localStorage para después del pago en MP
+    localStorage.setItem('pendingReserva', JSON.stringify({
+      tipo: 'individual',
+      id_usuario: getUsuarioId(),
+      id_clase: reserva.id_clase,
+      id_instancia: reserva.id_instancia,
+      fecha_clase: reserva.fecha_clase,
+      tipo_pago: 'seña',
+      precio_total: mitadPrecio,
+      id_reserva: reserva.id_reserva // Para actualizar la reserva existente
+    }));
+
+    // Crear preferencia en Mercado Pago
+    const pref = await fetch(`${BASE_URL}/payments/create-preference`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipoPago: 'sena',
+        descripcion: `${reserva.actividad} - Saldo pendiente ${formatFecha(reserva.fecha_clase)}`,
+        precio: mitadPrecio,
+        id_usuario: getUsuarioId(),
+        id_clase: reserva.id_clase
+      })
+    }).then(r => r.json());
+
+    if (pref.init_point) {
+      window.location.href = pref.init_point;
+    } else {
+      alert('Error al procesar el pago');
+    }
+  } catch (error) {
+    console.error('Error al completar pago:', error);
+    alert('Error al procesar la solicitud');
+  }
+};
 
   const filtradas = reservas.filter(r => {
     if (filtroTipo !== 'todos' && r.tipo_reserva !== filtroTipo) return false;
@@ -257,16 +312,27 @@ export default function MisReservas() {
                     )}
                   </div>
 
-                  {/* Cancelar */}
-                  <div style={{ flexShrink:0, minWidth:90 }}>
-                    {puedeCanc && (
-                      <button style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.3)',
-                        color:'#ef4444', borderRadius:10, padding:'8px 16px', fontSize:12,
-                        fontWeight:'bold', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-                        🗑️ Cancelar
-                      </button>
-                    )}
-                  </div>
+                  {/* Acciones */}
+                  <div style={{ flexShrink:0, minWidth:90, display:'flex', gap:6, flexDirection:'column' }}>
+                  {/* Botón completar pago seña */}
+                  {r.tipo_pago === 'seña' && r.saldo_pendiente && r.estado === 'reservada' && (
+                  <button 
+                      onClick={() => completarPagoSena(r)}
+                      style={{ background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.3)',
+                      color:'#22c55e', borderRadius:10, padding:'8px 12px', fontSize:11,
+                      fontWeight:'bold', cursor:'pointer', display:'flex', alignItems:'center', gap:4, justifyContent:'center' }}>
+                    💳 Completar pago
+                </button>
+                  )}
+                  {/* Botón cancelar */}
+                  {puedeCanc && (
+                <button style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.3)',
+                    color:'#ef4444', borderRadius:10, padding:'8px 16px', fontSize:12,
+                    fontWeight:'bold', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+                    🗑️ Cancelar
+                </button>
+                )}
+                </div>
 
                 </div>
               </div>

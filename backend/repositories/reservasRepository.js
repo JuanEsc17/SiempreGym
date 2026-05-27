@@ -96,18 +96,19 @@ const reservasRepository = {
   // ─── HISTORIAL ────────────────────────────────────────────────
   getReservasPorUsuario: async (id_usuario) => {
   const [rows] = await db.promise().execute(
-    `SELECT r.*,
-            c.actividad, c.dia, c.horario, c.duracion, c.imagen,
-            CONCAT(u.nombre, ' ', u.apellido) AS nombre_profesor,
-            s.nombre AS nombre_sala
-     FROM reservas r
-     JOIN      clases   c ON r.id_clase    = c.id_clase
-     LEFT JOIN usuarios u ON c.id_profesor = u.id_usuario
-     LEFT JOIN salas    s ON c.id_sala     = s.id_sala
-     WHERE r.id_usuario = ?
-     ORDER BY r.fecha_clase DESC`,
-    [id_usuario]
-  );
+  `SELECT r.id_reserva, r.id_usuario, r.id_clase, r.id_instancia, r.tipo_reserva, 
+          r.estado, r.tipo_pago, r.saldo_pendiente, r.fecha_reserva, r.fecha_clase,
+          c.actividad, c.dia, c.horario, c.duracion, c.imagen, c.precio_individual,
+          CONCAT(u.nombre, ' ', u.apellido) AS nombre_profesor,
+          s.nombre AS nombre_sala
+  FROM reservas r
+  JOIN clases c ON r.id_clase = c.id_clase
+  LEFT JOIN usuarios u ON c.id_profesor = u.id_usuario
+  LEFT JOIN salas s ON c.id_sala = s.id_sala
+  WHERE r.id_usuario = ?
+  ORDER BY r.fecha_clase DESC`,
+  [id_usuario]
+);
   return rows;
   },
 };
