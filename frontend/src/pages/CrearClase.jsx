@@ -131,8 +131,6 @@ export default function CrearClase() {
     id_profesor: '',
     id_sala: '',
   });
-  const [imagen, setImagen] = useState(null);
-  const [imagenPreview, setImagenPreview] = useState(null);
   const [errores, setErrores] = useState({});
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -140,6 +138,14 @@ export default function CrearClase() {
   const [salas, setSalas] = useState([]);
   const [cargandoDatos, setCargandoDatos] = useState(true);
   const navigate = useNavigate();
+
+  // Mapeo de actividades a imágenes predeterminadas
+  const imagenesActividades = {
+    yoga: 'Yoga2.png',
+    pilates: 'Pilatesmq.png',
+    funcional: 'Funcional.png'
+  };
+
   // ── Cargar profesores y salas ──
   useEffect(() => {
     async function cargar() {
@@ -174,29 +180,6 @@ export default function CrearClase() {
     if (errores[name]) setErrores(prev => ({ ...prev, [name]: null }));
   }
 
-  // ── Cambio de imagen ──
-  function handleImagen(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!FORMATOS_VALIDOS.includes(file.type)) {
-      setErrores(prev => ({ ...prev, imagen: 'La imagen no es de un formato válido (jpg, png, gif, webp)' }));
-      setImagen(null);
-      setImagenPreview(null);
-      return;
-    }
-    if (file.size > MAX_IMG_MB * 1024 * 1024) {
-      setErrores(prev => ({ ...prev, imagen: `La imagen supera el tamaño máximo permitido de ${MAX_IMG_MB} MB` }));
-      setImagen(null);
-      setImagenPreview(null);
-      return;
-    }
-
-    setErrores(prev => ({ ...prev, imagen: null }));
-    setImagen(file);
-    setImagenPreview(URL.createObjectURL(file));
-  }
-
   // ── Validación frontend ──
   function validar() {
     const e = {};
@@ -215,7 +198,6 @@ export default function CrearClase() {
     }
     if (!form.id_profesor) e.id_profesor = 'Seleccioná un profesor';
     if (!form.id_sala) e.id_sala = 'Seleccioná una sala';
-    if (!imagen) e.imagen = 'La imagen es obligatoria';
     return e;
   }
 
@@ -232,7 +214,10 @@ export default function CrearClase() {
     try {
       const formData = new FormData();
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
-      formData.append('imagen', imagen);
+      
+      // Asignar imagen automática según actividad
+      const nombreImagen = imagenesActividades[form.actividad];
+      formData.append('imagen', nombreImagen);
 
       const res = await axios.post(`${BASE_URL}/clases/crear`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -241,8 +226,6 @@ export default function CrearClase() {
       if (res.data.ok) {
         setToast({ mensaje: 'Clase creada exitosamente', tipo: 'exito' });
         setForm({ actividad: '', dia: '', horario: '', duracion: '', cupo_maximo: '', id_profesor: '', id_sala: '' });
-        setImagen(null);
-        setImagenPreview(null);
         setErrores({});
       } else {
         setToast({ mensaje: res.data.mensaje, tipo: 'error' });
@@ -377,55 +360,7 @@ export default function CrearClase() {
             </StyledSelect>
           </Campo>
 
-          {/* Imagen */}
-          <Campo label="Imagen de la clase" error={errores.imagen}>
-            <label
-              htmlFor="imagen-input"
-              className="flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all hover:opacity-80"
-              style={{
-                background: '#2d2d3a',
-                border: errores.imagen ? '1px solid #f87171' : '1px dashed rgba(255,255,255,0.2)',
-                borderRadius: '10px',
-              }}
-            >
-              {imagenPreview ? (
-                <>
-                  <img
-                    src={imagenPreview}
-                    alt="preview"
-                    className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                  />
-                  <div>
-                    <p className="text-sm text-white font-medium">{imagen.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      {(imagen.size / (1024 * 1024)).toFixed(2)} MB — click para cambiar
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(138,11,210,0.2)' }}>
-                    <span className="text-2xl">🖼️</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-white">Subir imagen</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      JPG, PNG, GIF, WEBP · Máx. {MAX_IMG_MB} MB
-                    </p>
-                  </div>
-                </>
-              )}
-            </label>
-            <input
-              id="imagen-input"
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-              onChange={handleImagen}
-            />
-          </Campo>
-
-          <div className="grid grid-cols-2 gap-4 mt-2">
+          <div className="grid grid-cols-2 gap-4 mt-8">
             <button
               type="button"
               onClick={() => navigate('/admin')}
