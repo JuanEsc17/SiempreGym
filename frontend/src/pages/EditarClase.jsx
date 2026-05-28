@@ -160,6 +160,16 @@ export default function EditarClase() {
     if (errores[name]) setErrores(prev => ({ ...prev, [name]: null }));
   }
 
+  // ── Validar solo números y guión en duración y cupo ──
+  function handleNumericInput(e) {
+    const char = String.fromCharCode(e.which);
+    // Permitir: números (0-9) y guión (-)
+    // No permitir: punto (.), coma (,) y otros caracteres
+    if (!/[0-9\-]/.test(char)) {
+      e.preventDefault();
+    }
+  }
+
   // Mapeo de actividades a imágenes predeterminadas
   const imagenesActividades = {
     yoga: 'Yoga2.png',
@@ -295,6 +305,7 @@ export default function EditarClase() {
                 min="1"
                 value={form.duracion}
                 onChange={handleChange}
+                onKeyPress={handleNumericInput}
                 error={errores.duracion}
               />
             </Campo>
@@ -307,6 +318,7 @@ export default function EditarClase() {
                 min="1"
                 value={form.cupo_maximo}
                 onChange={handleChange}
+                onKeyPress={handleNumericInput}
                 error={errores.cupo_maximo}
               />
             </Campo>
