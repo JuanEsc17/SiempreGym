@@ -31,10 +31,10 @@ const ClasesController = {
 
     async crearClase(req, res) {
     try {
-        const { actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala } = req.body;
-        //console.log('body:', req.body)  // ← agregá esto
-        //console.log('file:', req.file)  // ← y esto
-        if (!req.file) {
+        const { actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala, imagen } = req.body;
+        
+        // La imagen ahora viene como nombre (string) desde el frontend, no como archivo subido
+        if (!imagen) {
             return res.status(400).json({ ok: false, mensaje: 'Debe proporcionar una imagen' });
         }
 
@@ -46,7 +46,7 @@ const ClasesController = {
             cupo_maximo: parseInt(cupo_maximo),
             id_profesor: parseInt(id_profesor),
             id_sala: parseInt(id_sala),
-            imagen: req.file.filename
+            imagen: imagen
         };
 
         const resultado = await service.crearClase(datos);
@@ -89,7 +89,7 @@ async obtenerClasePorId(req, res) {
 //el real editar clases
 async editarClase(req, res) {
     try {
-        const { actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala } = req.body;
+        const { actividad, dia, horario, duracion, cupo_maximo, id_profesor, id_sala, imagen } = req.body;
 
         const datos = {
             actividad,
@@ -99,7 +99,7 @@ async editarClase(req, res) {
             cupo_maximo: parseInt(cupo_maximo),
             id_profesor: parseInt(id_profesor),
             id_sala: parseInt(id_sala),
-            imagen: req.file ? req.file.filename : null
+            imagen: imagen || null
         };
 
         const resultado = await service.editarClase(req.params.id, datos);
