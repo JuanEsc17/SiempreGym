@@ -1,6 +1,7 @@
 const db = require('../db');
 const ClasesRepository = require('../../repositories/clasesRepository');
 const reservasRepository = require('../../repositories/reservasRepository');
+const { sendPagoConfirmado } = require('./emailService');
 
 // ─── Helper: fechas del mes para un día de semana dado ───────────
 // Recibe el nombre del día ('lunes', 'martes'...), el mes (1-12) y el año.
@@ -29,7 +30,7 @@ const reservaMensualService = {
   // ─── PASO A: Verificar disponibilidad y calcular precio ──────
   // FIX: recibe mes + anio (no fechasArray) y los calcula internamente.
   // El controller solo pasa id_usuario, id_clase, mes, anio desde el body del request.
-  verificarYPresupuestarMensual: async (id_usuario, id_clase, mes, anio) => {
+  verificarYPresupuestarMensual: async (id_usuario, id_clase, mes, anio) => {// falta verificar los primeros 10 dias 
     const clasesRepo = new ClasesRepository(db);
 
     const clase = await clasesRepo.obtenerClasePorId(id_clase);
@@ -99,6 +100,27 @@ const reservaMensualService = {
     [id_usuario, monto_total, 'pagado', 'tarjeta', 'mensual']
   );
 
+  const [usuarioRows] = await db.promise().execute(
+    `
+      SELECT nombre, apellido, email
+      FROM usuarios
+      WHERE id_usuario = ?
+    `,
+    [id_usuario]
+  );
+
+  const usuario = usuarioRows[0];
+  if (usuario) {
+    await sendPagoConfirmado(
+      usuario.email,
+      `${usuario.nombre} ${usuario.apellido}`,
+      clase.actividad,
+      fechasArray[0] || 'Próximas clases mensuales',
+      monto_total,
+      'Suscripción mensual'
+    );
+  }
+
   // 2. Crear reservas una por una
   for (const fecha_clase_str of fechasArray) {
 
@@ -119,7 +141,7 @@ const reservaMensualService = {
       instancia.id_instancia,
       'reservada',
       'mensual',
-    'total',          // tipo_pago (NULL como ya lo venías usando)
+      null,          // tipo_pago (NULL como ya lo venías usando)
       fecha_clase_str
     );
   }

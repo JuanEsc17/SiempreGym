@@ -54,7 +54,8 @@ const sendPagoConfirmado = async ( // envio de mail confirmacion de pago
   nombre,
   actividad,
   fechaClase,
-  monto
+  monto,
+  tipoReserva = 'Reserva'
 ) => {
 
   try {
@@ -63,7 +64,7 @@ const sendPagoConfirmado = async ( // envio de mail confirmacion de pago
       from: process.env.EMAIL_USER,
       to: email,
 
-      subject: 'Pago confirmado - SiempreGym',
+      subject: `${tipoReserva} confirmado - SiempreGym`,
 
       html: `
         <div style="font-family: Arial, sans-serif; background:#f5f5f5; padding:20px;">
@@ -81,7 +82,7 @@ const sendPagoConfirmado = async ( // envio de mail confirmacion de pago
             <p>Hola <b>${nombre}</b>,</p>
 
             <p>
-              Tu pago fue registrado correctamente.
+              Tu pago de <strong>${tipoReserva}</strong> fue registrado correctamente.
             </p>
 
             <div style="background:#f3f3f3; padding:15px; border-radius:8px; margin-top:20px;">
@@ -100,8 +101,12 @@ const sendPagoConfirmado = async ( // envio de mail confirmacion de pago
 
             </div>
 
+            <p style="margin-top:15px;">
+              Este email funciona como comprobante de pago.
+            </p>
+
             <p style="margin-top:25px;">
-              Te esperamos en la clase 💪
+              Gracias por elegir SiempreGym. 💪
             </p>
 
           </div>

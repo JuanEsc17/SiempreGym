@@ -137,11 +137,11 @@ export default function PaymentStatus() {
 
           setExito(true);
 
-          setMensaje(
-          pending.tipo === 'mensual'
-            ? 'Suscripción mensual activada con éxito'
-            : 'Reserva creada con éxito'
-        );
+          if (pending.tipo === 'individual' && pending.tipo_pago === 'SEÑA') {
+            setMensaje('Clase señada con éxito');
+          } else {
+            setMensaje('Pago realizado con éxito');
+          }
 
           localStorage.removeItem('pendingReserva');
           setLoading(false);
@@ -151,7 +151,7 @@ export default function PaymentStatus() {
         // fallback general
         // ─────────────────────────────
         setExito(false);
-        setMensaje('No se pudo procesar el pago');
+        setMensaje('El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
         setLoading(false);
 
       } catch (error) {
@@ -159,7 +159,7 @@ export default function PaymentStatus() {
         console.error(error);
 
         setExito(false);
-        setMensaje('Error de conexión con el servidor');
+        setMensaje('El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
         setLoading(false);
       }
     }

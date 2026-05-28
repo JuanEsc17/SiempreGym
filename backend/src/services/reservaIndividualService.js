@@ -139,7 +139,8 @@ const reservaIndividualService = {
       `${usuario.nombre} ${usuario.apellido}`,
       clase.actividad,
       fecha_clase_str,
-      monto_pagado
+      monto_pagado,
+      tipo_pago && tipo_pago.toLowerCase() === 'sena' ? 'Pago de seña' : 'Reserva individual'
     );
 
     const esSeña = tipo_pago && tipo_pago.toLowerCase() === 'sena';

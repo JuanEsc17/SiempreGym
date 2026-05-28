@@ -9,7 +9,7 @@ export default defineConfig({
 
   server: {
     allowedHosts: [
-      'swirl-reclining-bling.ngrok-free.dev'
+      'bucktooth-unnamed-survey.ngrok-free.dev'
     ]
   }
 })

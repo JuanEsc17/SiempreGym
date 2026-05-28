@@ -86,7 +86,7 @@ const createPreference = async (req, res) => {
 
     return res.status(500).json({
       error:
-        "No se pudo iniciar el pago"
+        "El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde"
     });
   }
 };

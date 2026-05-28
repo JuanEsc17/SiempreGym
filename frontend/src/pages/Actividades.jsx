@@ -327,6 +327,13 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
           id_clase: clase.id_clase
         })
       });
+
+      if (!pref || pref.error || !pref.init_point) {
+        setErrorMsg(pref?.error || 'El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
+        setPaso('error');
+        return;
+      }
+
       window.location.href = pref.init_point; // redirige a Mercado Pago
       return;
     }
@@ -343,23 +350,28 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
         }));
 
       const pref = await apiFetch(`${BASE_URL}/payments/create-preference`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      tipoPago: 'mensual',
-      descripcion: `Reserva Mensual - ${clase.actividad}`,
-      precio: datosMensual.monto,
-      id_usuario,
-      id_clase:clase.id_clase//
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipoPago: 'mensual',
+          descripcion: `Reserva Mensual - ${clase.actividad}`,
+          precio: datosMensual.monto,
+          id_usuario,
+          id_clase: clase.id_clase
+        })
+      });
 
-    })
-  });
+      if (!pref || pref.error || !pref.init_point) {
+        setErrorMsg(pref?.error || 'El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
+        setPaso('error');
+        return;
+      }
 
-  window.location.href = pref.init_point;
+      window.location.href = pref.init_point;
 }
 
   } catch {
-    setErrorMsg('Error al procesar la solicitud');
+    setErrorMsg('El servicio para realizar el pago está interrumpido momentáneamente, reintente más tarde');
     setPaso('error');
   } finally {
     setProcesando(false);
