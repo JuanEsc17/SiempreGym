@@ -61,20 +61,50 @@ class ClasesRepository {
     return rows.length > 0;
   }
 
-  async profesorOcupado(id_profesor, dia, horario, id_clase_excluir) {
-    const [rows] = await this.db.promise().execute(
-        `SELECT id_clase FROM clases WHERE id_profesor = ? AND dia = ? AND horario = ? AND estado = 'activa' AND id_clase != ?`,
-        [id_profesor, dia, horario, id_clase_excluir]
-    );
-    return rows.length > 0;
+  // Convertir horario HH:MM a minutos desde medianoche
+  timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
   }
 
-  async salaOcupada(id_sala, dia, horario, id_clase_excluir) {
+  // Verificar si dos rangos de tiempo se solapan
+  horariosSeSuperponen(horario1, duracion1, horario2, duracion2) {
+    const inicio1 = this.timeToMinutes(horario1);
+    const fin1 = inicio1 + duracion1;
+    const inicio2 = this.timeToMinutes(horario2);
+    const fin2 = inicio2 + duracion2;
+    
+    return inicio1 < fin2 && inicio2 < fin1;
+  }
+
+  async profesorOcupado(id_profesor, dia, horario, duracion, id_clase_excluir) {
     const [rows] = await this.db.promise().execute(
-        `SELECT id_clase FROM clases WHERE id_sala = ? AND dia = ? AND horario = ? AND estado = 'activa' AND id_clase != ?`,
-        [id_sala, dia, horario, id_clase_excluir]
+        `SELECT id_clase, horario, duracion FROM clases WHERE id_profesor = ? AND dia = ? AND estado = 'activa' AND id_clase != ?`,
+        [id_profesor, dia, id_clase_excluir]
     );
-    return rows.length > 0;
+    
+    // Verificar si alguna clase existente se superpone con la nueva
+    for (const clase of rows) {
+      if (this.horariosSeSuperponen(clase.horario, clase.duracion, horario, duracion)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async salaOcupada(id_sala, dia, horario, duracion, id_clase_excluir) {
+    const [rows] = await this.db.promise().execute(
+        `SELECT id_clase, horario, duracion FROM clases WHERE id_sala = ? AND dia = ? AND estado = 'activa' AND id_clase != ?`,
+        [id_sala, dia, id_clase_excluir]
+    );
+    
+    // Verificar si alguna clase existente se superpone con la nueva
+    for (const clase of rows) {
+      if (this.horariosSeSuperponen(clase.horario, clase.duracion, horario, duracion)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async claseExiste(actividad, dia, horario, id_profesor, id_sala) {
