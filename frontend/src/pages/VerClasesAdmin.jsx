@@ -122,7 +122,7 @@ export default function VerClasesAdmin() {
                       </span>
                     </div>
                     <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      {DIAS_LABEL[clase.dia] || clase.dia} · {clase.horario?.slice(0, 5)} hs · {clase.duracion} min · cupo {clase.cupo_maximo} · {clase.cantidad_inscriptos} inscriptos
+                      {DIAS_LABEL[clase.dia] || clase.dia} · {clase.horario?.slice(0, 5)} hs · {clase.duracion} min · cupo {clase.cupo_maximo}
                     </p>
                   </div>
                 </div>
