@@ -30,7 +30,7 @@ const reservaMensualService = {
   // ─── PASO A: Verificar disponibilidad y calcular precio ──────
   // FIX: recibe mes + anio (no fechasArray) y los calcula internamente.
   // El controller solo pasa id_usuario, id_clase, mes, anio desde el body del request.
-  verificarYPresupuestarMensual: async (id_usuario, id_clase, mes, anio) => {// falta verificar los primeros 10 dias 
+  verificarYPresupuestarMensual: async (id_usuario, id_clase, mes, anio, esPresencial = false) => {
     const clasesRepo = new ClasesRepository(db);
 
     const clase = await clasesRepo.obtenerClasePorId(id_clase);
@@ -41,21 +41,6 @@ const reservaMensualService = {
       'SELECT id_usuario FROM usuarios WHERE id_usuario = ?', [id_usuario]
     );
     if (userRows.length === 0) throw new Error('El usuario especificado no existe.');
-
-    // Regla de negocio: el pago de la suscripción mensual debe realizarse
-    // dentro de los primeros 10 días del mes correspondiente.
-    // Si el cliente intenta reservar para el mes actual fuera de los primeros
-    // 10 días, rechazamos la operación.
-    const ahora = new Date();
-    const diaHoy = ahora.getDate();
-    const mesSolicitado = parseInt(mes, 10);
-    const anioSolicitado = parseInt(anio, 10);
-    const mesActual = ahora.getMonth() + 1;
-    const anioActual = ahora.getFullYear();
-
-    if (mesSolicitado === mesActual && anioSolicitado === anioActual && diaHoy > 10) {
-      throw new Error('Debes abonar dentro de los primeros 10 días del mes para activar la suscripción.');
-    }
 
     // Calcular las fechas restantes del mes para esta clase
     const fechasArray = calcularFechasDelMes(clase.dia, mes, anio);
@@ -156,7 +141,7 @@ const reservaMensualService = {
       instancia.id_instancia,
       'reservada',
       'mensual',
-      null,          // tipo_pago (NULL como ya lo venías usando)
+      'total',       // tipo_pago: pago total presencial
       fecha_clase_str
     );
   }

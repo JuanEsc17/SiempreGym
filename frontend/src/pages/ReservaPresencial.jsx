@@ -227,7 +227,10 @@ export default function ReservaPresencial() {
           hoy.getMonth()+1,
 
           anio:
-          hoy.getFullYear()
+          hoy.getFullYear(),
+          
+          esPresencial:
+          true
 
         };
 
