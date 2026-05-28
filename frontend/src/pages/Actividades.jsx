@@ -320,11 +320,13 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tipoPago: tipoPago === 'SEÑA' ? 'sena' : 'individual',
+          tipoPago: tipoPago === 'SEÑA' ? 'sena' : 'total',
           descripcion: `${clase.actividad} - ${fechaISO(fechaSeleccionada)}`,
           precio: montoACobrar,
           id_usuario,
-          id_clase: clase.id_clase
+          id_clase: clase.id_clase,
+          id_instancia: idInstancia,
+          fecha_clase: fechaISO(fechaSeleccionada)
         })
       });
 

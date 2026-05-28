@@ -217,7 +217,7 @@ class ReservasController {
       );
 
       let mensajeFinal = '¡Reserva confirmada exitosamente!';
-      if (resultado.saldoPendiente === 1) {
+      if (resultado.saldoPendiente > 0) {
         mensajeFinal = '¡Seña abonada! Recordá pagar el saldo restante presencialmente el día de la clase.';
       } else if (tipo_pago === 'CREDITO') {
         mensajeFinal = resultado.mensaje;

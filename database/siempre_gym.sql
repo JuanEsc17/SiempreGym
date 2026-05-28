@@ -134,7 +134,7 @@ CREATE TABLE `reservas` (
   `tipo_reserva` enum('individual','mensual') NOT NULL,
   `estado` enum('reservada','cancelada','asistio') DEFAULT 'reservada',
   `tipo_pago` enum('membresia','credito','total','seña') DEFAULT NULL,
-  `saldo_pendiente` tinyint(1) DEFAULT '0',
+  `saldo_pendiente` decimal(10,2) DEFAULT '0.00',
   `fecha_reserva` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_clase` date NOT NULL,
   PRIMARY KEY (`id_reserva`),

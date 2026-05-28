@@ -145,7 +145,9 @@ const reservaIndividualService = {
 
     const esSeña = tipo_pago && tipo_pago.toLowerCase() === 'sena';
     
-    const saldoPendiente = esSeña ? 1 : 0;
+    // Si es seña, el saldo pendiente es lo que falta pagar (el otro 50%)
+    // Si es pago total, no hay saldo pendiente
+    const saldoPendiente = esSeña ? monto_pagado : 0;
 
     const tipoPagoReserva = esSeña
         ? 'seña'

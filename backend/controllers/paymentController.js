@@ -90,7 +90,7 @@ const createPreference = async (req, res) => {
     });
   }
 };
-const paymentStatus = async (req, res) => {
+const paymentStatus = async (req, res) => {// no se usa
 
   try {
     console.log("aca")
