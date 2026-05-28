@@ -442,7 +442,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
             subtitulo={creditosUsuario > 0
               ? `Tenés ${creditosUsuario} crédito${creditosUsuario !== 1 ? 's' : ''}`
               : 'Sin créditos disponibles'}
-              precio="1 crédito"
+              precio={`${creditosUsuario} crédito${creditosUsuario !== 1 ? 's' : ''}`}
               seleccionado={tipoPago === 'CREDITO'}
               onClick={() => setTipoPago('CREDITO')}
               disabled={creditosUsuario === 0}   // ← viene del backend
