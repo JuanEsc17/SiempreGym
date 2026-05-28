@@ -109,7 +109,7 @@ export default function MisReservas() {
       id_usuario: getUsuarioId(),
       id_clase: reserva.id_clase,
       id_instancia: reserva.id_instancia,
-      fecha_clase: reserva.fecha_clase,
+      fecha_clase: reserva.fecha_clase.split('T')[0],// cambio de tipo de fecha a string para evitar problemas de formato en el backend;
       tipo_pago: 'seña',
       precio_total: mitadPrecio,
       id_reserva: reserva.id_reserva // Para actualizar la reserva existente

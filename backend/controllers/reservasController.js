@@ -242,6 +242,36 @@ class ReservasController {
       return res.status(400).json({ ok: false, mensaje: error.message });
     }
   }
+  async completarPago(req, res) {
+
+  try {
+
+    const { id_reserva } = req.body;
+
+    if (!id_reserva) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: 'id_reserva es obligatorio'
+      });
+    }
+
+    const resultado = await serviceIndividual.completarPagoReserva(id_reserva);
+
+    return res.status(200).json({
+      ok: true,
+      mensaje: 'Pago completado correctamente',
+      ...resultado
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: error.message
+    });
+
+  }
+}
 
   // ============================================================
   // HISTORIAL

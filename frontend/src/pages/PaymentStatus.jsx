@@ -99,6 +99,18 @@ export default function PaymentStatus() {
           // 🔵 CASO 2: INDIVIDUAL
           // ─────────────────────────────
           else {
+            // COMPLETAR SALDO DE UNA SEÑA EXISTENTE
+            if (pending.id_reserva) {
+
+              url = `${BASE_URL}/reservas/completar-pago`;
+
+              body = {
+                id_reserva: pending.id_reserva
+              };
+
+            }
+            else {
+             // CREAR RESERVA NUEVA
 
             url = `${BASE_URL}/reservas/crear`;
 
@@ -111,8 +123,7 @@ export default function PaymentStatus() {
               precio_total: pending.precio_total
             };
 
-          }
-          console.log('BODY MENSUAL:', body);//
+          }}
           // ─────────────────────────────
           // 🔁 REQUEST UNIFICADO
           // ─────────────────────────────

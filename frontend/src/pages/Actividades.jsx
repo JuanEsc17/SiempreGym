@@ -312,7 +312,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
         id_clase: clase.id_clase,
         id_instancia: idInstancia,
         fecha_clase: fechaISO(fechaSeleccionada),
-        tipo_pago: tipoPago,
+        tipo_pago: tipoPago === 'SEÑA' ? 'sena' : 'total',// mod para que entineda sena
         precio_total: montoACobrar
       }));
 

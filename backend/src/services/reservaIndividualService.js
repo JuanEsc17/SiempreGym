@@ -167,6 +167,20 @@ const reservaIndividualService = {
 
     return { success: true, id_reserva, saldoPendiente };
   },
+  completarPagoReserva: async (id_reserva) => {
+
+  await db.promise().execute(
+    `
+    UPDATE reservas
+    SET tipo_pago = 'total',
+        saldo_pendiente = 0
+    WHERE id_reserva = ?
+    `,
+    [id_reserva]
+  );
+
+  return { success: true };
+},
 
   // ─── PASO C: Ingresar a lista de espera individual ───────────
   ingresarListaEsperaIndividual: async (id_usuario, id_clase) => {
