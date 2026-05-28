@@ -669,8 +669,35 @@ background:'#8A0BD2'
 Pago total
 </option>
 
-<option value="SEÑA">
-Pago con seña
+</select>
+
+</div>
+
+)}
+
+{tipoReserva==="MENSUAL" && (
+
+<div className="mt-5">
+
+<select
+
+className="
+w-full
+rounded-3xl
+p-4
+text-white
+"
+
+style={{
+background:'#8A0BD2'
+}}
+
+disabled
+
+>
+
+<option value="TOTAL">
+Pago total
 </option>
 
 </select>
