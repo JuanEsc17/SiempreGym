@@ -28,7 +28,7 @@ class UsuariosRepository {
 
   async getMenoresPendientes() {
     const [rows] = await this.db.promise().execute(
-      `SELECT id_usuario, nombre, apellido, email, fecha_nacimiento, foto_autorizacion, estado_permiso
+      `SELECT id_usuario, nombre, apellido, email, dni, fecha_nacimiento, foto_autorizacion, estado_permiso
        FROM usuarios
        WHERE estado_permiso = 'pendiente'
        AND TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) < 18`

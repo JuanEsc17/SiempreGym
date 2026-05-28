@@ -29,6 +29,13 @@ class ReservasController {
       // cambio marian: para q menores con permisos no autorizados no puedan reservar 
       const usuario = await userRepo.buscarPorId(id_usuario);
 
+      if (!usuario) {
+        return res.status(404).json({
+          ok: false,
+          mensaje: `Usuario no encontrado (ID enviado: ${id_usuario})`
+        });
+      }
+
       if (usuario.estado_permiso === 'pendiente') {
           return res.status(403).json({
           ok: false,
@@ -156,6 +163,13 @@ class ReservasController {
 
       // cambio marian: para que menores con permisos no autorizados no puedan reservar
       const usuario = await userRepo.buscarPorId(id_usuario);
+
+      if (!usuario) {
+        return res.status(404).json({
+          ok: false,
+          mensaje: `Usuario no encontrado (ID enviado: ${id_usuario})`
+        });
+      }
 
       if (usuario.estado_permiso === 'pendiente') {
           return res.status(403).json({
