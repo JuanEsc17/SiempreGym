@@ -114,7 +114,10 @@ class ClasesService {
     if (inscriptosActuales > datos.cupo_maximo) {
     throw { status: 400, mensaje: 'La cantidad de inscriptos supera el nuevo cupo máximo' };
     }
-
+    //para escenario 7 - no se puede cambiar la actividad si hay inscriptos registrados 
+    if (datos.actividad.toLowerCase() !== clase.actividad.toLowerCase() && inscriptosActuales > 0) {
+    throw { status: 400, mensaje: 'No se puede cambiar la actividad de una clase que posee inscriptos registrados' };
+    }
     // Profesor existe
     const profesorExiste = await this.repo.existeProfesor(datos.id_profesor);
     if (!profesorExiste) throw { status: 404, mensaje: 'El profesor no existe en el sistema' };
