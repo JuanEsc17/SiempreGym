@@ -172,6 +172,17 @@ class ClasesRepository {
     );
     return rows;
   }
+  // para contar inscriptos en una clase (usado en edición para validar cupo)
+  async contarInscriptosClase(id_clase) {
+  const [rows] = await this.db.promise().execute(
+    `SELECT COUNT(*) as total 
+     FROM reservas r
+     JOIN instancias_clases ic ON r.id_instancia = ic.id_instancia
+     WHERE ic.id_clase = ? AND r.estado = 'reservada'`,
+    [id_clase]
+  );
+  return rows[0]?.total || 0;
+}
 }
 
 module.exports = ClasesRepository;

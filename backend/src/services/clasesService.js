@@ -110,8 +110,9 @@ class ClasesService {
     if (!clase) throw { status: 404, mensaje: 'La clase no existe' };
 
     // Inscriptos no superan nuevo cupo
-    if (clase.cantidad_inscriptos > datos.cupo_maximo) {
-        throw { status: 400, mensaje: 'La cantidad de inscriptos supera el nuevo cupo máximo' };
+    const inscriptosActuales = await this.repo.contarInscriptosClase(id_clase);
+    if (inscriptosActuales > datos.cupo_maximo) {
+    throw { status: 400, mensaje: 'La cantidad de inscriptos supera el nuevo cupo máximo' };
     }
 
     // Profesor existe
