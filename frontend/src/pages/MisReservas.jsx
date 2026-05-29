@@ -78,7 +78,6 @@ export default function MisReservas() {
   const [reservas, setReservas]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [filtroTipo, setFiltroTipo]     = useState('todos');
-  const [filtroEstado, setFiltroEstado] = useState('todos');
 
   useEffect(() => { cargar(); }, []);
 
@@ -141,16 +140,6 @@ export default function MisReservas() {
 
   const filtradas = reservas.filter(r => {
     if (filtroTipo !== 'todos' && r.tipo_reserva !== filtroTipo) return false;
-    if (filtroEstado !== 'todos') {
-      const map = {
-        confirmada: r.estado === 'reservada' && !r.saldo_pendiente,
-        sena:       r.estado === 'reservada' && !!r.saldo_pendiente,
-        pendiente:  r.estado === 'pendiente',
-        asistio:    r.estado === 'asistio',
-        cancelada:  r.estado === 'cancelada',
-      };
-      if (!map[filtroEstado]) return false;
-    }
     return true;
   });
 
@@ -186,19 +175,6 @@ export default function MisReservas() {
             <option value="mensual">Mensual</option>
           </select>
         </div>
-        <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-          <label style={{ color:'rgba(255,255,255,0.35)', fontSize:10, textTransform:'uppercase', letterSpacing:'0.1em' }}>
-            Estado
-          </label>
-          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} style={selectStyle}>
-            <option value="todos">Todos los estados</option>
-            <option value="confirmada">Confirmada</option>
-            <option value="sena">Seña pagada</option>
-            <option value="pendiente">Pendiente de pago</option>
-            <option value="asistio">Asistió</option>
-            <option value="cancelada">Cancelada</option>
-          </select>
-        </div>
       </div>
 
       <p style={{ color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600, marginBottom:14 }}>
@@ -217,7 +193,7 @@ export default function MisReservas() {
         <div style={{ textAlign:'center', paddingTop:80, opacity:0.4 }}>
           <span style={{ fontSize:44, display:'block', marginBottom:12 }}>📭</span>
           <p style={{ color:'white', fontSize:14 }}>
-            No tenés reservas{filtroTipo !== 'todos' || filtroEstado !== 'todos' ? ' con ese filtro' : ''}.
+            No tenés reservas{filtroTipo !== 'todos' ? ' con ese filtro' : ''}.
           </p>
         </div>
       ) : (
