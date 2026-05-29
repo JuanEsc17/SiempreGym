@@ -15,7 +15,12 @@ const MESES          = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio'
 const MESES_CORTO    = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 // ─── Helpers ─────────────────────────────────────────────────────
-const fechaISO    = (d) => d.toISOString().split('T')[0];
+const fechaISO = (d) => {
+  const año = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const día = String(d.getDate()).padStart(2, '0');
+  return `${año}-${mes}-${día}`;
+};
 const formatPrecio = (n) => n != null ? `$${Number(n).toLocaleString('es-AR')}` : '—';
 const formatCorta  = (iso) => { const [,m,d]=iso.split('-'); return `${+d} ${MESES_CORTO[+m-1]}`; };
 const fP = formatPrecio; 
