@@ -74,9 +74,19 @@ function Toast({ mensaje, onClose }) {
 
 // ─── DateSelector ─────────────────────────────────────────────────
 // Ahora trackea el Date real, no solo el nombre del día
+// Limita el desplazamiento a un máximo de 2 meses (60 días aproximadamente)
 function DateSelector({ fechaSeleccionada, onSeleccionar }) {
   const [offset, setOffset] = useState(0);
   const hoy = new Date(); hoy.setHours(0,0,0,0);
+  
+  // Límite: 60 días desde hoy (aproximadamente 2 meses)
+  const LIMITE_DIAS = 60;
+  const fechaLimite = new Date(hoy);
+  fechaLimite.setDate(fechaLimite.getDate() + LIMITE_DIAS);
+
+  // Calcular la fecha del primer día mostrado
+  const fechaPrimerDia = new Date(hoy);
+  fechaPrimerDia.setDate(fechaPrimerDia.getDate() + offset);
 
   const dias = Array.from({length:7},(_,i)=>{
     const f = new Date(hoy); f.setDate(hoy.getDate()+offset+i);
@@ -84,10 +94,18 @@ function DateSelector({ fechaSeleccionada, onSeleccionar }) {
   });
 
   const isSelected = (d) => fechaISO(d.fechaObj) === fechaISO(fechaSeleccionada);
+  
+  // Botón anterior deshabilitado si estamos al inicio
+  const puedeRetroceder = offset > 0;
+  
+  // Botón siguiente deshabilitado si la próxima semana excede el límite
+  const proximaFecha = new Date(fechaPrimerDia);
+  proximaFecha.setDate(proximaFecha.getDate() + 7);
+  const puedeAvanzar = proximaFecha <= fechaLimite;
 
   return (
     <div className="flex items-center gap-1 mb-6 bg-white/5 p-2 rounded-2xl border border-white/5">
-      <button onClick={()=>setOffset(o=>Math.max(0,o-7))} disabled={offset===0}
+      <button onClick={()=>setOffset(o=>Math.max(0,o-7))} disabled={!puedeRetroceder}
               className="text-white text-xl hover:bg-white/10 rounded-full w-9 h-9 border-none cursor-pointer flex-shrink-0 disabled:opacity-20">‹</button>
       {dias.map(d=>(
         <button key={fechaISO(d.fechaObj)}
@@ -98,8 +116,8 @@ function DateSelector({ fechaSeleccionada, onSeleccionar }) {
           <div className="text-[10px] opacity-70">{d.numero}</div>
         </button>
       ))}
-      <button onClick={()=>setOffset(o=>o+7)}
-              className="text-white text-xl hover:bg-white/10 rounded-full w-9 h-9 border-none cursor-pointer flex-shrink-0">›</button>
+      <button onClick={()=>setOffset(o=>o+7)} disabled={!puedeAvanzar}
+              className="text-white text-xl hover:bg-white/10 rounded-full w-9 h-9 border-none cursor-pointer flex-shrink-0 disabled:opacity-20">›</button>
     </div>
   );
 }
