@@ -20,25 +20,6 @@ const reservaIndividualService = {
     if (userRows.length === 0) throw new Error('El usuario especificado no existe.');
     const creditosDisponibles = userRows[0].creditos || 0;
   
-    // REGLA DE NEGOCIO:
-      // solo clientes NO abonados pueden pagar individual
-
-    const [mensualRows] = await db.promise().execute(`
-      SELECT id_reserva
-      FROM reservas
-        WHERE id_usuario = ?
-          AND tipo_reserva = 'mensual'
-          AND MONTH(fecha_clase) = MONTH(CURDATE())
-          AND YEAR(fecha_clase) = YEAR(CURDATE())
-        LIMIT 1
-      `, [id_usuario]);
-
-      if (mensualRows.length > 0) {
-        throw new Error(
-          'El usuario ya posee una membresía mensual activa.'
-        );
-      }
-
     // Escenario 10: clase ya iniciada o pasada
     const ahora = new Date();
     const [horas, minutos] = clase.horario.split(':');
@@ -47,7 +28,7 @@ const reservaIndividualService = {
       throw new Error('No es posible reservar una clase ya iniciada o pasada.');
     }
 
-    // Escenario 7: superposición horaria
+    // Escenario 7: superposición horaria (PRIMERO - mensaje más específico)
     const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
       id_usuario, clase.horario, fecha_clase_str
     );
