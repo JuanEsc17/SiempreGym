@@ -355,6 +355,7 @@ export default function Register() {
                     onChange={handleChange}
                     className="w-full border-2 border-[#8A0BD2] rounded-md p-2 bg-transparent outline-none focus:border-[#AF50E5]"
                 />
+                <p className="text-gray-500 text-xs mt-1">Debe incluir entre 9 y 20 caracteres, una mayúscula y un carácter especial</p>
                 {errors.password && (
                     <p className="text-red-600 text-xs mt-1">{errors.password}</p>
                 )}
