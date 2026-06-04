@@ -2,6 +2,23 @@ import gymImage from "../assets/hero.png"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom";
 
+// Función para calcular edad
+const calcularEdad = (fechaNacimiento) => {
+  if (!fechaNacimiento) return null
+  
+  const today = new Date()
+  const birthDate = new Date(fechaNacimiento)
+  
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  
+  return age
+}
+
 export default function Register() {
 
     const [permisoFile, setPermisoFile] = useState(null)
@@ -26,7 +43,16 @@ export default function Register() {
           ...formData,
           [name]: value
         })
-        }   
+        
+        // Si cambió la fecha de nacimiento, validar permiso
+        if (name === "fechaNacimiento") {
+          const newAge = calcularEdad(value)
+          // Si la edad ya no está entre 14 y 18, limpiar el archivo
+          if (newAge === null || newAge < 14 || newAge >= 18) {
+            setPermisoFile(null)
+          }
+        }
+    }   
 
 
     const navigate = useNavigate();
@@ -76,20 +102,9 @@ export default function Register() {
         alert("Error al conectar con el servidor");
     }
   }
-    // calcula edad
-    let age = null
-
-    if (formData.fechaNacimiento){
-      const today = new Date()
-      const birthDate = new Date(formData.fechaNacimiento)
-
-      age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--
-      }
-    }
+    
+    // Calcular edad
+    const age = calcularEdad(formData.fechaNacimiento)
 
     const validate = () => {
     const newErrors = {}

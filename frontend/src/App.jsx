@@ -13,7 +13,8 @@ import EditarClase from "./pages/EditarClase.jsx"
 import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
 import ReservaPresencial from "./pages/ReservaPresencial.jsx"
 import MisReservas from './pages/MisReservas'
-import PermisosAdmin from "./pages/PermisosAdmin";
+import PermisosAdmin from "./pages/PermisosAdmin"
+import ResubmitPermiso from "./pages/ResubmitPermiso"
 import EmpleadoPanel from "./pages/EmpleadoPanel"
 
 // Ruta protegida para usuarios autenticados (solo clientes regulares)
@@ -119,6 +120,7 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/actividades" element={<RutaUsuario><Actividades /></RutaUsuario>} />
         <Route path="/mis-reservas" element={<RutaProtegida><MisReservas /></RutaProtegida>} />
+        <Route path="/resubmit-permiso" element={<RutaProtegida><ResubmitPermiso /></RutaProtegida>} />
 
         {/** Rutas de administración **/}
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />

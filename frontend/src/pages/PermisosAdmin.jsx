@@ -1,9 +1,25 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+function Toast({ mensaje, tipo, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bgColor = tipo === 'error' ? 'bg-red-500' : 'bg-green-500';
+  return (
+    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`}>
+      {mensaje}
+    </div>
+  );
+}
+
 export default function PermisosAdmin() {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
 
   const fetchPendientes = async () => {
     try {
@@ -12,6 +28,7 @@ export default function PermisosAdmin() {
       setUsuarios(res.data.data);
     } catch (error) {
       console.log(error);
+      setToast({ mensaje: 'Error al cargar permisos', tipo: 'error' });
     } finally {
       setLoading(false);
     }
@@ -21,21 +38,31 @@ export default function PermisosAdmin() {
     fetchPendientes();
   }, []);
 
-  const aprobar = async (id) => {
+  const aprobar = async (id, nombre) => {
     try {
+      setActionLoading(id);
       await axios.put(`http://localhost:3000/api/usuarios/admin/permisos/${id}/aprobar`);
+      setToast({ mensaje: `✅ Permiso de ${nombre} aprobado y email enviado`, tipo: 'success' });
       fetchPendientes();
     } catch (error) {
       console.log(error);
+      setToast({ mensaje: 'Error al aprobar permiso', tipo: 'error' });
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const rechazar = async (id) => {
+  const rechazar = async (id, nombre) => {
     try {
+      setActionLoading(id);
       await axios.put(`http://localhost:3000/api/usuarios/admin/permisos/${id}/rechazar`);
+      setToast({ mensaje: `❌ Permiso de ${nombre} rechazado y email enviado`, tipo: 'success' });
       fetchPendientes();
     } catch (error) {
       console.log(error);
+      setToast({ mensaje: 'Error al rechazar permiso', tipo: 'error' });
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -91,24 +118,34 @@ export default function PermisosAdmin() {
               {/* BOTONES */}
               <div className="flex gap-3 mt-2">
                 <button
-                  onClick={() => aprobar(u.id_usuario)}
-                  className="px-4 py-1 rounded-md text-white"
+                  onClick={() => aprobar(u.id_usuario, u.nombre)}
+                  disabled={actionLoading === u.id_usuario}
+                  className="px-4 py-1 rounded-md text-white transition-opacity disabled:opacity-50"
                   style={{ background: "#AF50E5" }}
                 >
-                  Aprobar
+                  {actionLoading === u.id_usuario ? 'Procesando...' : 'Aprobar'}
                 </button>
 
                 <button
-                  onClick={() => rechazar(u.id_usuario)}
-                  className="px-4 py-1 rounded-md text-white"
+                  onClick={() => rechazar(u.id_usuario, u.nombre)}
+                  disabled={actionLoading === u.id_usuario}
+                  className="px-4 py-1 rounded-md text-white transition-opacity disabled:opacity-50"
                   style={{ background: "#8A0BD2" }}
                 >
-                  Rechazar
+                  {actionLoading === u.id_usuario ? 'Procesando...' : 'Rechazar'}
                 </button>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {toast && (
+        <Toast
+          mensaje={toast.mensaje}
+          tipo={toast.tipo}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

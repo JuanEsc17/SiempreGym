@@ -49,6 +49,25 @@ class UsuariosRepository {
       [id_usuario]
     );
   }
+
+  async getMenoresRechazados(id_usuario) {
+    const [rows] = await this.db.promise().execute(
+      `SELECT id_usuario, nombre, apellido, email, foto_autorizacion, estado_permiso
+       FROM usuarios
+       WHERE id_usuario = ?
+       AND estado_permiso = 'rechazado'
+       AND TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) < 18`,
+      [id_usuario]
+    );
+    return rows[0] || null;
+  }
+
+  async actualizarPermiso(id_usuario, foto_path) {
+    await this.db.promise().execute(
+      `UPDATE usuarios SET foto_autorizacion = ?, estado_permiso = 'pendiente' WHERE id_usuario = ?`,
+      [foto_path, id_usuario]
+    );
+  }
 }
 
 module.exports = UsuariosRepository;

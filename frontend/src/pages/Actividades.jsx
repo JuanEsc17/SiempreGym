@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import yogaImg from '../assets/Yoga2.png';
 import pilatesImg from '../assets/Pilatesmq.png';
 import funcionalImg from '../assets/Funcional.png';
@@ -638,6 +639,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
 // ─── Actividades (componente principal) ──────────────────────────
 export default function Actividades() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [clases, setClases]                   = useState([]);
   const [claseSeleccionada, setClaseSelec]    = useState(null);
   //const [sidebarOpen, setSidebarOpen]         = useState(false);
@@ -646,6 +648,7 @@ export default function Actividades() {
   const [diaSeleccionado, setDiaSel]          = useState(NOMBRES_DIAS[new Date().getDay()]);
   const [creditos, setCreditos]            = useState(null);
   const [toast, setToast] = useState(null);
+  const [estadoPermiso, setEstadoPermiso] = useState(null);
   const mostrarToast = (msg) => setToast(msg);
 
   useEffect(()=>{ cargarClases(); }, [fechaSeleccionada]);
@@ -664,7 +667,12 @@ export default function Actividades() {
   const id = getUsuarioId();
   if (!id) return;
   apiFetch(`${BASE_URL}/usuarios/${id}`)
-    .then(d => { if (d.ok) setCreditos(d.data?.creditos ?? 0); })
+    .then(d => { 
+      if (d.ok) {
+        setCreditos(d.data?.creditos ?? 0);
+        setEstadoPermiso(d.data?.estado_permiso);
+      }
+    })
     .catch(() => {});
   }, []);
 
@@ -695,6 +703,28 @@ export default function Actividades() {
             👤 
           </div>
         </header>
+
+        {/* ALERTA: Permiso rechazado */}
+        {estadoPermiso === 'rechazado' && (
+          <div className="mb-6 p-4 rounded-xl flex items-center gap-3" style={{background:'#fee2e2', border:'1px solid #fca5a5'}}>
+            <span style={{fontSize:'24px'}}>⚠️</span>
+            <div className="flex-1">
+              <p style={{color:'#991b1b', fontWeight:'bold', margin:0}}>
+                Tu autorización fue rechazada
+              </p>
+              <p style={{color:'#7f1d1d', fontSize:'13px', margin:'4px 0 0'}}>
+                Necesitas reenviar una nueva autorización para continuar reservando clases.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/resubmit-permiso')}
+              style={{background:'#dc2626', color:'white', padding:'8px 16px', borderRadius:'6px', border:'none', cursor:'pointer', fontWeight:'500', fontSize:'13px'}}
+            >
+              Reenviar autorización
+            </button>
+          </div>
+        )}
+
           {/* Stats + Créditos */}
         {/* Stats */}
 <div className="grid grid-cols-4 gap-4 mb-7">
