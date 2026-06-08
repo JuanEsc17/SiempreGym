@@ -33,7 +33,7 @@ app.use("/api/clases", clasesRoutes)
 app.use("/api/reservas", reservasRoutes)
 app.use("/api/usuarios", usuariosRoutes)
 app.use("/api/payments", paymentRoutes)
-app.use("/lista-espera", listaEsperaRoutes)
+app.use("/api/lista-espera", listaEsperaRoutes)
 
 const PORT = 3000
 

@@ -84,6 +84,53 @@ class ListaEsperaRepository {
 
   }
 
+  async obtenerPosicion(idUsuario, idClase, tipoReserva) {
+
+  const [rows] = await this.db.promise().execute(
+    `SELECT posicion
+     FROM lista_espera
+     WHERE id_usuario=?
+     AND id_clase=?
+     AND tipo_reserva=?`,
+    [idUsuario, idClase, tipoReserva]
+  );
+
+  return rows[0] || null;
+  }
+
+  async obtenerPorUsuario(idUsuario) {
+
+  const [rows] = await this.db.promise().execute(
+    `
+    SELECT
+      le.id_lista,
+      le.posicion,
+      le.estado,
+      le.tipo_reserva,
+      le.fecha_ingreso,
+
+      c.id_clase,
+      c.actividad,
+      c.dia,
+      c.horario,
+      c.imagen
+
+    FROM lista_espera le
+
+    INNER JOIN clases c
+      ON c.id_clase = le.id_clase
+
+    WHERE le.id_usuario = ?
+      AND le.estado = 'esperando'
+
+    ORDER BY le.fecha_ingreso ASC
+    `,
+    [idUsuario]
+  );
+
+  return rows;
+}
+
 }
 
 module.exports=ListaEsperaRepository;

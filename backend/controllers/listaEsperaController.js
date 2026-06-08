@@ -71,7 +71,74 @@ return res.status(500)
 
 };
 
+const obtenerPosicion = async (req, res) => {
+
+  try {
+
+    const {
+      idUsuario,
+      idClase,
+      tipoReserva
+    } = req.query;
+
+    const posicion = await repo.obtenerPosicion(
+      idUsuario,
+      idClase,
+      tipoReserva
+    );
+
+    if (!posicion) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: "No perteneces a esta lista de espera"
+      });
+    }
+
+    return res.json({
+      ok: true,
+      posicion: posicion.posicion
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error interno del servidor"
+    });
+
+  }
+};
+
+const obtenerPorUsuario = async (req, res) => {
+
+  try {
+
+    const { idUsuario } = req.params;
+
+    const lista = await repo.obtenerPorUsuario(idUsuario);
+
+    return res.json({
+      ok: true,
+      data: lista
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error interno"
+    });
+
+  }
+};
+
 
 module.exports={
- ingresar
+ ingresar,
+ obtenerPosicion,
+ obtenerPorUsuario
 };

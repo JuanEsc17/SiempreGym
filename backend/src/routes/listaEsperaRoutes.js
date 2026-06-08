@@ -8,4 +8,14 @@ router.post(
 ListaEsperaController.ingresar
 );
 
+router.get(
+  "/posicion",
+  ListaEsperaController.obtenerPosicion
+);
+
+router.get(
+  "/usuario/:idUsuario",
+  ListaEsperaController.obtenerPorUsuario
+);
+
 module.exports = router;
