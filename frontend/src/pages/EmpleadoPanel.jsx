@@ -25,6 +25,7 @@ export default function EmpleadoPanel() {
 
         <div className="grid grid-cols-2 gap-4">
 
+          {/* RESERVA PRESENCIAL */}
           <div
             onClick={() => navigate("/reserva-presencial")}
             className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
@@ -46,7 +47,7 @@ export default function EmpleadoPanel() {
             </div>
           </div>
 
-
+          {/* VER CLASES */}
           <div
             onClick={() => navigate("/ver-clases-admin")}
             className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
@@ -68,23 +69,24 @@ export default function EmpleadoPanel() {
             </div>
           </div>
 
-
+          {/* REGISTRAR CLIENTE */}
           <div
-            className="flex items-center gap-3 p-6 rounded-xl"
+            onClick={() => navigate("/empleado/registrar-usuario")}
+            className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
             style={{ background: '#5B0672' }}
           >
-            <span className="text-3xl">👤</span>
+            <span className="text-3xl">➕</span>
 
             <div>
               <p className="text-white font-medium">
-                Gestión de clientes
+                Registrar cliente
               </p>
 
               <p
                 className="text-xs mt-1"
                 style={{ color: 'rgba(255,255,255,0.6)' }}
               >
-                Búsqueda y atención presencial
+                Crear una nueva cuenta para un cliente
               </p>
             </div>
           </div>

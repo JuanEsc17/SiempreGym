@@ -104,13 +104,13 @@ const register = async (req, res) => {
       });
     }
 
-    // verifico contraseña con una mayuscula, un caracter especial, y entre 8 y 20 caracteres (escenario 5)
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,20}$/;
+    // verifico contraseña con una mayuscula, un caracter especial, y entre 9 y 20 caracteres (escenario 5)
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,20}$/;
 
     if (!passwordRegex.test(data.password)) {
       return res.status(400).json({
         error:
-          "La contraseña debe tener entre 8 y 20 caracteres, una mayuscula y un caracter especial"
+          "La contraseña debe tener entre 9 y 20 caracteres, una mayuscula y un caracter especial"
       });
     }
 

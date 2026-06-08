@@ -439,12 +439,26 @@ export default function ReservaPresencial() {
         
         {/* Header */}
         <header className="mb-7 flex justify-between items-start">
-          <div>
-            <h1 className="font-bold text-white m-0" style={{fontSize:'30px'}}>Actividades</h1>
-            <p style={{color:'rgba(255,255,255,0.4)', fontSize:'13px', margin:'4px 0 0'}}>
-              Selecciona una actividad para reservar al cliente
-            </p>
-          </div>
+        <div>
+          <h1 className="font-bold text-white m-0" style={{fontSize:'30px'}}>
+          Actividades
+          </h1>
+
+          <p style={{color:'rgba(255,255,255,0.4)', fontSize:'13px', margin:'4px 0 0'}}>
+          Selecciona una actividad para reservar al cliente
+          </p>
+        </div>
+
+        <button
+        onClick={() => navigate("/empleado")}
+        className="px-4 py-2 rounded-xl text-white font-medium cursor-pointer transition-all hover:opacity-90"
+        style={{
+          background: "#8A0BD2",
+          border: "none"
+        }}
+        >
+        ← Volver
+        </button>
         </header>
 
         {/* Date Selector */}
