@@ -263,6 +263,50 @@ CREATE TABLE `usuarios` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `asistencias`
+--
+
+DROP TABLE IF EXISTS `asistencias`;
+
+CREATE TABLE `asistencias` (
+  `id_asistencia` int NOT NULL AUTO_INCREMENT,
+  `usuario_id` int NOT NULL,
+  `id_reserva` int NOT NULL UNIQUE,
+  `presente` tinyint(1) NOT NULL DEFAULT '1',
+  `metodo` enum('qr','manual') NOT NULL,
+  `empleado_id` int DEFAULT NULL,
+  `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id_asistencia`),
+
+  KEY `usuario_id` (`usuario_id`),
+  KEY `id_reserva` (`id_reserva`),
+  KEY `empleado_id` (`empleado_id`),
+
+  CONSTRAINT `asistencias_ibfk_1`
+    FOREIGN KEY (`usuario_id`)
+    REFERENCES `usuarios` (`id_usuario`),
+
+  CONSTRAINT `asistencias_ibfk_2`
+    FOREIGN KEY (`id_reserva`)
+    REFERENCES `reservas` (`id_reserva`)
+    ON DELETE CASCADE,
+
+  CONSTRAINT `asistencias_ibfk_3`
+    FOREIGN KEY (`empleado_id`)
+    REFERENCES `usuarios` (`id_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `asistencias`
+--
+
+LOCK TABLES `asistencias` WRITE;
+/*!40000 ALTER TABLE `asistencias` DISABLE KEYS */;
+/*!40000 ALTER TABLE `asistencias` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Dumping data for table `usuarios`
 --
 

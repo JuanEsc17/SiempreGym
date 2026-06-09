@@ -210,13 +210,13 @@ export default function ListaEspera() {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 12
+              gap: 8
             }}
           >
             {lista.map((item) => {
               const colorEstado =
                 item.estado === 'esperando'
-                  ? '#f59e0b'
+                  ? '#b7b2a9'
                   : item.estado === 'notificado'
                   ? '#10b981'
                   : '#ef4444';
@@ -235,7 +235,7 @@ export default function ListaEspera() {
                 >
                   <div
                     style={{
-                      width: 130,
+                      width: 100,
                       flexShrink: 0,
                       background: '#5B0672',
                       overflow: 'hidden'
@@ -255,142 +255,123 @@ export default function ListaEspera() {
                   </div>
 
                   <div
-                    style={{
-                      flex: 1,
-                      padding: '18px 22px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      flexWrap: 'wrap',
-                      gap: 20
-                    }}
+                  style={{
+                  flex: 1,
+                  padding: '14px 18px',
+                  display: 'flex',
+                  alignItems: 'center'
+                  }}
                   >
-                    <div>
-                      <h3
-                        style={{
-                          color: 'white',
-                          margin: 0,
-                          fontSize: 20,
-                          textTransform: 'capitalize'
-                        }}
-                      >
-                        {item.actividad}
-                      </h3>
+                  <div style={{ width: '100%' }}>
+                  {/* FILA SUPERIOR */}
+                  <div
+                  style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  flexWrap: 'wrap'
+                  }}
+                  >
+                  <h3
+                  style={{
+                  color: 'white',
+                  margin: 0,
+                  fontSize: 18,
+                  textTransform: 'capitalize'
+                  }}
+                  >
+                  {item.actividad}
+                  </h3>
 
-                      <p
-                        style={{
-                          color: 'rgba(255,255,255,0.55)',
-                          margin: '6px 0'
-                        }}
-                      >
-                        {DIAS[item.dia] || item.dia} •{' '}
-                        {item.horario?.slice(0, 5)} hs
-                      </p>
+                  <span
+                  style={{
+                  color: 'rgba(255,255,255,0.55)',
+                  fontSize: 15
+                  }}
+                  >
+                  {DIAS[item.dia] || item.dia} •{' '}
+                  {item.horario?.slice(0, 5)} hs
+                  </span>
 
-                      <p
-                        style={{
-                          color: 'rgba(255,255,255,0.35)',
-                          fontSize: 12,
-                          marginTop: 6
-                        }}
-                      >
-                        📅 Ingresaste el{' '}
-                        {formatFecha(item.fecha_ingreso)}
-                      </p>
+                {/* POSICIÓN */}
+                <span
+                style={{
+                color:
+                item.posicion === 1
+                ? '#7f9a92'
+                : '#AF50E5',
+                fontWeight: 'bold',
+                fontSize: 14
+                }}
+                >
+                {item.posicion === 1 ? '🥇' : '👥'} Posición #{item.posicion}
+                </span>
 
-                      {item.posicion === 1 ? (
-                        <p
-                          style={{
-                            color: '#10b981',
-                            fontSize: 13,
-                            marginTop: 10,
-                            fontWeight: 600
-                          }}
-                        >
-                          🎉 Sos el próximo en ingresar
-                          cuando se libere un cupo
-                        </p>
-                      ) : (
-                        <p
-                          style={{
-                            color:
-                              'rgba(255,255,255,0.5)',
-                            fontSize: 13,
-                            marginTop: 10
-                          }}
-                        >
-                          👥 Hay {item.posicion - 1}{' '}
-                          persona(s) delante tuyo
-                        </p>
-                      )}
+              {/* ESTADO */}
+                <span
+                style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                background: 'rgba(245,158,11,0.12)',
+                color: colorEstado,
+                border: `1px solid ${colorEstado}40`,
+                padding: '4px 10px',
+                borderRadius: 999,
+                fontSize: 11,
+                fontWeight: 'bold'
+                }}
+               >
+              ⏳ {item.estado}
+                </span>
+              </div>
 
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          marginTop: 12,
-                          background:
-                            'rgba(245,158,11,0.12)',
-                          color: colorEstado,
-                          border: `1px solid ${colorEstado}40`,
-                          padding: '6px 12px',
-                          borderRadius: 999,
-                          fontSize: 12,
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        ⏳ {item.estado}
-                      </div>
-                    </div>
+              {/* FILA INFERIOR */}
+              <div
+              style={{
+              marginTop: 10
+              }}
+              >
+            <p
+            style={{
+            color: 'rgba(255,255,255,0.35)',
+            fontSize: 12,
+            margin: 0
+            }}
+            >
+          📅 Ingresaste el{' '}
+            {formatFecha(item.fecha_ingreso)}
+            </p>
 
-                    <div
-                      style={{
-                        textAlign: 'center',
-                        minWidth: 130
-                      }}
-                    >
-                      <p
-                        style={{
-                          color:
-                            'rgba(255,255,255,0.5)',
-                          fontSize: 12,
-                          margin: 0
-                        }}
-                      >
-                        Tu posición
-                      </p>
-
-                      <p
-                        style={{
-                          color:
-                            item.posicion === 1
-                              ? '#10b981'
-                              : '#AF50E5',
-                          fontSize: 52,
-                          fontWeight: 'bold',
-                          margin: 0
-                        }}
-                      >
-                        {item.posicion === 1
-                          ? `🥇 ${item.posicion}`
-                          : `#${item.posicion}`}
-                      </p>
-
-                      <p
-                        style={{
-                          color:
-                            'rgba(255,255,255,0.35)',
-                          fontSize: 12,
-                          marginTop: 4,
-                          textTransform: 'capitalize'
-                        }}
-                      >
-                        {item.tipo_reserva}
-                      </p>
+            {item.posicion === 1 ? (
+            <p
+            style={{
+            color: '#68aa94',
+            fontSize: 13,
+            marginTop: 8,
+            marginBottom: 0,
+            fontWeight: 600
+            }}
+            >
+            • Sos el próximo en ingresar cuando se libere un cupo
+            </p>
+          ) : (
+          <p
+          style={{
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: 13,
+            marginTop: 8,
+            marginBottom: 0
+          }}
+        >
+          👥 Hay {item.posicion - 1} persona(s)
+          delante tuyo
+        </p>
+                  )}
                     </div>
                   </div>
                 </div>
+              </div>
               );
             })}
           </div>
