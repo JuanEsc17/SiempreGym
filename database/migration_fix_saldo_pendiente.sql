@@ -13,3 +13,14 @@ MODIFY COLUMN saldo_pendiente DECIMAL(10,2) DEFAULT '0.00';
 
 -- Verificar que el cambio se aplicó correctamente
 DESCRIBE reservas;
+
+--modificar esto para lo de renovaciones 
+ALTER TABLE reservas MODIFY COLUMN estado 
+ENUM('reservada','cancelada','asistio','por_renovar');
+
+-- reservas hacia renovaciones
+ALTER TABLE reservas 
+ADD COLUMN id_renovacion INT NULL,
+ADD CONSTRAINT fk_reservas_renovacion
+FOREIGN KEY (id_renovacion) 
+REFERENCES renovaciones(id_renovacion);
