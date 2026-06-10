@@ -10,6 +10,7 @@ const reservasRoutes = require("./src/routes/reservasRoutes")
 const usuariosRoutes = require("./src/routes/usuariosRoutes")
 const paymentRoutes = require("./src/routes/paymentRoutes")
 const listaEsperaRoutes = require("./src/routes/listaEsperaRoutes")
+const asistenciasRoutes = require("./src/routes/asistenciasRoutes");
 
 const app = express()
 
@@ -34,6 +35,7 @@ app.use("/api/reservas", reservasRoutes)
 app.use("/api/usuarios", usuariosRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/lista-espera", listaEsperaRoutes)
+app.use("/api/asistencias", asistenciasRoutes)
 
 const PORT = 3000
 
