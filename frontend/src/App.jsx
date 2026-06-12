@@ -19,6 +19,7 @@ import EmpleadoPanel from "./pages/EmpleadoPanel"
 import RegistrarUsuarioEmpleado from "./pages/RegistrarUsuarioEmpleado";
 import ListaEspera from "./pages/ListaEspera";
 import RegistrarAsistencia from './pages/RegistrarAsistencia';
+import Renovaciones from "./pages/Renovaciones.jsx"
 
 // Ruta protegida para usuarios autenticados (solo clientes regulares)
 function RutaProtegida({ children }) {
@@ -125,6 +126,7 @@ function AppContent() {
         <Route path="/mis-reservas" element={<RutaProtegida><MisReservas /></RutaProtegida>} />
         <Route path="/resubmit-permiso" element={<RutaProtegida><ResubmitPermiso /></RutaProtegida>} />
         <Route path="/lista-espera" element={<RutaProtegida><ListaEspera /></RutaProtegida>} />
+        <Route path="/renovaciones" element={<RutaUsuario><Renovaciones /></RutaUsuario>} />
 
         {/** Rutas de administración **/}
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />

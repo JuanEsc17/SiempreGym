@@ -635,7 +635,79 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
     </div>
   );
 }
+// ─── BannerRenovacion ─────────────────────────────────────────────
+function BannerRenovacion({ banner, onNavegar }) {
+  if (!banner?.mostrar) return null;
 
+  // Calcular días restantes
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const venc = new Date(banner.fecha_limite);
+  venc.setHours(0, 0, 0, 0);
+  const diasRestantes = Math.ceil((venc - hoy) / (1000 * 60 * 60 * 24));
+
+  const fechaFormateada = venc.toLocaleDateString('es-AR', {
+    day: '2-digit', month: 'long'
+  });
+
+  return (
+    <div className="mb-6 rounded-2xl overflow-hidden"
+         style={{ border: '1px solid rgba(138,11,210,0.4)' }}>
+
+      {/* Fila principal */}
+      <div className="flex items-center justify-between p-4 gap-4"
+           style={{ background: 'linear-gradient(135deg, #2d0a4e, #1e0a3c)' }}>
+
+        {/* Ícono + texto */}
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+               style={{ background: 'rgba(138,11,210,0.4)', border: '1px solid rgba(138,11,210,0.6)' }}>
+            <span style={{ fontSize: '22px' }}>📅</span>
+          </div>
+          <div>
+            <p className="text-white font-bold m-0" style={{ fontSize: '15px' }}>
+              ¡Es momento de renovar tus reservas!
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '3px 0 0' }}>
+              Tenés tiempo hasta el {fechaFormateada} para renovar tus reservas mensuales
+              del próximo mes y asegurar tu lugar.
+            </p>
+          </div>
+        </div>
+
+        {/* Tiempo restante */}
+        <div className="flex-shrink-0 rounded-xl p-3 text-right"
+             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', minWidth: '120px' }}>
+          <p style={{ color: 'rgba(255,165,0,0.9)', fontSize: '10px', fontWeight: 'bold',
+                      textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>
+            ⏱ Tiempo restante
+          </p>
+          <p className="text-white font-bold m-0" style={{ fontSize: '22px', lineHeight: 1 }}>
+            {diasRestantes} <span style={{ fontSize: '13px', fontWeight: 'normal' }}>días</span>
+          </p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', margin: '3px 0 0' }}>
+            Hasta el {venc.getDate()}/{String(venc.getMonth() + 1).padStart(2, '0')}
+          </p>
+        </div>
+      </div>
+
+      {/* Fila inferior informativa */}
+      <div className="flex items-center justify-between px-4 py-2 gap-3"
+           style={{ background: 'rgba(0,0,0,0.35)', borderTop: '1px solid rgba(138,11,210,0.2)' }}>
+        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', margin: 0 }}>
+          ℹ️ Solo vos podés ver y renovar tus reservas. Si no renovás antes del {venc.getDate()}/{String(venc.getMonth() + 1).padStart(2, '0')}, perderás tu prioridad y el cupo quedará liberado.
+        </p>
+        <button
+          onClick={onNavegar}
+          className="flex-shrink-0 px-4 py-1.5 rounded-xl text-white font-bold border-none cursor-pointer transition-all hover:brightness-110"
+          style={{ background: '#8A0BD2', fontSize: '12px', whiteSpace: 'nowrap' }}>
+          Renovar →
+        </button>
+      </div>
+
+    </div>
+  );
+}
 // ─── Actividades (componente principal) ──────────────────────────
 export default function Actividades() {
   const navigate = useNavigate();
@@ -650,6 +722,7 @@ export default function Actividades() {
   const [toast, setToast] = useState(null);
   const [estadoPermiso, setEstadoPermiso] = useState(null);
   const mostrarToast = (msg) => setToast(msg);
+  const [banner, setBanner] = useState(null);
 
   useEffect(()=>{ cargarClases(); }, [fechaSeleccionada]);
 
@@ -673,6 +746,14 @@ export default function Actividades() {
         setEstadoPermiso(d.data?.estado_permiso);
       }
     })
+    .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+  const id = getUsuarioId();
+  if (!id) return;
+  apiFetch(`${BASE_URL}/renovaciones/banner/${id}`)
+    .then(d => { if (d.ok) setBanner(d); })
     .catch(() => {});
   }, []);
 
@@ -703,7 +784,10 @@ export default function Actividades() {
             👤 
           </div>
         </header>
-
+          <BannerRenovacion 
+            banner={banner} 
+            onNavegar={() => navigate('/renovaciones')} 
+          />
         {/* ALERTA: Permiso rechazado */}
         {estadoPermiso === 'rechazado' && (
           <div className="mb-6 p-4 rounded-xl flex items-center gap-3" style={{background:'#fee2e2', border:'1px solid #fca5a5'}}>
@@ -769,7 +853,7 @@ export default function Actividades() {
       </p>
     </div>
   </div>
-  <div onClick={() => navigate('/plan')}
+  <div onClick={() => navigate('/renovaciones')}
        className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
        style={{background:'#0d9488', border:'1px solid rgba(20,184,166,0.25)'}}>
     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -777,7 +861,7 @@ export default function Actividades() {
       <span style={{fontSize:'20px'}}>⚡</span>
     </div>
     <div>
-      <p className="text-white font-bold text-sm m-0">Plan Activo</p>
+      <p className="text-white font-bold text-sm m-0">Renovarr</p>
       <span style={{background:'rgba(20,184,166,0.2)', color:'#2dd4bf', fontSize:'10px',
         fontWeight:'bold', padding:'2px 8px', borderRadius:999, textTransform:'uppercase',
         letterSpacing:'0.06em', display:'inline-block', marginTop:2}}>Mensual</span>

@@ -105,7 +105,7 @@ const reservasRepository = {
   JOIN clases c ON r.id_clase = c.id_clase
   LEFT JOIN usuarios u ON c.id_profesor = u.id_usuario
   LEFT JOIN salas s ON c.id_sala = s.id_sala
-  WHERE r.id_usuario = ?
+  WHERE r.id_usuario = ? AND r.estado != 'por_renovar'
   ORDER BY r.fecha_clase DESC`,
   [id_usuario]
 );

@@ -6,20 +6,20 @@ const reservasRepository = require('../../repositories/reservasRepository');
 const renovacionesRepository = require('../../repositories/renovacionesRepository');
 
 // ─── Helper: calcular fechas del mes completo ─────────────────
-// A diferencia de calcularFechasDelMes en reservaMensualService,
-// esta version NO filtra fechas pasadas — necesitamos TODAS las del mes
+// Solo fechas FUTURAS (posteriores a hoy)
 function calcularFechasDelMesSiguiente(diaEnum, mes, anio) {
   const DIAS_MAP = { lunes:1, martes:2, miercoles:3, jueves:4, viernes:5, sabado:6 };
   const diaN = DIAS_MAP[diaEnum.toLowerCase()];
   if (diaN === undefined) throw new Error(`Día de clase inválido: ${diaEnum}`);
 
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
   const fechas = [];
   const d = new Date(anio, mes - 1, 1);
 
   while (d.getDay() !== diaN) d.setDate(d.getDate() + 1);
 
   while (d.getMonth() === mes - 1) {
-    fechas.push(d.toISOString().split('T')[0]);
+    if (d >= hoy) fechas.push(d.toISOString().split('T')[0]);
     d.setDate(d.getDate() + 7);
   }
   return fechas;
@@ -39,7 +39,7 @@ function estaEnVentanaRenovacion() {
   const ultimaSemanaInicio = diasEnMes - 6; // últimos 7 días del mes
 
   const esUltimaSemana = dia >= ultimaSemanaInicio;
-  const esPrimerosDiez = dia >= 1 && dia <= 10;
+  const esPrimerosDiez = dia >= 1 && dia <= 15;
 
   return esUltimaSemana || esPrimerosDiez;
 }
@@ -108,9 +108,28 @@ const renovacionesService = {
     );
 
     const ventanaActiva = estaEnVentanaRenovacion();
+    const hoy = new Date().toISOString().split('T')[0];
+
+  // Helper para normalizar fecha_vencimiento a 'YYYY-MM-DD'
+  const toFechaStr = (fecha) => {
+    if (fecha instanceof Date) return fecha.toISOString().split('T')[0];
+    return fecha;
+  };
+
+  // Filtrar solo renovaciones NO vencidas
+  const renovacionesValidas = renovaciones.filter(r => toFechaStr(r.fecha_vencimiento) >= hoy);
+
+  // Marcar como vencidas las que pasaron su fecha
+  const renovacionesVencidas = renovaciones.filter(r => toFechaStr(r.fecha_vencimiento) < hoy);
+  for (const ren of renovacionesVencidas) {
+    await db.promise().execute(
+      'UPDATE renovaciones SET estado = ? WHERE id_renovacion = ?',
+      ['vencida', ren.id_renovacion]
+    );
+  }
 
     // Para cada renovación calculamos las fechas y el precio
-    const resultado = renovaciones.map(r => {
+    const resultado = renovacionesValidas.map(r => {
       const fechas = calcularFechasDelMesSiguiente(r.dia, r.mes, r.anio);
       const monto = parseFloat(r.precio_individual) * fechas.length;
       const nombreMes = new Date(r.anio, r.mes - 1, 1)
@@ -129,7 +148,8 @@ const renovacionesService = {
         fecha_vencimiento: r.fecha_vencimiento,
         cantidad_clases:  fechas.length,
         fechas,
-        monto
+        monto,
+        puede_renovar_ahora: ventanaActiva
       };
     });
 
@@ -145,6 +165,13 @@ const renovacionesService = {
     if (renovacion.estado !== 'pendiente') {
       throw new Error('Esta renovación ya fue confirmada o venció.');
     }
+    
+    // Verificar que no esté vencida (día 11 del mes de vencimiento)
+    const hoy = new Date().toISOString().split('T')[0];
+    if (renovacion.fecha_vencimiento < hoy) {
+      throw new Error('Esta renovación venció. No se puede renovar.');
+    }
+    
     if (!estaEnVentanaRenovacion()) {
       throw new Error('Estás fuera de la ventana de renovación.');
     }
