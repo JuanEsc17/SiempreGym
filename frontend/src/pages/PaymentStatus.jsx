@@ -85,12 +85,24 @@ export default function PaymentStatus() {
           // 🟢 CASO 1: SUSCRIPCIÓN MENSUAL
           // ─────────────────────────────
           if (pending.tipo === 'mensual') {
+            // Si tiene id_renovacion es una renovación, sino es reserva nueva
+            url = pending.id_renovacion 
+            ? `${BASE_URL}/renovaciones/confirmar`
+            : `${BASE_URL}/reservas/crear-mensual`;
 
-            url = `${BASE_URL}/reservas/crear-mensual`;//bver esto
-             body = {
-              id_usuario: pending.id_usuario,
-              id_clase: pending.id_clase,
-              fechas: pending.fechas,
+            body = pending.id_renovacion
+            ? {
+              id_renovacion: pending.id_renovacion,
+              id_usuario:    pending.id_usuario,
+              id_clase:      pending.id_clase,
+              mes:           pending.mes,
+              anio:          pending.anio,
+              monto_total:   pending.precio_total
+              } 
+            : {
+              id_usuario:  pending.id_usuario,
+              id_clase:    pending.id_clase,
+              fechas:      pending.fechas,
               monto_total: pending.precio_total
             };
         }

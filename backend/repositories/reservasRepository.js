@@ -42,7 +42,7 @@ const reservasRepository = {
 
   contarReservasDeInstancia: async (id_instancia) => {
     const [rows] = await db.promise().execute(
-      "SELECT COUNT(*) as total FROM reservas WHERE id_instancia = ? AND estado = 'reservada'",
+      "SELECT COUNT(*) as total FROM reservas WHERE id_instancia = ? AND estado IN ('reservada', 'por_renovar')",
       [id_instancia]
     );
     return rows[0].total;

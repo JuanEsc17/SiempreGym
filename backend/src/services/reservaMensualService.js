@@ -145,7 +145,24 @@ const reservaMensualService = {
       fecha_clase_str
     );
   }
+  //nuevo para renovar la reservas del proximo mes
+  try {
+    const renovacionesService = require('./renovacionesService');
 
+    // Extraer mes y anio de la primera fecha reservada
+    const primeraFecha = new Date(fechasArray[0]);
+    const mes  = primeraFecha.getMonth() + 1;
+    const anio = primeraFecha.getFullYear();
+
+    await renovacionesService.generarRenovacion(
+      id_usuario, id_clase, mes, anio
+    );
+
+    console.log(`[RENOVACION] Generada para usuario ${id_usuario}, clase ${id_clase}, mes ${mes}/${anio}`);
+  } catch (error) {
+    // No frenamos el flujo si falla la generación de renovación
+    console.error('[RENOVACION] Error al generar renovación automática:', error.message);
+  }
   return {
     success: true,
     reservasCreadas: fechasArray.length
