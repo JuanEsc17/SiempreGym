@@ -90,7 +90,27 @@ export default function EmpleadoPanel() {
               </p>
             </div>
           </div>
+          {/* REGISTRAR ASISTENCIA */}
+          <div
+          onClick={() => navigate("/empleado/asistencia")}
+          className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
+          style={{ background: '#6D28D9' }}
+          >
+          <span className="text-3xl">✅</span>
 
+          <div>
+          <p className="text-white font-medium">
+              Registrar asistencia
+          </p>
+
+          <p
+          className="text-xs mt-1"
+          style={{ color: 'rgba(255,255,255,0.6)' }}
+          >
+            Marcar asistencia manual de clientes
+          </p>
+          </div>
+        </div>
         </div>
       </div>
     </div>
