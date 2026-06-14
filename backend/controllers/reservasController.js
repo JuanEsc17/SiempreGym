@@ -298,6 +298,166 @@ class ReservasController {
       res.status(500).json({ ok: false, mensaje: error.message });
     }
   }
+
+  // ============================================================
+  // CANCELACIÓN DE RESERVAS
+  // ============================================================
+  async cancelarReserva(req, res) {
+    try {
+      const { id_reserva } = req.params;
+      const id_usuario = req.body?.id_usuario;
+
+      if (!id_reserva || !id_usuario) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'id_reserva e id_usuario son obligatorios.'
+        });
+      }
+
+      // 1. Obtener detalles de la reserva
+      const reserva = await reservasRepository.obtenerReservaPorId(id_reserva);
+      
+      if (!reserva) {
+        return res.status(404).json({
+          ok: false,
+          mensaje: 'No hay clases reservadas'
+        });
+      }
+
+      // Validar que el usuario sea el dueño de la reserva
+      if (reserva.id_usuario !== id_usuario) {
+        return res.status(403).json({
+          ok: false,
+          mensaje: 'No tienes permiso para cancelar esta reserva.'
+        });
+      }
+
+      // Validar que no esté ya cancelada o completada
+      if (reserva.estado !== 'reservada' && reserva.estado !== 'pendiente') {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'No se puede cancelar esta reserva (ya fue completada o cancelada).'
+        });
+      }
+
+      // 2. Contar cancelaciones del mes
+      const cancelacionesDelMes = await reservasRepository.contarCancelacionesMes(id_usuario);
+      
+      if (cancelacionesDelMes >= 3) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'Se alcanzo el límite de cancelaciones en el mes.'
+        });
+      }
+
+      // 3. Validar plazo según tipo de reserva
+      const ahora = new Date();
+      const fechaClase = new Date(reserva.fecha_clase);
+      const horasRestantes = (fechaClase - ahora) / (1000 * 60 * 60);
+      
+      let acreditarCredito = false;
+      let montoDevolucion = 0;
+      let tipoDevolucion = '';
+      let reservasACancelar = [];
+
+      // CASO 1: RESERVA MENSUAL — Cancelar TODAS las clases del mes
+      if (reserva.tipo_reserva === 'mensual') {
+        reservasACancelar = await reservasRepository.obtenerReservasDelMes(
+          id_usuario, 
+          reserva.id_clase, 
+          id_reserva
+        );
+
+        // Mensual: debe ser > 48 horas (validamos la primera)
+        if (horasRestantes > 48) {
+          acreditarCredito = true;
+        }
+      } 
+      // CASO 2: RESERVA INDIVIDUAL
+      else if (reserva.tipo_reserva === 'individual') {
+        reservasACancelar = [id_reserva]; // Solo esta
+
+        // Individual: debe ser > 24 horas
+        if (horasRestantes > 24) {
+          acreditarCredito = true;
+        }
+
+        // Manejar devoluciones según tipo de pago
+        if (reserva.tipo_pago === 'seña' && horasRestantes > 24) {
+          montoDevolucion = await reservasRepository.obtenerSenaPagada(id_reserva);
+          tipoDevolucion = 'seña';
+        }
+      }
+
+      // 4. Cancelar la(s) reserva(s)
+      if (reserva.tipo_reserva === 'mensual') {
+        await reservasRepository.cancelarReservasMensualesTodas(reservasACancelar);
+      } else {
+        await reservasRepository.cancelarReserva(id_reserva);
+      }
+
+      // 5. Liberar cupos
+      if (reserva.id_instancia) {
+        await reservasRepository.contarReservasDeInstancia(reserva.id_instancia);
+      }
+
+      // 6. Procesar créditos y devoluciones
+      let creditosAcreditados = 0;
+
+      if (reserva.tipo_reserva === 'mensual' && acreditarCredito) {
+        // Acreditar 1 crédito por CADA clase cancelada del mes
+        creditosAcreditados = reservasACancelar.length;
+        for (let i = 0; i < creditosAcreditados; i++) {
+          await reservasRepository.agregarCredito(id_usuario, 1);
+        }
+      } else if (reserva.tipo_reserva === 'individual') {
+        if (reserva.tipo_pago === 'credito' && acreditarCredito) {
+          creditosAcreditados = 1;
+          await reservasRepository.agregarCredito(id_usuario, 1);
+        } else if (reserva.tipo_pago === 'total' && acreditarCredito) {
+          creditosAcreditados = 1;
+          await reservasRepository.agregarCredito(id_usuario, 1);
+        } else if (reserva.tipo_pago === 'seña' && horasRestantes > 24) {
+          if (montoDevolucion > 0) {
+            await reservasRepository.registrarDevolucion(id_usuario, montoDevolucion, 'seña');
+          }
+        }
+      }
+
+      // 7. Responder
+      let mensaje = '';
+      if (reserva.tipo_reserva === 'mensual') {
+        if (acreditarCredito) {
+          mensaje = `Reserva mensual cancelada exitosamente. Se acreditaron ${creditosAcreditados} créditos en tu cuenta (una por cada clase del mes).`;
+        } else {
+          mensaje = `Reserva mensual cancelada exitosamente. No se acreditaron créditos por cancelación fuera de tiempo.`;
+        }
+      } else {
+        if (tipoDevolucion) {
+          mensaje = `Reserva cancelada exitosamente - Se devolverá ${tipoDevolucion}`;
+        } else if (creditosAcreditados > 0) {
+          mensaje = 'Reserva cancelada exitosamente - Se acreditó un crédito en tu cuenta';
+        } else {
+          mensaje = 'Reserva cancelada exitosamente';
+        }
+      }
+
+      return res.status(200).json({
+        ok: true,
+        mensaje: mensaje,
+        acreditoODevolucion: acreditarCredito || montoDevolucion > 0,
+        creditosAcreditados: creditosAcreditados,
+        reservasCanceladas: reservasACancelar.length
+      });
+
+    } catch (error) {
+      console.error('Error al cancelar reserva:', error);
+      return res.status(500).json({
+        ok: false,
+        mensaje: error.message
+      });
+    }
+  }
 }
 
 module.exports = ReservasController;

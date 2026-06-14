@@ -91,6 +91,30 @@ export default function MisReservas() {
     } finally { setLoading(false); }
   };
 
+  const cancelarReserva = async (id_reserva) => {
+    if (!window.confirm('¿Estás seguro? No podrás recuperar tu reserva.')) return;
+    
+    try {
+      const response = await fetch(`${BASE_URL}/reservas/${id_reserva}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_usuario: getUsuarioId() })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(data.mensaje);
+        cargar(); // Recargar lista
+      } else {
+        alert(`Error: ${data.mensaje}`);
+      }
+    } catch (error) {
+      console.error('Error al cancelar:', error);
+      alert('Error al conectar con el servidor');
+    }
+  };
+
   const completarPagoSena = async (reserva) => {
   if (!reserva.id_reserva || !reserva.id_clase) {
     alert('Faltan datos de la reserva');
@@ -197,119 +221,242 @@ export default function MisReservas() {
           </p>
         </div>
       ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           {filtradas.map(r => {
             const estado     = getEstado(r);
             const colorClase = COLORES_CLASE[r.actividad?.toLowerCase()] || '#5B0672';
             const imgClase = IMAGENES_CLASE[r.actividad?.toLowerCase()] || null;
             const imagenUrl  = r.imagen ? `${UPLOADS_URL}/${r.imagen}` : null;
             const puedeCanc  = r.estado === 'reservada' || r.estado === 'pendiente';
-            // Dentro del .map(), antes del return:
+            
             return (
               <div key={r.id_reserva}
-                style={{ background:'#1a1a2e', borderRadius:14, overflow:'hidden',
-                  border:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'stretch' }}>
+                style={{ 
+                  background:'#1a1a2e', 
+                  borderRadius:14, 
+                  overflow:'hidden',
+                  border:`1px solid ${estado.color}33`,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                  transition: 'all 0.2s ease'
+                }}>
+                
+                {/* Card superior - Clase info */}
+                <div style={{ display:'flex', gap:0 }}>
+                  {/* Imagen */}
+                  <div style={{ 
+                    width:140, 
+                    flexShrink:0, 
+                    background:colorClase, 
+                    position:'relative',
+                    display:'flex', 
+                    alignItems:'center', 
+                    justifyContent:'center', 
+                    overflow:'hidden' 
+                  }}>
+                    <img 
+                      src={imagenUrl || imgClase || ''}
+                      alt={r.actividad}
+                      style={{ width:'100%', height:'100%', objectFit:'cover', position:'absolute', inset:0 }}
+                      onError={e => {
+                        if (imgClase) e.target.src = imgClase;
+                        else e.target.style.display = 'none';
+                      }}
+                    />
+                    <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.35)' }} />
+                  </div>
 
-                {/* Imagen */}
-                <div style={{ width:130, flexShrink:0, background:colorClase, position:'relative',
-                  display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
-                <img src={imagenUrl || imgClase || ''}
-                    alt={r.actividad}
-                    style={{ width:'100%', height:'100%', objectFit:'cover', position:'absolute', inset:0 }}
-                    onError={e => {
-                    if (imgClase) e.target.src = imgClase;
-                    else e.target.style.display = 'none';
-                    }}
-                />
-                <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)' }} />
-                    <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)' }} />
-                </div>
-
-                {/* Info */}
-                <div style={{ flex:1, padding:'14px 20px', display:'flex',
-                  alignItems:'center', gap:20, flexWrap:'wrap' }}>
-                    {/* Nombre y fecha */}
-                <div style={{ minWidth:190, flex:1 }}>
-                    <div style={{ display:'flex', alignItems:'baseline', gap:12, marginBottom:8 }}>
-                        <p style={{ color:'white', fontWeight:'bold', fontSize:18, margin:0,
-                            textTransform:'capitalize' }}>
-                            {r.actividad}
-                        </p>
-                    <p style={{ color:'rgba(255,255,255,0.6)', fontSize:15, margin:0, fontWeight:500 }}>
-                        {formatFecha(r.fecha_clase)} • {r.horario?.slice(0,5)} hs
-                    </p>
-                    </div>
-                    {(r.nombre_sala || r.nombre_profesor) && (
-                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                        {r.nombre_sala && (
-                        <span style={{ background:'rgba(138,11,210,0.2)', border:'1px solid rgba(138,11,210,0.35)',
-                        color:'#c084fc', fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:6 }}>
-                        🏛️ Sala {r.nombre_sala}
-                        </span>
-                    )}
-                    {r.nombre_profesor && (
-                    <span style={{ background:'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)',
-                        color:'#a5b4fc', fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:6 }}>
-                        👤 Prof. {r.nombre_profesor.split(' ')[0]}
-                    </span>
-                    )}
-                </div>
-            )}
-        </div>
-
-                  {/* Tipo pago */}
-                  <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:130 }}>
-                    <span style={{ fontSize:20, opacity:0.5 }}>📅</span>
+                  {/* Info principal */}
+                  <div style={{ flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', justifyContent:'center', gap:8 }}>
                     <div>
-                      <p style={{ color:'rgba(255,255,255,0.7)', fontSize:13, margin:'0 0 1px',
-                        textTransform:'capitalize', fontWeight:600 }}>
-                        {r.tipo_reserva}
+                      <h3 style={{ 
+                        color:'white', 
+                        fontWeight:'bold', 
+                        fontSize:18, 
+                        margin:'0 0 4px 0',
+                        textTransform:'capitalize' 
+                      }}>
+                        {r.actividad}
+                      </h3>
+                      <p style={{ 
+                        color:'rgba(255,255,255,0.6)', 
+                        fontSize:13, 
+                        margin:0,
+                        fontWeight:500
+                      }}>
+                        📅 {formatFecha(r.fecha_clase)} • ⏰ {r.horario?.slice(0,5)} hs
                       </p>
-                      <p style={{ color:'rgba(255,255,255,0.35)', fontSize:12, margin:0 }}>
+                    </div>
+                    
+                    {/* Detalles */}
+                    <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                      {r.nombre_sala && (
+                        <span style={{ 
+                          background:'rgba(138,11,210,0.2)', 
+                          border:'1px solid rgba(138,11,210,0.35)',
+                          color:'#c084fc', 
+                          fontSize:11, 
+                          fontWeight:600, 
+                          padding:'4px 10px', 
+                          borderRadius:6 
+                        }}>
+                          🏛️ Sala {r.nombre_sala}
+                        </span>
+                      )}
+                      {r.nombre_profesor && (
+                        <span style={{ 
+                          background:'rgba(99,102,241,0.15)', 
+                          border:'1px solid rgba(99,102,241,0.3)',
+                          color:'#a5b4fc', 
+                          fontSize:11, 
+                          fontWeight:600, 
+                          padding:'4px 10px', 
+                          borderRadius:6 
+                        }}>
+                          👤 {r.nombre_profesor.split(' ')[0]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Estado - lado derecho */}
+                  <div style={{ padding:'16px 20px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:4, textAlign:'right' }}>
+                    <div style={{ 
+                      display:'inline-flex', 
+                      alignItems:'center', 
+                      gap:6,
+                      background:estado.bg, 
+                      color:estado.color, 
+                      fontSize:12,
+                      fontWeight:'bold', 
+                      padding:'6px 14px', 
+                      borderRadius:999,
+                      border: `1px solid ${estado.color}44`
+                    }}>
+                      {estado.icon} {estado.label}
+                    </div>
+                    {r.estado === 'pendiente' && (
+                      <p style={{ 
+                        color:'rgba(255,255,255,0.4)', 
+                        fontSize:11, 
+                        margin:0,
+                        fontWeight:500
+                      }}>
+                        ⏳ <Countdown />
+                      </p>
+                    )}
+                    {r.estado !== 'pendiente' && estado.desc && (
+                      <p style={{ 
+                        color:'rgba(255,255,255,0.3)', 
+                        fontSize:11, 
+                        margin:0 
+                      }}>
+                        {estado.desc}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ height:'1px', background:'rgba(255,255,255,0.08)' }} />
+
+                {/* Card inferior - Detalles y acciones */}
+                <div style={{ padding:'12px 20px', display:'flex', alignItems:'center', gap:16, justifyContent:'space-between', flexWrap:'wrap' }}>
+                  {/* Tipo reserva y pago */}
+                  <div style={{ display:'flex', gap:16, flex:1, minWidth:200 }}>
+                    <div>
+                      <p style={{ 
+                        color:'rgba(255,255,255,0.5)', 
+                        fontSize:11, 
+                        margin:'0 0 4px 0',
+                        textTransform:'uppercase',
+                        letterSpacing:'0.05em',
+                        fontWeight:600
+                      }}>
+                        Tipo
+                      </p>
+                      <p style={{ 
+                        color:'white', 
+                        fontSize:13, 
+                        margin:0,
+                        fontWeight:600,
+                        textTransform:'capitalize'
+                      }}>
+                        {r.tipo_reserva === 'mensual' ? '📅 Membresía' : '🎫 Individual'}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ 
+                        color:'rgba(255,255,255,0.5)', 
+                        fontSize:11, 
+                        margin:'0 0 4px 0',
+                        textTransform:'uppercase',
+                        letterSpacing:'0.05em',
+                        fontWeight:600
+                      }}>
+                        Pago
+                      </p>
+                      <p style={{ 
+                        color:'#b4b4ff', 
+                        fontSize:13, 
+                        margin:0,
+                        fontWeight:500
+                      }}>
                         {getPagoInfo(r)}
                       </p>
                     </div>
                   </div>
 
-                  {/* Estado */}
-                  <div style={{ minWidth:170 }}>
-                    <div style={{ display:'inline-flex', alignItems:'center', gap:6,
-                      background:estado.bg, color:estado.color, fontSize:12,
-                      fontWeight:'bold', padding:'5px 12px', borderRadius:999, marginBottom:5 }}>
-                      {estado.icon} {estado.label}
-                    </div>
-                    {r.estado === 'pendiente' && (
-                      <p style={{ color:'rgba(255,255,255,0.4)', fontSize:12, margin:0 }}>
-                        Te quedan <Countdown /> para confirmar
-                      </p>
+                  {/* Botones */}
+                  <div style={{ display:'flex', gap:8, flexShrink:0 }}>
+                    {r.tipo_pago === 'seña' && r.saldo_pendiente && r.estado === 'reservada' && (
+                      <button 
+                        onClick={() => completarPagoSena(r)}
+                        style={{ 
+                          background:'rgba(34,197,94,0.15)', 
+                          border:'1px solid rgba(34,197,94,0.4)',
+                          color:'#22c55e', 
+                          borderRadius:8, 
+                          padding:'8px 14px', 
+                          fontSize:12,
+                          fontWeight:'bold', 
+                          cursor:'pointer', 
+                          display:'flex', 
+                          alignItems:'center', 
+                          gap:6,
+                          transition:'all 0.2s',
+                          whiteSpace:'nowrap'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(34,197,94,0.25)'}
+                        onMouseLeave={(e) => e.target.style.background = 'rgba(34,197,94,0.15)'}
+                      >
+                        💳 Pagar
+                      </button>
                     )}
-                    {r.estado !== 'pendiente' && estado.desc && (
-                      <p style={{ color:'rgba(255,255,255,0.3)', fontSize:12, margin:0 }}>{estado.desc}</p>
+                    {puedeCanc && (
+                      <button 
+                        onClick={() => cancelarReserva(r.id_reserva)} 
+                        style={{ 
+                          background:'rgba(239,68,68,0.15)', 
+                          border:'1px solid rgba(239,68,68,0.4)',
+                          color:'#ff6b6b', 
+                          borderRadius:8, 
+                          padding:'8px 14px', 
+                          fontSize:12,
+                          fontWeight:'bold', 
+                          cursor:'pointer', 
+                          display:'flex', 
+                          alignItems:'center', 
+                          gap:6,
+                          transition:'all 0.2s',
+                          whiteSpace:'nowrap'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(239,68,68,0.25)'}
+                        onMouseLeave={(e) => e.target.style.background = 'rgba(239,68,68,0.15)'}
+                      >
+                        🗑️ Cancelar
+                      </button>
                     )}
                   </div>
-
-                  {/* Acciones */}
-                  <div style={{ flexShrink:0, minWidth:90, display:'flex', gap:6, flexDirection:'column' }}>
-                  {/* Botón completar pago seña */}
-                  {r.tipo_pago === 'seña' && r.saldo_pendiente && r.estado === 'reservada' && (
-                  <button 
-                      onClick={() => completarPagoSena(r)}
-                      style={{ background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.3)',
-                      color:'#22c55e', borderRadius:10, padding:'8px 12px', fontSize:11,
-                      fontWeight:'bold', cursor:'pointer', display:'flex', alignItems:'center', gap:4, justifyContent:'center' }}>
-                    💳 Completar pago
-                </button>
-                  )}
-                  {/* Botón cancelar */}
-                  {puedeCanc && (
-                <button style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.3)',
-                    color:'#ef4444', borderRadius:10, padding:'8px 16px', fontSize:12,
-                    fontWeight:'bold', cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-                    🗑️ Cancelar
-                </button>
-                )}
-                </div>
-
                 </div>
               </div>
             );

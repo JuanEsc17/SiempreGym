@@ -111,6 +111,106 @@ const reservasRepository = {
 );
   return rows;
   },
+
+  // ─── CANCELACIÓN ──────────────────────────────────────────────
+  obtenerReservaPorId: async (id_reserva) => {
+    const [rows] = await db.promise().execute(
+      `SELECT r.id_reserva, r.id_usuario, r.id_clase, r.id_instancia, r.tipo_reserva, 
+              r.estado, r.tipo_pago, r.saldo_pendiente, r.fecha_reserva, r.fecha_clase,
+              c.actividad, c.precio_individual, c.cupo_maximo
+       FROM reservas r
+       JOIN clases c ON r.id_clase = c.id_clase
+       WHERE r.id_reserva = ?`,
+      [id_reserva]
+    );
+    return rows[0] || null;
+  },
+
+  contarCancelacionesMes: async (id_usuario) => {
+    const ahora = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const finMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0);
+    
+    const [rows] = await db.promise().execute(
+      `SELECT COUNT(*) as total FROM reservas 
+       WHERE id_usuario = ? AND estado = 'cancelada' 
+       AND fecha_reserva >= ? AND fecha_reserva <= ?`,
+      [id_usuario, inicioMes, finMes]
+    );
+    return rows[0].total || 0;
+  },
+
+  cancelarReserva: async (id_reserva) => {
+    const [result] = await db.promise().execute(
+      'UPDATE reservas SET estado = ? WHERE id_reserva = ?',
+      ['cancelada', id_reserva]
+    );
+    return result.affectedRows > 0;
+  },
+
+  agregarCredito: async (id_usuario, cantidad = 1) => {
+    const [result] = await db.promise().execute(
+      'UPDATE usuarios SET creditos = creditos + ? WHERE id_usuario = ?',
+      [cantidad, id_usuario]
+    );
+    return result.affectedRows > 0;
+  },
+
+  obtenerSenaPagada: async (id_reserva) => {
+    const [rows] = await db.promise().execute(
+      `SELECT (c.precio_individual / 2) as monto_sena 
+       FROM reservas r
+       JOIN clases c ON r.id_clase = c.id_clase
+       WHERE r.id_reserva = ?`,
+      [id_reserva]
+    );
+    return rows[0]?.monto_sena || 0;
+  },
+
+  registrarDevolucion: async (id_usuario, monto, tipo_devolucion) => {
+    const [result] = await db.promise().execute(
+      `INSERT INTO devoluciones (id_usuario, monto, tipo, fecha)
+       VALUES (?, ?, ?, NOW())`,
+      [id_usuario, monto, tipo_devolucion]
+    );
+    return result.insertId;
+  },
+
+  obtenerReservasDelMes: async (id_usuario, id_clase, id_reserva) => {
+    // Obtener la fecha de la primera reserva para determinar el mes
+    const [reservaActual] = await db.promise().execute(
+      'SELECT fecha_clase FROM reservas WHERE id_reserva = ?',
+      [id_reserva]
+    );
+    if (!reservaActual || reservaActual.length === 0) return [];
+
+    const fechaClase = new Date(reservaActual[0].fecha_clase);
+    const mes = fechaClase.getMonth() + 1;
+    const anio = fechaClase.getFullYear();
+
+    // Obtener todas las reservas del usuario para esta clase en este mes
+    const [rows] = await db.promise().execute(
+      `SELECT id_reserva FROM reservas 
+       WHERE id_usuario = ? 
+       AND id_clase = ? 
+       AND tipo_reserva = 'mensual'
+       AND estado IN ('reservada', 'pendiente')
+       AND MONTH(fecha_clase) = ? 
+       AND YEAR(fecha_clase) = ?`,
+      [id_usuario, id_clase, mes, anio]
+    );
+    return rows.map(r => r.id_reserva);
+  },
+
+  cancelarReservasMensualesTodas: async (id_reservas) => {
+    if (!id_reservas || id_reservas.length === 0) return 0;
+    const placeholders = id_reservas.map(() => '?').join(', ');
+    const [result] = await db.promise().execute(
+      `UPDATE reservas SET estado = 'cancelada' WHERE id_reserva IN (${placeholders})`,
+      id_reservas
+    );
+    return result.affectedRows;
+  }
 };
 
 module.exports = reservasRepository;

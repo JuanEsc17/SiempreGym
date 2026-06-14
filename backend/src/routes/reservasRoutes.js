@@ -41,4 +41,7 @@ router.get('/usuario/:id', (req, res) => ctrl.getMisReservas(req, res));
 
 router.post('/completar-pago', (req, res) => ctrl.completarPago(req, res));// completar pago de una seña existente (individual)
 
+// ─── CANCELACIÓN ──────────────────────────────────────────────────
+router.delete('/:id_reserva', (req, res) => ctrl.cancelarReserva(req, res));
+
 module.exports = router;
