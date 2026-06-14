@@ -7,9 +7,9 @@ const BASE_URL = 'http://localhost:3000/api';
 const getUsuarioId = () => JSON.parse(localStorage.getItem('user'))?.id || null;
 
 const IMAGENES_CLASE = {
-  yoga:      new URL('../assets/Yoga2.png',        import.meta.url).href,
-  pilates:   new URL('../assets/Pilatesmq.png',    import.meta.url).href,
-  funcional: new URL('../assets/Funcional.png',    import.meta.url).href,
+  yoga:      new URL('../assets/tapete.jpeg',        import.meta.url).href,
+  pilates:   new URL('../assets/pesa.png',    import.meta.url).href,
+  funcional: new URL('../assets/pesa2.png',    import.meta.url).href,
 };
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -66,7 +66,7 @@ function TarjetaRenovacion({ renovacion, onRenovar }) {
               Reserva mensual
             </span>
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '0 0 2px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '17px', margin: '0 0 2px' }}>
             📅 {renovacion.dia.charAt(0).toUpperCase() + renovacion.dia.slice(1)} {renovacion.horario?.slice(0,5)} hs
           </p>
           <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', margin: 0 }}>
@@ -145,7 +145,7 @@ function TarjetaRenovacion({ renovacion, onRenovar }) {
             className="w-full py-3 rounded-xl text-white font-bold border-none cursor-pointer transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2"
             style={{ background: '#8A0BD2', fontSize: '14px',
                      boxShadow: '0 4px 20px rgba(138,11,210,0.35)' }}>
-            🔄 Renovar reserva
+             🔁Renovar reserva
           </button>
         )}
       </div>
