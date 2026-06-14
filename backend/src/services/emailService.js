@@ -229,6 +229,99 @@ const sendPermisoRechazado = async (email, nombre) => {
     console.error("Error al enviar email de permiso rechazado:", error)
     return false
   }
+
+}
+const sendPasswordResetCode = async (email, nombre, codigo) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Código de confirmación - SiempreGym",
+      html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+          <div style="max-width: 400px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="color: #5B0672; text-align: center;">SiempreGym</h2>
+            <h3 style="color: #5B0672; text-align: center;">Recuperar Contraseña</h3>
+            
+            <p style="color: #666; text-align: center;">Hola <b>${nombre}</b>,</p>
+            
+            <p style="color: #666; text-align: center;">
+              Recibimos una solicitud para cambiar tu contraseña. Usa este código para continuar:
+            </p>
+            
+            <div style="background-color: #E2CEF6; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+              <p style="font-size: 32px; font-weight: bold; color: #5B0672; letter-spacing: 5px; margin: 0;">
+                ${codigo}
+              </p>
+            </div>
+            
+            <p style="color: #999; text-align: center; font-size: 12px;">
+              Este código expira en 15 minutos
+            </p>
+            
+            <p style="color: #999; text-align: center; font-size: 12px;">
+              Si no solicitaste este cambio, ignora este email
+            </p>
+          </div>
+        </div>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email de recuperación enviado:", info.response);
+    return true;
+  } catch (error) {
+    console.error("Error al enviar email de recuperación:", error);
+    return false;
+  }
 }
 
-module.exports = { sendVerificationCode, sendPagoConfirmado, sendPermisoAprobado, sendPermisoRechazado }
+const sendPasswordChanged = async (email, nombre) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Contraseña actualizada - SiempreGym",
+      html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+          <div style="max-width: 400px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="color: #5B0672; text-align: center;">SiempreGym</h2>
+            <h3 style="color: #14b8a6; text-align: center;">Contraseña Actualizada</h3>
+            
+            <p style="color: #666;">Hola <b>${nombre}</b>,</p>
+            
+            <div style="background-color: #E2CEF6; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="color: #5B0672; font-size: 16px; font-weight: bold; margin: 0;">
+                ✅ Tu contraseña ha sido actualizada exitosamente
+              </p>
+            </div>
+            
+            <p style="color: #666;">
+              Ya puedes iniciar sesión con tu nueva contraseña.
+            </p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">
+              Gracias por usar SiempreGym. 💪
+            </p>
+          </div>
+        </div>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email de cambio de contraseña enviado:", info.response);
+    return true;
+  } catch (error) {
+    console.error("Error al enviar email de cambio de contraseña:", error);
+    return false;
+  }
+}
+
+module.exports = {
+  sendVerificationCode,
+  sendPagoConfirmado,
+  sendPermisoAprobado,
+  sendPermisoRechazado,
+  sendPasswordResetCode,
+  sendPasswordChanged
+}

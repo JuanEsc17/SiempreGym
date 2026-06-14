@@ -2,6 +2,10 @@ const db = require('../src/db');
 const UsuariosRepository = require('../repositories/usuariosRepository');
 const { sendPermisoAprobado, sendPermisoRechazado } = require('../src/services/emailService');
 
+//para cambio de contraseña
+const UsuariosService = require('../src/services/usuariosService');
+const service = new UsuariosService(db);
+
 const repo = new UsuariosRepository(db);
 
 const UsuariosController = {
@@ -137,4 +141,43 @@ const UsuariosController = {
     }
   }
 }
+
+//para cambio de contraseña
+
+const UsuariosController = {
+  
+  // solicito el codigo de verificación para cambio de contraseña
+  async solicitarCambioContraseña(req, res) {
+    try {
+      const { email } = req.body;
+      const resultado = await service.solicitarCambioContraseña(email);
+      res.json({ ok: true, ...resultado });
+    } catch (error) {
+      res.status(error.status || 500).json({ ok: false, mensaje: error.mensaje || error.message });
+    }
+  },
+
+  // verifico el codigo de verificación para cambio de contraseña
+  async verificarCodigo(req, res) {
+    try {
+      const { email, codigo } = req.body;
+      const resultado = await service.verificarCodigo(email, codigo);
+      res.json({ ok: true, ...resultado });
+    } catch (error) {
+      res.status(error.status || 500).json({ ok: false, mensaje: error.mensaje || error.message });
+    }
+  },
+
+  // cambio la contraseña
+  async cambiarContraseña(req, res) {
+    try {
+      const { email, contraseñaNueva, confirmacionContraseña } = req.body;
+      const resultado = await service.cambiarContraseña(email, null, contraseñaNueva, confirmacionContraseña);
+      res.json({ ok: true, ...resultado });
+    } catch (error) {
+      res.status(error.status || 500).json({ ok: false, mensaje: error.mensaje || error.message });
+    }
+  }
+};
+
 module.exports = UsuariosController;

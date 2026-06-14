@@ -21,6 +21,11 @@ import ListaEspera from "./pages/ListaEspera";
 import RegistrarAsistencia from './pages/RegistrarAsistencia';
 import Renovaciones from "./pages/Renovaciones.jsx"
 
+//para cambio de contraseña
+import ForgotPassword from "./pages/ForgotPassword"
+import VerifyCode from "./pages/VerifyCode"
+import ResetPassword from "./pages/ResetPassword"
+
 // Ruta protegida para usuarios autenticados (solo clientes regulares)
 function RutaProtegida({ children }) {
   const { isAuthenticated, isAdmin, isEmpleado } = useAuth()
@@ -141,6 +146,12 @@ function AppContent() {
         <Route path="/empleado" element={<RutaEmpleado><EmpleadoPanel /></RutaEmpleado>}/>
         <Route path="/empleado/registrar-usuario" element={<RutaEmpleado><RegistrarUsuarioEmpleado /></RutaEmpleado>} />
         <Route path="/empleado/asistencia" element={<RutaEmpleado><RegistrarAsistencia /></RutaEmpleado>}/>
+
+        {/** Rutas para recuperación de contraseña */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-code" element={<VerifyCode />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
       </Routes>
       </>
   )

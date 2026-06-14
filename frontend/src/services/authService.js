@@ -65,3 +65,48 @@ export const getCurrentUser = () => {
 export const isAuthenticated = () => {
   return !!localStorage.getItem("token")
 }
+
+//para cambio de contraseña
+const API_USUARIOS_URL = "http://localhost:3000/api/usuarios"
+
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await fetch(`${API_USUARIOS_URL}/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    })
+    return response.json()
+  } catch (error) {
+    console.error("Error al solicitar reset:", error)
+    return { ok: false, mensaje: "Error de conexión con el servidor" }
+  }
+}
+
+export const verifyResetCode = async (email, codigo) => {
+  try {
+    const response = await fetch(`${API_USUARIOS_URL}/verify-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, codigo })
+    })
+    return response.json()
+  } catch (error) {
+    console.error("Error al verificar código:", error)
+    return { ok: false, mensaje: "Error de conexión con el servidor" }
+  }
+}
+
+export const resetPassword = async (email, contraseñaNueva, confirmacionContraseña) => {
+  try {
+    const response = await fetch(`${API_USUARIOS_URL}/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, contraseñaNueva, confirmacionContraseña })
+    })
+    return response.json()
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error)
+    return { ok: false, mensaje: "Error de conexión con el servidor" }
+  }
+}

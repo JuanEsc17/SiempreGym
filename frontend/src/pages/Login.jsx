@@ -4,6 +4,9 @@ import { useAuth } from "../context/AuthContext"
 import gymImage from "../assets/hero.png"
 import { loginUser, verify2FA } from "../services/authService"
 
+//para cambio de contraseña
+import { Link } from "react-router-dom"
+
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
@@ -210,9 +213,9 @@ export default function Login() {
                 {isLoading ? "Iniciando..." : "Iniciar sesión →"}
               </button>
               <div className="text-center mb-6">
-                <a href="#" className="text-sm text-[#5B0672] underline hover:text-[#8A0BD2]">
+                <Link to="/forgot-password" className="text-sm text-[#5B0672] underline hover:text-[#8A0BD2]">
                   Olvidé mi contraseña
-                </a>
+                </Link>
               </div>
               <div className="text-center">
                 <p className="text-sm text-[#5B0672]">

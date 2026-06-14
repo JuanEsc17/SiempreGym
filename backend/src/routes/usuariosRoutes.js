@@ -18,4 +18,9 @@ router.put('/permisos/:id/resubmit', upload.single('permiso'), UsuariosControlle
 
 router.get('/:id', UsuariosController.getById);
 
+// Rutas de recuperación de contraseña
+router.post('/forgot-password', UsuariosController.solicitarCambioContraseña);
+router.post('/verify-code', UsuariosController.verificarCodigo);
+router.post('/reset-password', UsuariosController.cambiarContraseña);
+
 module.exports = router;
