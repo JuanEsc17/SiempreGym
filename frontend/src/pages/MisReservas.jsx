@@ -78,6 +78,7 @@ export default function MisReservas() {
   const [reservas, setReservas]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [filtroTipo, setFiltroTipo]     = useState('todos');
+  const [vista, setVista] = useState('proximas'); // 'proximas' o 'historial'
 
   useEffect(() => { cargar(); }, []);
 
@@ -164,7 +165,29 @@ export default function MisReservas() {
 
   const filtradas = reservas.filter(r => {
     if (filtroTipo !== 'todos' && r.tipo_reserva !== filtroTipo) return false;
-    return true;
+    
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fechaClase = new Date(r.fecha_clase);
+    
+    if (vista === 'proximas') {
+      // Solo mostrar futuras
+      return fechaClase >= hoy;
+    } else {
+      // Mostrar solo pasadas
+      return fechaClase < hoy;
+    }
+  }).sort((a, b) => {
+    const fechaA = new Date(a.fecha_clase);
+    const fechaB = new Date(b.fecha_clase);
+    
+    if (vista === 'proximas') {
+      // Próximas: de más cercana a más lejana
+      return fechaA - fechaB;
+    } else {
+      // Historial: de más reciente a más antigua
+      return fechaB - fechaA;
+    }
   });
 
   const selectStyle = {
@@ -188,7 +211,7 @@ export default function MisReservas() {
         Administrá tus clases reservadas
       </p>
 
-      <div style={{ display:'flex', gap:20, marginBottom:28, flexWrap:'wrap' }}>
+      <div style={{ display:'flex', gap:20, marginBottom:28, flexWrap:'wrap', alignItems:'flex-end' }}>
         <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
           <label style={{ color:'rgba(255,255,255,0.35)', fontSize:10, textTransform:'uppercase', letterSpacing:'0.1em' }}>
             Tipo de reserva
@@ -199,10 +222,58 @@ export default function MisReservas() {
             <option value="mensual">Mensual</option>
           </select>
         </div>
+        
+        <div style={{ display:'flex', gap:8, alignItems:'flex-end' }}>
+          <button 
+            onClick={() => setVista('proximas')}
+            style={{ 
+              background: vista === 'proximas' ? 'rgba(138,11,210,0.3)' : 'rgba(138,11,210,0.12)',
+              border: `1px solid ${vista === 'proximas' ? 'rgba(138,11,210,0.6)' : 'rgba(138,11,210,0.3)'}`,
+              color: vista === 'proximas' ? '#c084fc' : 'rgba(255,255,255,0.6)',
+              borderRadius: 10,
+              padding: '8px 16px',
+              fontSize: 13,
+              cursor: 'pointer',
+              fontWeight: '600',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => {
+              if (vista !== 'proximas') e.target.style.background = 'rgba(138,11,210,0.2)';
+            }}
+            onMouseLeave={e => {
+              if (vista !== 'proximas') e.target.style.background = 'rgba(138,11,210,0.12)';
+            }}
+          >
+            📅 Próximas
+          </button>
+          
+          <button 
+            onClick={() => setVista('historial')}
+            style={{ 
+              background: vista === 'historial' ? 'rgba(138,11,210,0.3)' : 'rgba(138,11,210,0.12)',
+              border: `1px solid ${vista === 'historial' ? 'rgba(138,11,210,0.6)' : 'rgba(138,11,210,0.3)'}`,
+              color: vista === 'historial' ? '#c084fc' : 'rgba(255,255,255,0.6)',
+              borderRadius: 10,
+              padding: '8px 16px',
+              fontSize: 13,
+              cursor: 'pointer',
+              fontWeight: '600',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => {
+              if (vista !== 'historial') e.target.style.background = 'rgba(138,11,210,0.2)';
+            }}
+            onMouseLeave={e => {
+              if (vista !== 'historial') e.target.style.background = 'rgba(138,11,210,0.12)';
+            }}
+          >
+            📜 Historial
+          </button>
+        </div>
       </div>
 
       <p style={{ color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600, marginBottom:14 }}>
-        Todas mis reservas
+        {vista === 'proximas' ? 'Mis próximas clases' : 'Historial de reservas'}
         <span style={{ color:'rgba(255,255,255,0.25)', fontWeight:'normal', marginLeft:8 }}>({filtradas.length})</span>
       </p>
 
@@ -215,9 +286,14 @@ export default function MisReservas() {
         </div>
       ) : filtradas.length === 0 ? (
         <div style={{ textAlign:'center', paddingTop:80, opacity:0.4 }}>
-          <span style={{ fontSize:44, display:'block', marginBottom:12 }}>📭</span>
+          <span style={{ fontSize:44, display:'block', marginBottom:12 }}>
+            {vista === 'proximas' ? '📅' : '📜'}
+          </span>
           <p style={{ color:'white', fontSize:14 }}>
-            No tenés reservas{filtroTipo !== 'todos' ? ' con ese filtro' : ''}.
+            {vista === 'proximas' 
+              ? `No tenés clases próximas${filtroTipo !== 'todos' ? ' con ese filtro' : ''}.`
+              : `No tenés historial de reservas${filtroTipo !== 'todos' ? ' con ese filtro' : ''}.`
+            }
           </p>
         </div>
       ) : (
@@ -227,7 +303,7 @@ export default function MisReservas() {
             const colorClase = COLORES_CLASE[r.actividad?.toLowerCase()] || '#5B0672';
             const imgClase = IMAGENES_CLASE[r.actividad?.toLowerCase()] || null;
             const imagenUrl  = r.imagen ? `${UPLOADS_URL}/${r.imagen}` : null;
-            const puedeCanc  = r.estado === 'reservada' || r.estado === 'pendiente';
+            const puedeCanc  = (r.estado === 'reservada' || r.estado === 'pendiente') && vista !== 'historial';
             
             return (
               <div key={r.id_reserva}
@@ -334,7 +410,17 @@ export default function MisReservas() {
                     }}>
                       {estado.icon} {estado.label}
                     </div>
-                    {r.estado === 'pendiente' && (
+                    {vista === 'historial' && (
+                      <p style={{ 
+                        color:'rgba(255,255,255,0.35)', 
+                        fontSize:11, 
+                        margin:0,
+                        fontWeight:500
+                      }}>
+                        ✓ Clase pasada
+                      </p>
+                    )}
+                    {r.estado === 'pendiente' && vista !== 'historial' && (
                       <p style={{ 
                         color:'rgba(255,255,255,0.4)', 
                         fontSize:11, 
@@ -344,7 +430,7 @@ export default function MisReservas() {
                         ⏳ <Countdown />
                       </p>
                     )}
-                    {r.estado !== 'pendiente' && estado.desc && (
+                    {r.estado !== 'pendiente' && r.estado !== 'cancelada' && vista !== 'historial' && estado.desc && (
                       <p style={{ 
                         color:'rgba(255,255,255,0.3)', 
                         fontSize:11, 
@@ -408,7 +494,7 @@ export default function MisReservas() {
 
                   {/* Botones */}
                   <div style={{ display:'flex', gap:8, flexShrink:0 }}>
-                    {r.tipo_pago === 'seña' && r.saldo_pendiente && r.estado === 'reservada' && (
+                    {r.tipo_pago === 'seña' && r.saldo_pendiente && r.estado === 'reservada' && vista !== 'historial' && (
                       <button 
                         onClick={() => completarPagoSena(r)}
                         style={{ 
