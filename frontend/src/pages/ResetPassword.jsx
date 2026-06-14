@@ -102,27 +102,37 @@ export default function ResetPassword() {
             <h1 className="text-4xl italic font-light text-[#5B0672] mb-8">Cambiar Contraseña</h1>
             <form onSubmit={handleSubmit}>
               <div className="mb-6">
-                <label className="block text-sm mb-2 text-[#5B0672]">Nueva Contraseña</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={contraseñaNueva}
-                    onChange={handleChange("contraseñaNueva")}
-                    placeholder="••••••••"
-                    className="w-full border-2 border-[#8A0BD2] rounded-md p-3 bg-transparent outline-none focus:border-[#AF50E5]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-[#5B0672]"
-                  >
-                    {showPassword ? "👁️" : "👁️‍🗨️"}
-                  </button>
-                </div>
-                {errors.contraseñaNueva && (
-                  <p className="text-red-600 text-xs mt-1">{errors.contraseñaNueva}</p>
-                )}
-              </div>
+  <label className="block text-sm mb-2 text-[#5B0672]">Nueva Contraseña</label>
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      value={contraseñaNueva}
+      onChange={handleChange("contraseñaNueva")}
+      placeholder="••••••••"
+      className="w-full border-2 border-[#8A0BD2] rounded-md p-3 bg-transparent outline-none focus:border-[#AF50E5]"
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-3 top-3 text-[#5B0672]"
+    >
+      {showPassword ? "👁️" : "👁️‍🗨️"}
+    </button>
+  </div>
+  {/* Requisitos de contraseña */}
+  <div className="mt-2 text-xs text-[#5B0672] space-y-1">
+    <p className="font-semibold">Requisitos:</p>
+    <ul className="list-disc list-inside">
+      <li>Mínimo 8 caracteres, máximo 20</li>
+      <li>Al menos 1 letra mayúscula</li>
+      <li>Al menos 1 carácter especial (!@#$%^&*)</li>
+      <li>La contraseña debe ser distinta a la actual</li>
+    </ul>
+  </div>
+  {errors.contraseñaNueva && (
+    <p className="text-red-600 text-xs mt-1">{errors.contraseñaNueva}</p>
+  )}
+</div>
 
               <div className="mb-6">
                 <label className="block text-sm mb-2 text-[#5B0672]">Confirmar Contraseña</label>

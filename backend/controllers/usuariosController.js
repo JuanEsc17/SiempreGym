@@ -139,13 +139,9 @@ const UsuariosController = {
         error: "Error interno del servidor"
       });
     }
-  }
-}
+  },
 
-//para cambio de contraseña
-
-const UsuariosController = {
-  
+  //para cambio de contraseña
   // solicito el codigo de verificación para cambio de contraseña
   async solicitarCambioContraseña(req, res) {
     try {
@@ -178,6 +174,7 @@ const UsuariosController = {
       res.status(error.status || 500).json({ ok: false, mensaje: error.mensaje || error.message });
     }
   }
-};
+}
+
 
 module.exports = UsuariosController;

@@ -38,8 +38,8 @@ function estaEnVentanaRenovacion() {
   const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
   const ultimaSemanaInicio = diasEnMes - 6; // últimos 7 días del mes
 
-  const esUltimaSemana = dia >= ultimaSemanaInicio;
-  const esPrimerosDiez = dia >= 1 && dia <= 15;
+  const esUltimaSemana = dia >= ultimaSemanaInicio;//a chequear que dice la profe
+  const esPrimerosDiez = dia >= 1 && dia <= 10;
 
   return esUltimaSemana || esPrimerosDiez;
 }

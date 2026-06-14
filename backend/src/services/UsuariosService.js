@@ -110,17 +110,12 @@ class UsuariosService {
     }
 
     // Validar que NO sea igual a la actual
-    const bcrypt = require('bcryptjs');
-    const esIgual = await bcrypt.compare(contraseñaNueva, usuario.password);
-    if (esIgual) {
-      throw { status: 400, mensaje: 'La contraseña nueva debe ser distinta a la actual' };
+
+    if (contraseñaNueva === usuario.password) {
+        throw { status: 400, mensaje: 'La contraseña nueva debe ser distinta a la actual' };
     }
 
-    // Encriptar nueva contraseña
-    const contraseñaEncriptada = await bcrypt.hash(contraseñaNueva, 10);
-
-    // Actualizar en BD
-    await this.repo.actualizarContraseña(usuario.id_usuario, contraseñaEncriptada);
+    await this.repo.actualizarContraseña(usuario.id_usuario, contraseñaNueva);
 
     // Enviar email de confirmación
     await sendPasswordChanged(email, usuario.nombre);

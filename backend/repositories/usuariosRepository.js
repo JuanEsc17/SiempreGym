@@ -70,9 +70,9 @@ class UsuariosRepository {
   }
 
   //para cambio de contraseña
-  async buscarPorEmail(email) {
+async buscarPorEmail(email) {
   const query = 'SELECT * FROM usuarios WHERE email = ?';
-  const result = await this.db.query(query, [email]);
+  const [result] = await this.db.promise().execute(query, [email]);
   return result[0];
 }
 
@@ -81,7 +81,7 @@ async crearCodigoConfirmacion(id_usuario, codigo, fechaExpiracion) {
     INSERT INTO codigos_confirmacion (id_usuario, codigo, fecha_expiracion, usado) 
     VALUES (?, ?, ?, 0)
   `;
-  await this.db.query(query, [id_usuario, codigo, fechaExpiracion]);
+  await this.db.promise().execute(query, [id_usuario, codigo, fechaExpiracion]);
 }
 
 async obtenerUltimoCodigoConfirmacion(id_usuario) {
@@ -91,18 +91,18 @@ async obtenerUltimoCodigoConfirmacion(id_usuario) {
     ORDER BY id_codigo DESC 
     LIMIT 1
   `;
-  const result = await this.db.query(query, [id_usuario]);
+  const [result] = await this.db.promise().execute(query, [id_usuario]);
   return result[0];
 }
 
 async marcarCodigoUsado(id_codigo) {
   const query = 'UPDATE codigos_confirmacion SET usado = 1 WHERE id_codigo = ?';
-  await this.db.query(query, [id_codigo]);
+  await this.db.promise().execute(query, [id_codigo]);
 }
 
 async actualizarContraseña(id_usuario, contraseñaEncriptada) {
   const query = 'UPDATE usuarios SET password = ? WHERE id_usuario = ?';
-  await this.db.query(query, [contraseñaEncriptada, id_usuario]);
+  await this.db.promise().execute(query, [contraseñaEncriptada, id_usuario]);
 }
 }
 
