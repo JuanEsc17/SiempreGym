@@ -21,6 +21,12 @@ import RegistrarUsuarioEmpleado from "./pages/RegistrarUsuarioEmpleado"
 import RegistrarAsistencia from "./pages/RegistrarAsistencia.jsx"
 import EmpleadoPanel from "./pages/EmpleadoPanel"
 
+//lista de espera 
+
+import ListaEspera from "./pages/ListaEspera";
+
+import Renovaciones from "./pages/Renovaciones.jsx"
+
 //para cambio de contraseña
 import ForgotPassword from "./pages/ForgotPassword"
 import VerifyCode from "./pages/VerifyCode"
@@ -130,7 +136,9 @@ function AppContent() {
         <Route path="/actividades" element={<RutaUsuario><Actividades /></RutaUsuario>} />
         <Route path="/mis-reservas" element={<RutaProtegida><MisReservas /></RutaProtegida>} />
         <Route path="/resubmit-permiso" element={<RutaProtegida><ResubmitPermiso /></RutaProtegida>} />
-
+        {/** Lista de espera **/}
+        <Route path="/lista-espera" element={<RutaProtegida><ListaEspera /></RutaProtegida>} />
+        <Route path="/renovaciones" element={<RutaUsuario><Renovaciones /></RutaUsuario>} />
         {/** Rutas de administración **/}
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
@@ -146,6 +154,7 @@ function AppContent() {
         <Route path="/empleado" element={<RutaEmpleado><EmpleadoPanel /></RutaEmpleado>}/>
         <Route path="/empleado/registrar-usuario" element={<RutaEmpleado><RegistrarUsuarioEmpleado /></RutaEmpleado>} />
         <Route path="/empleado/asistencia" element={<RutaEmpleado><RegistrarAsistencia /></RutaEmpleado>}/>
+
 
         {/** Rutas para recuperación de contraseña */}
         <Route path="/forgot-password" element={<ForgotPassword />} />
