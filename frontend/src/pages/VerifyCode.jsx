@@ -10,7 +10,7 @@ export default function VerifyCode() {
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(900) // 15 minutos
+  const [timeLeft, setTimeLeft] = useState(60) // 15 minutos
 
   useEffect(() => {
     // Obtener email de sessionStorage
@@ -114,10 +114,14 @@ export default function VerifyCode() {
                 />
                 {errors.codigo && <p className="text-red-600 text-xs mt-1">{errors.codigo}</p>}
               </div>
-              {serverError && <p className="text-red-600 text-sm mb-4">{serverError}</p>}
+              {serverError && (
+                <div className="bg-red-100 border-2 border-red-600 rounded-md p-4 mb-4">
+                    <p className="text-red-600 text-sm font-semibold">{serverError}</p>
+                </div>
+            )}
               <button
                 type="submit"
-                disabled={isLoading || timeLeft === 0}
+                disabled={isLoading}
                 className="w-full bg-[#8A0BD2] text-white font-semibold py-3 rounded-full mb-4 hover:bg-[#AF50E5] transition disabled:opacity-50"
               >
                 {isLoading ? "Verificando..." : "Confirmar →"}
