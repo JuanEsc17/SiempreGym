@@ -10,7 +10,7 @@ export default function VerifyCode() {
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(60) // 15 minutos
+  const [timeLeft, setTimeLeft] = useState(900) // 15 minutos
 
   useEffect(() => {
     // Obtener email de sessionStorage
