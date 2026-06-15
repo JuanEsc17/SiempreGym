@@ -183,6 +183,25 @@ class ClasesRepository {
   );
   return rows[0]?.total || 0;
 }
+
+  async contarReservasActivas(id_clase) {
+    const [rows] = await this.db.promise().execute(
+      `SELECT COUNT(*) as total
+       FROM reservas
+       WHERE id_clase = ?
+         AND estado != 'cancelada'`,
+      [id_clase]
+    );
+    return rows[0]?.total || 0;
+  }
+
+  async eliminarClase(id_clase) {
+    const [result] = await this.db.promise().execute(
+      `DELETE FROM clases WHERE id_clase = ?`,
+      [id_clase]
+    );
+    return result.affectedRows > 0;
+  }
 }
 
 module.exports = ClasesRepository;

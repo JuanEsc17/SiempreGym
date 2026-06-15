@@ -148,6 +148,21 @@ class ClasesService {
     return { mensaje: 'Clase actualizada exitosamente' };
 }
 
+async eliminarClase(id_clase) {
+    const clase = await this.repo.obtenerClasePorId(id_clase);
+    if (!clase) throw { status: 404, mensaje: 'La clase no existe' };
+
+    const inscriptos = await this.repo.contarReservasActivas(id_clase);
+    if (inscriptos > 0) {
+      throw { status: 400, mensaje: 'La clase tiene inscritos y no puede eliminarse' };
+    }
+
+    const eliminado = await this.repo.eliminarClase(id_clase);
+    if (!eliminado) throw { status: 500, mensaje: 'No se pudo eliminar la clase' };
+
+    return { mensaje: 'Clase eliminada exitosamente' };
+}
+
 async obtenerClasePorId(id_clase) {
     const clase = await this.repo.obtenerClasePorId(id_clase);
     if (!clase) throw { status: 404, mensaje: 'La clase no existe' };

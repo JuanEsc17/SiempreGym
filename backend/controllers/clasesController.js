@@ -109,6 +109,17 @@ async editarClase(req, res) {
         res.status(status).json({ ok: false, mensaje: error.mensaje || error.message });
     }
 },
+
+async eliminarClase(req, res) {
+    try {
+      const resultado = await service.eliminarClase(req.params.id);
+      res.json({ ok: true, data: resultado });
+    } catch (error) {
+      const status = error.status || 500;
+      res.status(status).json({ ok: false, mensaje: error.mensaje || error.message });
+    }
+},
+
 //para mostrar todas las clases en el admin panel
 async obtenerTodas(req, res) {
     try {

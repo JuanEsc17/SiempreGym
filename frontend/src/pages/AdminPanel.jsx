@@ -45,6 +45,18 @@ export default function AdminPanel() {
               </p>
             </div>
           </div>
+
+          <div onClick={() => navigate("/reportes-asistencias")}
+            className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
+            style={{ background: '#6D28D9' }}>
+            <span className="text-3xl">📊</span>
+            <div>
+              <p className="text-white font-medium">Reportes de asistencias</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Visualizar asistencias por fechas
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

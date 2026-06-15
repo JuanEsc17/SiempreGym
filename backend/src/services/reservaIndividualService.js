@@ -150,18 +150,76 @@ const reservaIndividualService = {
   },
   completarPagoReserva: async (id_reserva) => {
 
-  await db.promise().execute(
-    `
-    UPDATE reservas
-    SET tipo_pago = 'total',
-        saldo_pendiente = 0
-    WHERE id_reserva = ?
-    `,
-    [id_reserva]
-  );
+    await db.promise().execute(
+      `
+      UPDATE reservas
+      SET tipo_pago = 'total',
+          saldo_pendiente = 0
+      WHERE id_reserva = ?
+      `,
+      [id_reserva]
+    );
 
-  return { success: true };
-},
+    return { success: true };
+  },
+
+  registrarPagoEfectivoReserva: async (id_reserva) => {
+    const [rows] = await db.promise().execute(
+      `
+      SELECT r.id_usuario, r.tipo_pago, r.saldo_pendiente, r.fecha_clase,
+             c.actividad, u.nombre, u.apellido, u.email
+      FROM reservas r
+      JOIN clases c ON r.id_clase = c.id_clase
+      JOIN usuarios u ON r.id_usuario = u.id_usuario
+      WHERE r.id_reserva = ?
+      `,
+      [id_reserva]
+    );
+
+    const reserva = rows[0];
+    if (!reserva) {
+      throw new Error('Reserva no encontrada');
+    }
+    if (reserva.tipo_pago !== 'seña' || !reserva.saldo_pendiente || reserva.saldo_pendiente <= 0) {
+      throw new Error('No hay un pago pendiente en efectivo para esta reserva');
+    }
+
+    const monto = parseFloat(reserva.saldo_pendiente);
+
+    await reservasRepository.insertarPago(
+      reserva.id_usuario,
+      monto,
+      'pagado',
+      'efectivo',
+      'individual'
+    );
+
+    await db.promise().execute(
+      `
+      UPDATE reservas
+      SET tipo_pago = 'total',
+          saldo_pendiente = 0
+      WHERE id_reserva = ?
+      `,
+      [id_reserva]
+    );
+
+    await sendPagoConfirmado(
+      reserva.email,
+      `${reserva.nombre} ${reserva.apellido}`,
+      reserva.actividad,
+      reserva.fecha_clase,
+      monto,
+      'Pago en efectivo'
+    );
+
+    return {
+      success: true,
+      cliente: `${reserva.nombre} ${reserva.apellido}`,
+      fecha: reserva.fecha_clase,
+      monto
+    };
+  },
 
   // ─── PASO C: Ingresar a lista de espera individual ───────────
   ingresarListaEsperaIndividual: async (id_usuario, id_clase) => {

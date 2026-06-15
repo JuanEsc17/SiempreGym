@@ -25,7 +25,6 @@ export default function EmpleadoPanel() {
 
         <div className="grid grid-cols-2 gap-4">
 
-          {/* RESERVA PRESENCIAL */}
           <div
             onClick={() => navigate("/reserva-presencial")}
             className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
@@ -47,7 +46,7 @@ export default function EmpleadoPanel() {
             </div>
           </div>
 
-          {/* VER CLASES */}
+
           <div
             onClick={() => navigate("/ver-clases-admin")}
             className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
@@ -69,48 +68,47 @@ export default function EmpleadoPanel() {
             </div>
           </div>
 
-          {/* REGISTRAR CLIENTE */}
           <div
-            onClick={() => navigate("/empleado/registrar-usuario")}
+            onClick={() => navigate("/registrar-pago")}
             className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
-            style={{ background: '#5B0672' }}
+            style={{ background: '#10B981' }}
           >
-            <span className="text-3xl">➕</span>
+            <span className="text-3xl">💵</span>
 
             <div>
               <p className="text-white font-medium">
-                Registrar cliente
+                Registrar pago efectivo
               </p>
 
               <p
                 className="text-xs mt-1"
                 style={{ color: 'rgba(255,255,255,0.6)' }}
               >
-                Crear una nueva cuenta para un cliente
+                Actualizar pagos pendientes de clientes
               </p>
             </div>
           </div>
-          {/* REGISTRAR ASISTENCIA */}
+
           <div
-          onClick={() => navigate("/empleado/asistencia")}
-          className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
-          style={{ background: '#6D28D9' }}
+            className="flex items-center gap-3 p-6 rounded-xl"
+            style={{ background: '#5B0672' }}
           >
-          <span className="text-3xl">✅</span>
+            <span className="text-3xl">👤</span>
 
-          <div>
-          <p className="text-white font-medium">
-              Registrar asistencia
-          </p>
+            <div>
+              <p className="text-white font-medium">
+                Gestión de clientes
+              </p>
 
-          <p
-          className="text-xs mt-1"
-          style={{ color: 'rgba(255,255,255,0.6)' }}
-          >
-            Marcar asistencia manual de clientes
-          </p>
+              <p
+                className="text-xs mt-1"
+                style={{ color: 'rgba(255,255,255,0.6)' }}
+              >
+                Búsqueda y atención presencial
+              </p>
+            </div>
           </div>
-        </div>
+
         </div>
       </div>
     </div>

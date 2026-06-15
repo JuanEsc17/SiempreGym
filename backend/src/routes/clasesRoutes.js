@@ -21,4 +21,5 @@ router.get('/todas', ClasesController.obtenerTodas);
 //para editar clase
 router.get('/:id', ClasesController.obtenerClasePorId);
 router.put('/:id', upload.single('imagen'), ClasesController.editarClase);
+router.delete('/:id', ClasesController.eliminarClase);
 module.exports = router;

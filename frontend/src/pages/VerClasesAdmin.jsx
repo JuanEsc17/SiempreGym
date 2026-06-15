@@ -28,6 +28,7 @@ export default function VerClasesAdmin() {
   const [clases, setClases] = useState([])
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     async function cargar() {
@@ -47,6 +48,22 @@ export default function VerClasesAdmin() {
     c.actividad?.toLowerCase().includes(busqueda.toLowerCase()) ||
     c.dia?.toLowerCase().includes(busqueda.toLowerCase())
   )
+
+  const eliminarClase = async (id_clase, actividad) => {
+    const confirmacion = window.confirm(`¿Eliminar la clase ${actividad}? Esta acción no se puede deshacer.`)
+    if (!confirmacion) return
+
+    try {
+      setDeletingId(id_clase)
+      await axios.delete(`${BASE_URL}/clases/${id_clase}`)
+      setClases(prev => prev.filter(clase => clase.id_clase !== id_clase))
+    } catch (error) {
+      const mensaje = error?.response?.data?.mensaje || 'No se pudo eliminar la clase'
+      alert(mensaje)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <div className="flex min-h-screen" style={{ background: '#1a1a2e' }}>
@@ -126,13 +143,23 @@ export default function VerClasesAdmin() {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => navigate(`/editar-clase/${clase.id_clase}`)}
-                  className="px-5 py-2 rounded-lg text-white text-sm border-none cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-                  style={{ background: '#8A0BD2' }}
-                >
-                  Editar
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate(`/editar-clase/${clase.id_clase}`)}
+                    className="px-5 py-2 rounded-lg text-white text-sm border-none cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                    style={{ background: '#8A0BD2' }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => eliminarClase(clase.id_clase, clase.actividad)}
+                    disabled={deletingId === clase.id_clase}
+                    className="px-5 py-2 rounded-lg text-white text-sm border-none cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                    style={{ background: '#DC2626' }}
+                  >
+                    {deletingId === clase.id_clase ? 'Eliminando...' : 'Borrar'}
+                  </button>
+                </div>
               </div>
             )
           })}

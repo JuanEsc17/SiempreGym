@@ -12,14 +12,14 @@ import AdminPanel from "./pages/AdminPanel.jsx"
 import EditarClase from "./pages/EditarClase.jsx"
 import VerClasesAdmin from "./pages/VerClasesAdmin.jsx"
 import ReservaPresencial from "./pages/ReservaPresencial.jsx"
+import RegistrarPagoEfectivo from "./pages/RegistrarPagoEfectivo.jsx"
 import MisReservas from './pages/MisReservas'
 import PermisosAdmin from "./pages/PermisosAdmin"
 import ResubmitPermiso from "./pages/ResubmitPermiso"
+import ReportesAsistencias from "./pages/ReportesAsistencias.jsx"
+import RegistrarUsuarioEmpleado from "./pages/RegistrarUsuarioEmpleado"
+import RegistrarAsistencia from "./pages/RegistrarAsistencia.jsx"
 import EmpleadoPanel from "./pages/EmpleadoPanel"
-import RegistrarUsuarioEmpleado from "./pages/RegistrarUsuarioEmpleado";
-import ListaEspera from "./pages/ListaEspera";
-import RegistrarAsistencia from './pages/RegistrarAsistencia';
-import Renovaciones from "./pages/Renovaciones.jsx"
 
 //para cambio de contraseña
 import ForgotPassword from "./pages/ForgotPassword"
@@ -130,15 +130,15 @@ function AppContent() {
         <Route path="/actividades" element={<RutaUsuario><Actividades /></RutaUsuario>} />
         <Route path="/mis-reservas" element={<RutaProtegida><MisReservas /></RutaProtegida>} />
         <Route path="/resubmit-permiso" element={<RutaProtegida><ResubmitPermiso /></RutaProtegida>} />
-        <Route path="/lista-espera" element={<RutaProtegida><ListaEspera /></RutaProtegida>} />
-        <Route path="/renovaciones" element={<RutaUsuario><Renovaciones /></RutaUsuario>} />
 
         {/** Rutas de administración **/}
         <Route path="/admin" element={<RutaAdmin><AdminPanel /></RutaAdmin>} />
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
         <Route path="/editar-clase/:id" element={<RutaAdmin><EditarClase /></RutaAdmin>} />
+        <Route path="/reportes-asistencias" element={<RutaAdmin><ReportesAsistencias /></RutaAdmin>} />
         <Route path="/ver-clases-admin" element={<RutaEmpleado><VerClasesAdmin /></RutaEmpleado>} />
         <Route path="/reserva-presencial" element={<RutaEmpleado><ReservaPresencial /></RutaEmpleado>}/>
+        <Route path="/registrar-pago" element={<RutaEmpleado><RegistrarPagoEfectivo /></RutaEmpleado>} />
         <Route path="/payment-status" element={<PaymentStatus />} />
         <Route path="/admin/permisos" element={<PermisosAdmin />} />
 
@@ -151,7 +151,6 @@ function AppContent() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-code" element={<VerifyCode />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-
       </Routes>
       </>
   )

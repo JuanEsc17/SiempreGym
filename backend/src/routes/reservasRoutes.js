@@ -34,8 +34,7 @@ router.post('/crear', (req, res) => ctrl.confirmarReservaIndividual(req, res));
 // Ingresar a lista de espera individual
 //    Body: { id_usuario, id_clase }
 router.post('/lista-espera', (req, res) => ctrl.confirmarListaEsperaIndividual(req, res));
-
-
+router.post('/registrar-pago-efectivo', (req, res) => ctrl.registrarPagoEfectivo(req, res));
 // ─── HISTORIAL ───────────────────────────────────────────────────
 router.get('/usuario/:id', (req, res) => ctrl.getMisReservas(req, res));
 
