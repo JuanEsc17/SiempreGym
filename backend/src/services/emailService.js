@@ -317,11 +317,69 @@ const sendPasswordChanged = async (email, nombre) => {
   }
 }
 
+// Función para enviar notificación de pago próximo a vencer
+const sendNotificacionPagoProximoAVencer = async (email, nombre, actividad) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Tu pago está próximo a vencerse - SiempreGym",
+      html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+          <div style="max-width: 500px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="color: #5B0672; text-align: center;">SiempreGym</h2>
+            <h3 style="color: #f59e0b; text-align: center;">⏰ Recordatorio de Pago</h3>
+            
+            <p style="color: #333;">Hola <b>${nombre}</b>,</p>
+            
+            <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+              <p style="color: #92400e; font-size: 16px; font-weight: bold; margin: 0;">
+                Su pago está a dos días de vencerse
+              </p>
+            </div>
+            
+            <p style="color: #666;">
+              Tu suscripción a <b>${actividad}</b> se vence dentro de dos días. Te recomendamos renovar tu pago para no perder acceso a tus clases.
+            </p>
+            
+            <div style="background-color: #f3f3f3; padding: 15px; border-radius: 8px; margin-top: 20px;">
+              <p style="color: #333; margin: 0;">
+                <b>¿Qué hacer?</b>
+              </p>
+              <p style="color: #666; margin-top: 10px;">
+                1. Ingresa a tu cuenta en SiempreGym<br>
+                2. Ve a la sección de "Renovaciones"<br>
+                3. Completa tu pago antes del vencimiento
+              </p>
+            </div>
+            
+            <p style="color: #666; margin-top: 20px;">
+              Si ya realizaste el pago, ignora este mensaje.
+            </p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">
+              Gracias por ser parte de SiempreGym. 💪
+            </p>
+          </div>
+        </div>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email de notificación de pago próximo a vencer enviado:", info.response);
+    return true;
+  } catch (error) {
+    console.error("Error al enviar email de notificación de pago:", error);
+    return false;
+  }
+}
+
 module.exports = {
   sendVerificationCode,
   sendPagoConfirmado,
   sendPermisoAprobado,
   sendPermisoRechazado,
   sendPasswordResetCode,
-  sendPasswordChanged
+  sendPasswordChanged,
+  sendNotificacionPagoProximoAVencer
 }

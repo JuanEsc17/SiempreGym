@@ -95,6 +95,30 @@ const renovacionesRepository = {
     );
   },
 
+  // ─── CRON: obtener renovaciones próximas a vencer (2 días) ────
+  // Se ejecuta el día 8 del mes para notificar sobre pagos que vencen el 10
+  obtenerRenovacionesProximasAVencer: async () => {
+    const [rows] = await db.promise().execute(
+      `SELECT 
+         r.id_renovacion,
+         r.mes,
+         r.anio,
+         r.fecha_vencimiento,
+         u.id_usuario,
+         u.email,
+         u.nombre,
+         c.actividad
+       FROM renovaciones r
+       JOIN usuarios u ON r.id_usuario = u.id_usuario
+       JOIN clases c ON r.id_clase = c.id_clase
+       WHERE r.estado = 'pendiente' 
+       AND DAY(r.fecha_vencimiento) = 10
+       AND MONTH(r.fecha_vencimiento) = MONTH(CURDATE())
+       AND YEAR(r.fecha_vencimiento) = YEAR(CURDATE())`
+    );
+    return rows;
+  },
+
 };
 
 module.exports = renovacionesRepository;
