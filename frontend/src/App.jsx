@@ -17,6 +17,7 @@ import MisReservas from './pages/MisReservas'
 import PermisosAdmin from "./pages/PermisosAdmin"
 import ResubmitPermiso from "./pages/ResubmitPermiso"
 import ReportesAsistencias from "./pages/ReportesAsistencias.jsx"
+import ReportesIngresos from './pages/ReportesIngresos'
 import RegistrarUsuarioEmpleado from "./pages/RegistrarUsuarioEmpleado"
 import RegistrarAsistencia from "./pages/RegistrarAsistencia.jsx"
 import EmpleadoPanel from "./pages/EmpleadoPanel"
@@ -146,6 +147,7 @@ function AppContent() {
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
         <Route path="/editar-clase/:id" element={<RutaAdmin><EditarClase /></RutaAdmin>} />
         <Route path="/reportes-asistencias" element={<RutaAdmin><ReportesAsistencias /></RutaAdmin>} />
+        <Route path="/reportes-ingresos" element={<RutaAdmin><ReportesIngresos /></RutaAdmin>} />
         <Route path="/ver-clases-admin" element={<RutaEmpleado><VerClasesAdmin /></RutaEmpleado>} />
         <Route path="/reserva-presencial" element={<RutaEmpleado><ReservaPresencial /></RutaEmpleado>}/>
         <Route path="/registrar-pago" element={<RutaEmpleado><RegistrarPagoEfectivo /></RutaEmpleado>} />
