@@ -20,6 +20,8 @@ import ReportesAsistencias from "./pages/ReportesAsistencias.jsx"
 import RegistrarUsuarioEmpleado from "./pages/RegistrarUsuarioEmpleado"
 import RegistrarAsistencia from "./pages/RegistrarAsistencia.jsx"
 import EmpleadoPanel from "./pages/EmpleadoPanel"
+import Personal         from "./pages/Personal"
+import RegisterEmpleado from "./pages/RegisterEmpleado"
 
 //lista de espera 
 
@@ -149,6 +151,8 @@ function AppContent() {
         <Route path="/registrar-pago" element={<RutaEmpleado><RegistrarPagoEfectivo /></RutaEmpleado>} />
         <Route path="/payment-status" element={<PaymentStatus />} />
         <Route path="/admin/permisos" element={<PermisosAdmin />} />
+        <Route path="/admin/personal"       element={<RutaAdmin><Personal /></RutaAdmin>} />
+        <Route path="/admin/personal/nuevo" element={<RutaAdmin><RegisterEmpleado /></RutaAdmin>} />
 
         {/** Rutas para empleado */}
         <Route path="/empleado" element={<RutaEmpleado><EmpleadoPanel /></RutaEmpleado>}/>

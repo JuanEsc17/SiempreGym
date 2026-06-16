@@ -32,10 +32,11 @@ class RegisterRepository {
 
   // creo un nuevo cliente en la base de datos con los valores correspondientes
   async create(cliente) {
+    const rol = cliente.rol || "cliente";
     const query = `
       INSERT INTO usuarios
-      (nombre, apellido, username, email, dni, telefono, fecha_nacimiento,password, foto_autorizacion, estado_permiso)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (nombre, apellido, username, email, dni, telefono, fecha_nacimiento,password, foto_autorizacion, estado_permiso, rol)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -48,7 +49,8 @@ class RegisterRepository {
       cliente.fechaNacimiento,
       cliente.password,
       cliente.permiso || null,
-      cliente.estado_permiso
+      cliente.estado_permiso,
+      rol
     ];
 
     const [result] = await this.db.promise().execute(query, values);
