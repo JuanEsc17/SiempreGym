@@ -45,9 +45,13 @@ class AsistenciasRepository {
   async obtenerReservaPorId(idReserva) {
     const [rows] = await this.db.promise().execute(
       `
-      SELECT *
-      FROM reservas
-      WHERE id_reserva = ?
+      SELECT
+      r.*,
+      c.horario
+      FROM reservas r
+      JOIN clases c
+      ON c.id_clase = r.id_clase
+      WHERE r.id_reserva = ?
       `,
       [idReserva]
     );

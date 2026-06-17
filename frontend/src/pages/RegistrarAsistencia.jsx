@@ -31,20 +31,86 @@ function Toast({ mensaje, onClose }) {
   );
 }
 
+// nuevo
+function obtenerEstadoReserva(reserva) {
+
+  const ahora = new Date();
+
+  const [hora, minuto] =
+    reserva.horario.slice(0,5).split(':');
+
+  const inicioClase = new Date();
+
+  inicioClase.setHours(
+    Number(hora),
+    Number(minuto),
+    0,
+    0
+  );
+
+  const habilitaDesde = new Date(
+    inicioClase.getTime() - 30 * 60000
+  );
+
+  const venceEn = new Date(
+    inicioClase.getTime() + 15 * 60000
+  );
+
+  if (ahora < habilitaDesde) {
+    return {
+      habilitada: false,
+      mensaje:
+        'Se habilitará 30 minutos antes del inicio'
+    };
+  }
+
+  if (ahora > venceEn) {
+    return {
+      habilitada: false,
+      mensaje:
+        'Iniciada hace más de 15 minutos'
+    };
+  }
+
+  return {
+    habilitada: true,
+    mensaje: null
+  };
+}
+
+// modificado
 function ReservaCard({
   reserva,
   seleccionada,
   onClick
 }) {
+
+  const estado =
+    obtenerEstadoReserva(reserva);
+
   return (
     <div
-      onClick={onClick}
-      className="cursor-pointer rounded-2xl p-5 transition-all"
+      onClick={
+        estado.habilitada
+          ? onClick
+          : undefined
+      }
+      className={`rounded-2xl p-5 transition-all ${
+        estado.habilitada
+          ? 'cursor-pointer'
+          : 'cursor-not-allowed'
+      }`}
       style={{
+        opacity:
+          estado.habilitada
+            ? 1
+            : 0.6,
+
         background:
           seleccionada
             ? '#8A0BD2'
             : '#252535',
+
         border:
           seleccionada
             ? '2px solid #AF50E5'
@@ -64,6 +130,19 @@ function ReservaCard({
       <p className="text-white/40 text-sm">
         Reserva #{reserva.id_reserva}
       </p>
+
+      {!estado.habilitada && (
+        <div
+          className="mt-3 text-xs px-2 py-1 rounded-lg inline-block"
+          style={{
+            background:
+              'rgba(239,68,68,0.15)',
+            color:'#fca5a5'
+          }}
+        >
+          {estado.mensaje}
+        </div>
+      )}
     </div>
   );
 }
