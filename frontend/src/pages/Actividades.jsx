@@ -636,10 +636,10 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
   );
 }
 // ─── BannerRenovacion ─────────────────────────────────────────────
+// ─── BannerRenovacion ─────────────────────────────────────────────
 function BannerRenovacion({ banner, onNavegar }) {
   if (!banner?.mostrar) return null;
 
-  // Calcular días restantes
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const venc = new Date(banner.fecha_limite);
@@ -675,9 +675,9 @@ function BannerRenovacion({ banner, onNavegar }) {
           </div>
         </div>
 
-        {/* Tiempo restante */}
+        {/* Tiempo restante + botón */}
         <div className="flex-shrink-0 rounded-xl p-3 text-right"
-             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', minWidth: '120px' }}>
+             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', minWidth: '230px' }}>
           <p style={{ color: 'rgba(255,165,0,0.9)', fontSize: '10px', fontWeight: 'bold',
                       textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>
             ⏱ Tiempo restante
@@ -685,26 +685,17 @@ function BannerRenovacion({ banner, onNavegar }) {
           <p className="text-white font-bold m-0" style={{ fontSize: '22px', lineHeight: 1 }}>
             {diasRestantes} <span style={{ fontSize: '13px', fontWeight: 'normal' }}>días</span>
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', margin: '3px 0 0' }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', margin: '3px 0 10px' }}>
             Hasta el {venc.getDate()}/{String(venc.getMonth() + 1).padStart(2, '0')}
           </p>
+          <button
+            onClick={onNavegar}
+            className="w-full py-1.5 rounded-xl text-white font-bold border-none cursor-pointer transition-all hover:brightness-110"
+            style={{ background: 'rgba(255,165,0,0.9)', fontSize: '17px' }}>
+            Renovar →
+          </button>
         </div>
       </div>
-
-      {/* Fila inferior informativa */}
-      <div className="flex items-center justify-between px-4 py-2 gap-3"
-           style={{ background: 'rgba(0,0,0,0.35)', borderTop: '1px solid rgba(138,11,210,0.2)' }}>
-        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', margin: 0 }}>
-          ℹ️ Solo vos podés ver y renovar tus reservas. Si no renovás antes del {venc.getDate()}/{String(venc.getMonth() + 1).padStart(2, '0')}, perderás tu prioridad y el cupo quedará liberado.
-        </p>
-        <button
-          onClick={onNavegar}
-          className="flex-shrink-0 px-4 py-1.5 rounded-xl text-white font-bold border-none cursor-pointer transition-all hover:brightness-110"
-          style={{ background: '#8A0BD2', fontSize: '12px', whiteSpace: 'nowrap' }}>
-          Renovar →
-        </button>
-      </div>
-
     </div>
   );
 }
