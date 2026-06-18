@@ -190,13 +190,13 @@ class ReservasController {
         id_usuario, id_clase, fecha_clase
       );
 
-      if (resultado.status === 'SIN_CUPO_DISPONIBLE') {
+      if (resultado.status === 'CLASE_LLENA') {
         return res.status(200).json({
-          ok: true,
-          status: 'OFRECER_LISTA_ESPERA',
-          mensaje: resultado.mensaje
-        });
-      }
+      ok: true,
+      status: 'CLASE_LLENA',
+      mensaje: resultado.mensaje
+      });
+    }
 
       return res.status(200).json({
         ok: true,
@@ -244,18 +244,6 @@ class ReservasController {
     }
   }
 
-  async confirmarListaEsperaIndividual(req, res) {
-    try {
-      const { id_usuario, id_clase } = req.body;
-      if (!id_usuario || !id_clase) {
-        return res.status(400).json({ ok: false, mensaje: 'id_usuario e id_clase son obligatorios.' });
-      }
-      const resultado = await serviceIndividual.ingresarListaEsperaIndividual(id_usuario, id_clase);
-      return res.status(201).json({ ok: true, mensaje: resultado.mensaje });
-    } catch (error) {
-      return res.status(400).json({ ok: false, mensaje: error.message });
-    }
-  }
   async completarPago(req, res) {
 
     try {

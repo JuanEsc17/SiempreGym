@@ -47,11 +47,11 @@ const reservaIndividualService = {
     // Escenario 4: sin cupo → ofrecer lista de espera
     const inscriptosActuales = await reservasRepository.contarReservasDeInstancia(instancia.id_instancia);
     if (inscriptosActuales >= clase.cupo_maximo) {
-      return {
-        status: 'SIN_CUPO_DISPONIBLE',
-        mensaje: 'No hay cupos disponibles. ¿Deseás ingresar a la lista de espera?'
-      };
-    }
+        return {
+    status: 'CLASE_LLENA',
+    mensaje: 'No hay cupos disponibles para esta fecha.'
+    };
+  }
 
     // Escenario 9: seña no disponible si es el mismo día de la clase
     const fechaHoyStr = ahora.toISOString().slice(0, 10);
@@ -220,18 +220,6 @@ const reservaIndividualService = {
       monto
     };
   },
-
-  // ─── PASO C: Ingresar a lista de espera individual ───────────
-  ingresarListaEsperaIndividual: async (id_usuario, id_clase) => {
-    // FIX: verifica y opera con tipo_reserva = 'individual' (antes estaba hardcodeado 'mensual')
-    const yaEsta = await reservasRepository.verificarYaEnListaEspera(id_usuario, id_clase, 'individual');
-    if (yaEsta) throw new Error('Ya estás en la lista de espera para esta clase.');
-
-    const total = await reservasRepository.obtenerUltimaPosicionListaEspera(id_clase, 'individual');
-    await reservasRepository.insertarEnListaEspera(id_usuario, id_clase, total + 1, 'individual');
-
-    return { mensaje: 'Te anotamos en la lista de espera. Tendrás 24 hs para confirmar el pago si se libera un lugar.' };
-  }
 };
 
 module.exports = reservaIndividualService;
