@@ -584,7 +584,7 @@ if (paso === 'lista_espera_mensual') {
 if (paso === 'lista_espera_mensual')
   return <button onClick={handleListaEspera} disabled={procesando} className={base}
            style={{background:procesando?'rgba(245,158,11,0.4)':'#f59e0b', color:'#451a00'}}>
-           {procesando?'Anotando...':'⏳ Anotarme en lista de espera'}
+           {procesando?'Anotando...':'⏳ Ingresar a la lista de espera'}
          </button>;
     if (paso==='seleccionar_pago') {
   const ok = tipoPago && !procesando;

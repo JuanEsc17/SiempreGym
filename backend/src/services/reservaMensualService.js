@@ -49,12 +49,26 @@ const reservaMensualService = {
     }
 
     // Escenario 5: superposición en cualquiera de las fechas
-    const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
-      id_usuario, clase.horario, fechasArray
-    );
-    if (superposiciones.length > 0) {
-      throw new Error('Ya contás con una reserva en ese horario para alguna de las fechas del mes.');
-    }
+  const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
+  id_usuario, clase.horario, fechasArray
+);
+if (superposiciones.length > 0) {
+  const vistos = new Set();
+  const detalle = superposiciones
+    .map(s => ({ fecha: s.fecha_clase.toISOString().split('T')[0], actividad: s.actividad }))
+    .filter(item => {
+      const key = `${item.fecha}-${item.actividad}`;
+      if (vistos.has(key)) return false;
+      vistos.add(key);
+      return true;
+    })
+    .sort((a, b) => a.fecha.localeCompare(b.fecha))
+    .map(item => `• ${item.fecha} - ${item.actividad}`)
+    .join('\n');
+
+  throw new Error(`Ya contás con una reserva en ese horario: 
+    \n${detalle}`);
+}
 
     // Verificar cupo en CADA semana — si alguna está llena, ofrecer lista de espera
     for (const fecha_clase_str of fechasArray) {

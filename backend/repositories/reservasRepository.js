@@ -11,7 +11,7 @@ const reservasRepository = {
     const placeholders = listaFechas.map(() => '?').join(', ');
 
     const query = `
-      SELECT r.id_reserva, r.fecha_clase, c.horario
+      SELECT r.id_reserva, r.fecha_clase, c.horario, c.actividad
       FROM reservas r
       JOIN clases c ON r.id_clase = c.id_clase
       WHERE r.id_usuario = ?

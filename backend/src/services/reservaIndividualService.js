@@ -30,11 +30,14 @@ const reservaIndividualService = {
 
     // Escenario 7: superposición horaria (PRIMERO - mensaje más específico)
     const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
-      id_usuario, clase.horario, fecha_clase_str
+    id_usuario, clase.horario, fecha_clase_str
     );
     if (superposiciones.length > 0) {
-      throw new Error('Ya contás con una actividad reservada para ese horario.');
-    }
+    const detalle = superposiciones
+      .map(s => `• ${s.fecha_clase.toISOString().split('T')[0]} - ${s.actividad}`)
+      .join('\n');
+    throw new Error(`Ya contás con una actividad reservada en ese horario:\n${detalle}`);
+  }
 
     // Obtener o crear la instancia para esa fecha exacta
     const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
