@@ -4,6 +4,7 @@ class AsistenciasRepository {
   }
 
   async obtenerReservasHoyPorUsuario(idUsuario) {
+    
     const [rows] = await this.db.promise().execute(
       `
       SELECT

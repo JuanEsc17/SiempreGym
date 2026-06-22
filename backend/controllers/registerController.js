@@ -3,6 +3,11 @@ const db = require("../src/db");
 
 const repo = new RegisterRepository(db);
 
+//crear qr 
+const QRCode = require('qrcode');
+const { v4: uuidv4 } = require('uuid');
+
+
 // calcular edad
 function calcularEdad(fechaNacimiento) {
   const today = new Date();
@@ -159,21 +164,35 @@ const register = async (req, res) => {
       permisoPath = file.filename;
     }
 
+
+
     // agrego cliente a la base de datos (escenario 1 y 12)
 
-    await repo.create({
-      username: data.username,
-      email: data.email,
-      password: data.password, // guarda contraseña sin encriptar
-      nombre: data.nombre,
-      apellido: data.apellido,
-      dni: data.dni,
-      telefono: data.telefono,
-      fechaNacimiento: data.fechaNacimiento,
-      permiso: permisoPath,
-      estado_permiso: estado_permiso
-    });
+    // Primero crear el usuario sin QR
+const nuevoId = await repo.create({
+    username: data.username,
+    email: data.email,
+    password: data.password,
+    nombre: data.nombre,
+    apellido: data.apellido,
+    dni: data.dni,
+    telefono: data.telefono,
+    fechaNacimiento: data.fechaNacimiento,
+    permiso: permisoPath,
+    estado_permiso: estado_permiso,
+    codigo_qr: null
+});
+  // Generar QR con el id real
+const qrId = uuidv4();
+const qrData = JSON.stringify({
+    userId: nuevoId,
+    qrId: qrId,
+    timestamp: new Date().toISOString()
+});
+const codigoQr = await QRCode.toDataURL(qrData);
 
+// Actualizar el QR en la base de datos
+await repo.actualizarQR(nuevoId, codigoQr);
     return res.status(201).json({
       mensaje: "Usuario registrado con éxito"
     });

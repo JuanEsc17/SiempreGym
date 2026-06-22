@@ -25,6 +25,20 @@ export default function EmpleadoPanel() {
 
         <div className="grid grid-cols-2 gap-4">
 
+          {/* ESCANEAR QR */}
+        <button onClick={() => navigate('/qr-scanner')}
+            className="p-6 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 
+                   text-white cursor-pointer hover:scale-105 transition-all shadow-lg 
+                   border-none flex flex-col items-center gap-3"
+            style={{minHeight:'140px', justifyContent:'center'}}>
+          <span style={{fontSize:'40px'}}>📸</span>
+          <div className="text-center">
+            <h3 className="font-bold m-0 mb-1">Escanear QR</h3>
+            <p style={{fontSize:'12px', opacity:0.8, margin:0}}>Registrar asistencia de cliente</p>
+          </div>
+        </button>
+          
+
           {/* RESERVA PRESENCIAL */}
           <div
             onClick={() => navigate("/reserva-presencial")}

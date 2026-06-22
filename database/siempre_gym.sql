@@ -255,10 +255,11 @@ CREATE TABLE `usuarios` (
   `estado_permiso` enum('pendiente','aprobado','rechazado') DEFAULT 'pendiente',
   `creditos` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `codigo_qr` TEXT DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `dni` (`dni`)
+  UNIQUE KEY `dni` (`dni`),
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -330,6 +331,8 @@ LOCK TABLES `usuarios` WRITE;
 INSERT INTO `usuarios` VALUES (1,'Ana','Gomez','anag','ana@gmail.com','1234','12345678','2215555555','2000-05-10','cliente',NULL,NULL,0,'2026-05-10 20:16:25');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

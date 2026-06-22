@@ -873,6 +873,18 @@ export default function Actividades() {
         letterSpacing:'0.06em', display:'inline-block', marginTop:2}}>Mensual</span>
     </div>
   </div>
+  <div onClick={() => navigate('/qr-viewer')}
+     className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
+     style={{background:'#6D28D9', border:'1px solid rgba(147,51,234,0.25)'}}>
+  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+       style={{background:'#7c3aed'}}>
+    <span style={{fontSize:'20px'}}>📱</span>
+  </div>
+  <div>
+    <p className="text-white font-bold text-sm m-0">Mi QR</p>
+    <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Ver mi código</p>
+  </div>
+  </div>
 </div>
 
         <DateSelector fechaSeleccionada={fechaSeleccionada} onSeleccionar={handleSeleccionarDia} />
@@ -931,5 +943,7 @@ export default function Actividades() {
           }
       `}</style>
     </div>
+    
   );
+  
 }

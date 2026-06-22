@@ -16,6 +16,9 @@ require("./src/crons/renovacionesCron")
 const reportesRoutes = require("./src/routes/reportesRoutes")
 const personalRoutes = require("./src/routes/personalRoutes")
 
+//para qr
+const qrRoutes = require('./src/routes/qrRoutes');
+
 const app = express()
 
 
@@ -43,6 +46,7 @@ app.use("/api/asistencias", asistenciasRoutes)
 app.use("/api/renovaciones", renovacionesRoutes)
 app.use("/api/reportes", reportesRoutes)
 app.use("/api/personal", personalRoutes)
+app.use('/api/qr', qrRoutes);
 
 const PORT = 3000
 
