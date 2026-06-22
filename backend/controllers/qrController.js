@@ -102,7 +102,7 @@ const QRController = {
       // Procesar cada reserva válida
       const resultados = [];
 
-      for (const reserva of reservasHoy) {
+    for (const reserva of reservasHoy) {
         const ahora = new Date();
         
         const inicioClase = new Date(
@@ -113,12 +113,21 @@ const QRController = {
         const venceEn = new Date(inicioClase.getTime() + 15 * 60000);
 
         // Validar tiempo
-        if (ahora < habilitaDesde || ahora > venceEn) {
+        const duracionClase = reserva.duracion || 60;
+        const finClase = new Date(inicioClase.getTime() + duracionClase * 60000);
+
+        // Fuera del rango (antes de 30 min o después de que terminó) → sin reservas
+        if (ahora < habilitaDesde || ahora > finClase) {
+        continue;
+        }
+
+        // Llegó tarde (más de 15 min desde que empezó, pero clase no terminó)
+        if (ahora > venceEn) {
           resultados.push({
             idReserva: reserva.id_reserva,
             clase: reserva.actividad,
             valido: false,
-            razon: 'Fuera de horario permitido'
+            razon: 'Se ha superado el tiempo límite para registrar asistencia a la clase'
           });
           continue;
         }
@@ -163,13 +172,18 @@ const QRController = {
 
       // Devolver resultado
       const valido = resultados.some(r => r.valido);
-      
+      const hayResultados = resultados.length > 0;
+
       return res.json({
         ok: true,
-        valido: valido,
+        valido,
         usuario: usuario.nombre,
-        resultados: resultados,
-        mensaje: valido ? 'Asistencia registrada. Bienvenido!' : 'No se pudo registrar la asistencia'
+        resultados,
+        mensaje: valido 
+        ? 'Asistencia registrada. Bienvenido!'
+        : hayResultados 
+            ? resultados[0].razon
+            : 'El cliente está sin reservas para el día actual'
       });
 
     } catch (error) {

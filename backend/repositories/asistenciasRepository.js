@@ -15,6 +15,7 @@ class AsistenciasRepository {
         r.saldo_pendiente,
         c.actividad,
         c.horario,
+        c.duracion,
         r.fecha_clase
       FROM reservas r
       JOIN clases c
