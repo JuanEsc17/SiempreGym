@@ -1,6 +1,7 @@
 const serviceMensual    = require('../src/services/reservaMensualService');
 const serviceIndividual = require('../src/services/reservaIndividualService');
 const reservasRepository = require('../repositories/reservasRepository');
+const listaEsperaMensualService = require('../src/services/listaEsperaMensualService');
 // cambio marian
 const UsuariosRepository = require('../repositories/usuariosRepository');
 const db = require('../src/db');
@@ -400,16 +401,21 @@ class ReservasController {
         }
       }
 
-      // 4. Cancelar la(s) reserva(s)
       if (reserva.tipo_reserva === 'mensual') {
-        await reservasRepository.cancelarReservasMensualesTodas(reservasACancelar);
-      } else {
-        await reservasRepository.cancelarReserva(id_reserva);
-      }
 
-      // 5. Liberar cupos
-      if (reserva.id_instancia) {
+      // 1. cancelar todas
+        await reservasRepository.cancelarReservasMensualesTodas(reservasACancelar);
+
+      // 2. liberar cupo (si aplica lógica de instancia)
+        if (reserva.id_instancia) {
         await reservasRepository.contarReservasDeInstancia(reserva.id_instancia);
+        }
+
+      // 3. recién ahí lista de espera
+        await listaEsperaMensualService.procesarVacanteMensual(
+          reserva.id_clase,
+          reserva.fecha_clase
+        );
       }
 
       // 6. Procesar créditos y devoluciones

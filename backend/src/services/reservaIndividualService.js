@@ -153,15 +153,34 @@ const reservaIndividualService = {
   },
   completarPagoReserva: async (id_reserva) => {
 
+    const [rows] = await db.promise().execute(
+    `SELECT grupo_mensual_id
+     FROM reservas
+     WHERE id_reserva = ?`,
+    [id_reserva]
+  );
+
+  const grupoId = rows[0]?.grupo_mensual_id;
+
+  if (grupoId) {
     await db.promise().execute(
-      `
-      UPDATE reservas
-      SET tipo_pago = 'total',
-          saldo_pendiente = 0
-      WHERE id_reserva = ?
-      `,
+      `UPDATE reservas
+       SET estado = 'reservada',
+           tipo_pago = 'total',
+           saldo_pendiente = 0
+       WHERE grupo_mensual_id = ?`,
+      [grupoId]
+    );
+  } else {
+    await db.promise().execute(
+      `UPDATE reservas
+       SET estado = 'reservada',
+           tipo_pago = 'total',
+           saldo_pendiente = 0
+       WHERE id_reserva = ?`,
       [id_reserva]
     );
+  }
 
     return { success: true };
   },
