@@ -5,6 +5,7 @@ const listaEsperaMensualService = require('../src/services/listaEsperaMensualSer
 // cambio marian
 const UsuariosRepository = require('../repositories/usuariosRepository');
 const db = require('../src/db');
+const reservaIndividualService = require('../src/services/reservaIndividualService');
 
 const userRepo = new UsuariosRepository(db);
 // fin cambio marian
@@ -298,6 +299,41 @@ class ReservasController {
       return res.status(500).json({ ok: false, mensaje: error.message });
     }
   }
+
+  // individual presencial
+  async crearReservaIndividualPresencial (req, res) {
+  try {
+    const {
+      id_usuario,
+      id_clase,
+      id_instancia,
+      fecha_clase,
+      monto_total
+    } = req.body;
+
+    const resultado = await reservaIndividualService.crearReservaIndividualPresencial(
+      id_usuario,
+      id_clase,
+      id_instancia,
+      fecha_clase,
+      monto_total
+    );
+
+    res.status(201).json({
+      ok: true,
+      mensaje: "Reserva creada correctamente",
+      ...resultado
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(400).json({
+      ok: false,
+      mensaje: error.message
+    });
+  }
+}
 
   // ============================================================
   // HISTORIAL

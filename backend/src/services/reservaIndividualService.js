@@ -151,6 +151,31 @@ const reservaIndividualService = {
 
     return { success: true, id_reserva, saldoPendiente };
   },
+  crearReservaIndividualPresencial: async (
+  id_usuario,
+  id_clase,
+  id_instancia,
+  fecha_clase,
+  monto_total
+) => {
+
+  await reservasRepository.insertarReserva(
+    id_usuario,
+    id_clase,
+    id_instancia,
+    'pendiente',   // estado
+    'individual',
+    'total',
+    fecha_clase,
+    monto_total,         // saldo pendiente
+    null           // grupo_mensual_id
+  );
+
+  return {
+    success: true
+  };
+},
+
   completarPagoReserva: async (id_reserva) => {
 
     const [rows] = await db.promise().execute(
