@@ -57,6 +57,28 @@ export default function AdminPanel() {
               </p>
             </div>
           </div>
+          <div onClick={() => navigate("/admin/personal")}
+            className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
+            style={{ background: '#3b0764' }}>
+            <span className="text-3xl">👥</span>
+          <div>
+            <p className="text-white font-medium">Personal</p>
+            <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              Registrar personal y gestionar roles
+            </p>
+          </div>
+          </div>
+          <div onClick={() => navigate("/reportes-ingresos")}
+            className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
+            style={{ background: '#053f2f' }}>
+            <span className="text-3xl">💰</span>
+            <div>
+              <p className="text-white font-medium">Reporte de ingresos</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Visualizar ingresos por fechas
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

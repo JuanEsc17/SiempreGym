@@ -30,11 +30,14 @@ const reservaIndividualService = {
 
     // Escenario 7: superposición horaria (PRIMERO - mensaje más específico)
     const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
-      id_usuario, clase.horario, fecha_clase_str
+    id_usuario, clase.horario, fecha_clase_str
     );
     if (superposiciones.length > 0) {
-      throw new Error('Ya contás con una actividad reservada para ese horario.');
-    }
+    const detalle = superposiciones
+      .map(s => `• ${s.fecha_clase.toISOString().split('T')[0]} - ${s.actividad}`)
+      .join('\n');
+    throw new Error(`Ya contás con una actividad reservada en ese horario:\n${detalle}`);
+  }
 
     // Obtener o crear la instancia para esa fecha exacta
     const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
@@ -47,11 +50,11 @@ const reservaIndividualService = {
     // Escenario 4: sin cupo → ofrecer lista de espera
     const inscriptosActuales = await reservasRepository.contarReservasDeInstancia(instancia.id_instancia);
     if (inscriptosActuales >= clase.cupo_maximo) {
-      return {
-        status: 'SIN_CUPO_DISPONIBLE',
-        mensaje: 'No hay cupos disponibles. ¿Deseás ingresar a la lista de espera?'
-      };
-    }
+        return {
+    status: 'CLASE_LLENA',
+    mensaje: 'No hay cupos disponibles para esta fecha.'
+    };
+  }
 
     // Escenario 9: seña no disponible si es el mismo día de la clase
     const fechaHoyStr = ahora.toISOString().slice(0, 10);
@@ -148,17 +151,61 @@ const reservaIndividualService = {
 
     return { success: true, id_reserva, saldoPendiente };
   },
+  crearReservaIndividualPresencial: async (
+  id_usuario,
+  id_clase,
+  id_instancia,
+  fecha_clase,
+  monto_total
+) => {
+
+  await reservasRepository.insertarReserva(
+    id_usuario,
+    id_clase,
+    id_instancia,
+    'pendiente',   // estado
+    'individual',
+    'total',
+    fecha_clase,
+    monto_total,         // saldo pendiente
+    null           // grupo_mensual_id
+  );
+
+  return {
+    success: true
+  };
+},
+
   completarPagoReserva: async (id_reserva) => {
 
+    const [rows] = await db.promise().execute(
+    `SELECT grupo_mensual_id
+     FROM reservas
+     WHERE id_reserva = ?`,
+    [id_reserva]
+  );
+
+  const grupoId = rows[0]?.grupo_mensual_id;
+
+  if (grupoId) {
     await db.promise().execute(
-      `
-      UPDATE reservas
-      SET tipo_pago = 'total',
-          saldo_pendiente = 0
-      WHERE id_reserva = ?
-      `,
+      `UPDATE reservas
+       SET estado = 'reservada',
+           tipo_pago = 'total',
+           saldo_pendiente = 0
+       WHERE grupo_mensual_id = ?`,
+      [grupoId]
+    );
+  } else {
+    await db.promise().execute(
+      `UPDATE reservas
+       SET estado = 'reservada',
+           tipo_pago = 'total',
+           saldo_pendiente = 0
+       WHERE id_reserva = ?`,
       [id_reserva]
     );
+  }
 
     return { success: true };
   },
@@ -220,18 +267,6 @@ const reservaIndividualService = {
       monto
     };
   },
-
-  // ─── PASO C: Ingresar a lista de espera individual ───────────
-  ingresarListaEsperaIndividual: async (id_usuario, id_clase) => {
-    // FIX: verifica y opera con tipo_reserva = 'individual' (antes estaba hardcodeado 'mensual')
-    const yaEsta = await reservasRepository.verificarYaEnListaEspera(id_usuario, id_clase, 'individual');
-    if (yaEsta) throw new Error('Ya estás en la lista de espera para esta clase.');
-
-    const total = await reservasRepository.obtenerUltimaPosicionListaEspera(id_clase, 'individual');
-    await reservasRepository.insertarEnListaEspera(id_usuario, id_clase, total + 1, 'individual');
-
-    return { mensaje: 'Te anotamos en la lista de espera. Tendrás 24 hs para confirmar el pago si se libera un lugar.' };
-  }
 };
 
 module.exports = reservaIndividualService;

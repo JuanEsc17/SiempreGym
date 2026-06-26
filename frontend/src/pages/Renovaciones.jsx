@@ -266,47 +266,6 @@ export default function Renovaciones() {
         </div>
       </header>
 
-      {/* Banner de ventana */}
-      {ventanaActiva && renovaciones.length > 0 && (
-        <div className="mb-6 rounded-2xl overflow-hidden"
-             style={{ border: '1px solid rgba(138,11,210,0.4)' }}>
-          <div className="flex items-center justify-between p-4 gap-4"
-               style={{ background: 'linear-gradient(135deg, #2d0a4e, #1e0a3c)' }}>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                   style={{ background: 'rgba(138,11,210,0.4)', border: '1px solid rgba(138,11,210,0.6)' }}>
-                <span style={{ fontSize: '22px' }}>📅</span>
-              </div>
-              <div>
-                <p className="text-white font-bold m-0" style={{ fontSize: '15px' }}>
-                  ¡Es momento de renovar tus reservas!
-                </p>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '3px 0 0' }}>
-                  Tenés tiempo hasta el 10 de {MESES[mesSiguiente]} para renovar tus reservas
-                  mensuales del próximo mes y asegurar tu lugar.
-                </p>
-              </div>
-            </div>
-            <div className="flex-shrink-0 rounded-xl p-3 text-right"
-                 style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', minWidth: '120px' }}>
-              <p style={{ color: 'rgba(255,165,0,0.9)', fontSize: '10px', fontWeight: 'bold',
-                          textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>
-                ⏱ Tiempo restante
-              </p>
-              <p className="text-white font-bold m-0" style={{ fontSize: '22px', lineHeight: 1 }}>
-                {diasRestantes} <span style={{ fontSize: '13px', fontWeight: 'normal' }}>días</span>
-              </p>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', margin: '3px 0 0' }}>
-                Hasta el 10/{String(mesSiguiente + 1).padStart(2, '0')}
-              </p>
-            </div>
-          </div>
-          <div className="px-4 py-2"
-               style={{ background: 'rgba(0,0,0,0.35)', borderTop: '1px solid rgba(138,11,210,0.2)' }}>
-          </div>
-        </div>
-      )}
-
       {/* Fuera de ventana */}
       {!ventanaActiva && (
         <div className="mb-6 rounded-2xl p-4 flex items-center gap-3"

@@ -11,7 +11,7 @@ const reservasRepository = {
     const placeholders = listaFechas.map(() => '?').join(', ');
 
     const query = `
-      SELECT r.id_reserva, r.fecha_clase, c.horario
+      SELECT r.id_reserva, r.fecha_clase, c.horario, c.actividad
       FROM reservas r
       JOIN clases c ON r.id_clase = c.id_clase
       WHERE r.id_usuario = ?
@@ -74,12 +74,12 @@ const reservasRepository = {
   },
 
   // ─── RESERVAS ─────────────────────────────────────────────────
-  insertarReserva: async (id_usuario, id_clase, id_instancia, estado, tipo_reserva, tipo_pago, fecha_clase, saldo_pendiente = 0) => {
+  insertarReserva: async (id_usuario, id_clase, id_instancia, estado, tipo_reserva, tipo_pago, fecha_clase, saldo_pendiente = 0, grupo_mensual_id = null) => {
     const [result] = await db.promise().execute(
       `INSERT INTO reservas
-         (id_usuario, id_clase, id_instancia, estado, tipo_reserva, tipo_pago, saldo_pendiente, fecha_clase)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id_usuario, id_clase, id_instancia, estado, tipo_reserva, tipo_pago, saldo_pendiente, fecha_clase]
+         (id_usuario, id_clase, id_instancia, estado, tipo_reserva, tipo_pago, saldo_pendiente, fecha_clase, grupo_mensual_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id_usuario, id_clase, id_instancia, estado, tipo_reserva, tipo_pago, saldo_pendiente, fecha_clase, grupo_mensual_id]
     );
     return result.insertId;
   },

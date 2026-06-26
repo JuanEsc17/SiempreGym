@@ -132,17 +132,20 @@ CREATE TABLE `reservas` (
   `id_clase` int NOT NULL,
   `id_instancia` int NULL,
   `tipo_reserva` enum('individual','mensual') NOT NULL,
-  `estado` enum('reservada','cancelada','asistio') DEFAULT 'reservada',
+  `estado` enum('reservada','cancelada','asistio', 'pendiente') DEFAULT 'reservada',
   `tipo_pago` enum('membresia','credito','total','seña') DEFAULT NULL,
   `saldo_pendiente` decimal(10,2) DEFAULT '0.00',
   `fecha_reserva` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_clase` date NOT NULL,
+  `grupo_mensual_id` int NULL,
+  `id_renovacion` int NULL,
   PRIMARY KEY (`id_reserva`),
   KEY `id_usuario` (`id_usuario`),
   KEY `id_clase` (`id_clase`),
   CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`id_instancia`) REFERENCES `instancias_clases` (`id_instancia`),
   CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
-  CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_clase`) REFERENCES `clases` (`id_clase`)
+  CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_clase`) REFERENCES `clases` (`id_clase`),
+  CONSTRAINT `fk_reservas_renovacion` FOREIGN KEY (id_renovacion) REFERENCES renovaciones(id_renovacion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -255,10 +258,11 @@ CREATE TABLE `usuarios` (
   `estado_permiso` enum('pendiente','aprobado','rechazado') DEFAULT 'pendiente',
   `creditos` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `codigo_qr` TEXT DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `dni` (`dni`)
+  UNIQUE KEY `dni` (`dni`),
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -330,6 +334,8 @@ LOCK TABLES `usuarios` WRITE;
 INSERT INTO `usuarios` VALUES (1,'Ana','Gomez','anag','ana@gmail.com','1234','12345678','2215555555','2000-05-10','cliente',NULL,NULL,0,'2026-05-10 20:16:25');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

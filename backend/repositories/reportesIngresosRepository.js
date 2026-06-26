@@ -1,0 +1,107 @@
+const db = require('../src/db');
+
+class ReportesIngresosRepository {
+
+  // Métricas globales — siempre desde reservas+clases para que el filtro de actividad funcione
+  async getMetricas({ fechaDesde, fechaHasta, actividad }) {
+    const params = [fechaDesde, fechaHasta, actividad || null, actividad || null];
+
+    const query = `
+      SELECT 
+        COALESCE(SUM(
+          CASE 
+            WHEN r.tipo_pago = 'total'   THEN c.precio_individual
+            WHEN r.tipo_pago = 'seña'    THEN (c.precio_individual - r.saldo_pendiente)
+            WHEN r.tipo_pago = 'credito' THEN c.precio_individual
+            ELSE 0
+          END
+        ), 0) AS ingreso_total,
+
+        COUNT(*)                                                              AS total_reservas,
+        SUM(CASE WHEN r.tipo_reserva = 'mensual'    THEN 1 ELSE 0 END)      AS mensuales,
+        SUM(CASE WHEN r.tipo_reserva = 'individual' THEN 1 ELSE 0 END)      AS individuales
+
+      FROM reservas r
+      JOIN clases c ON c.id_clase = r.id_clase
+      WHERE r.fecha_clase BETWEEN ? AND ?
+        AND r.estado IN ('reservada', 'asistio')
+        AND (? IS NULL OR c.actividad = ?)
+    `;
+
+    const [rows] = await db.promise().query(query, params);
+    return rows[0];
+  }
+
+  // Ingresos agrupados por día (para el gráfico de área)
+  async getPorDia({ fechaDesde, fechaHasta, actividad }) {
+    const params = [fechaDesde, fechaHasta, actividad || null, actividad || null];
+
+    const query = `
+      SELECT 
+        r.fecha_clase                                         AS dia,
+        COUNT(*)                                             AS cantidad,
+        SUM(
+          CASE 
+            WHEN r.tipo_pago = 'total'   THEN c.precio_individual
+            WHEN r.tipo_pago = 'seña'    THEN (c.precio_individual - r.saldo_pendiente)
+            WHEN r.tipo_pago = 'credito' THEN c.precio_individual
+            ELSE 0
+          END
+        )                                                    AS total
+
+      FROM reservas r
+      JOIN clases c ON c.id_clase = r.id_clase
+      WHERE r.fecha_clase BETWEEN ? AND ?
+        AND r.estado IN ('reservada', 'asistio')
+        AND (? IS NULL OR c.actividad = ?)
+      GROUP BY r.fecha_clase
+      ORDER BY r.fecha_clase ASC
+    `;
+
+    const [rows] = await db.promise().query(query, params);
+    return rows;
+  }
+
+  // Ingresos agrupados por actividad (para el donut) — solo visible cuando no hay filtro de actividad
+  async getPorActividad({ fechaDesde, fechaHasta }) {
+    const query = `
+      SELECT 
+        c.actividad,
+        COUNT(r.id_reserva)                                                   AS cantidad,
+        SUM(CASE WHEN r.tipo_reserva = 'mensual'    THEN 1 ELSE 0 END)       AS mensuales,
+        SUM(CASE WHEN r.tipo_reserva = 'individual' THEN 1 ELSE 0 END)       AS individuales,
+        SUM(
+          CASE 
+            WHEN r.tipo_pago = 'total'   THEN c.precio_individual
+            WHEN r.tipo_pago = 'seña'    THEN (c.precio_individual - r.saldo_pendiente)
+            WHEN r.tipo_pago = 'credito' THEN c.precio_individual
+            ELSE 0
+          END
+        )                                                                      AS ingreso
+
+      FROM reservas r
+      JOIN clases c ON c.id_clase = r.id_clase
+      WHERE r.fecha_clase BETWEEN ? AND ?
+        AND r.estado IN ('reservada', 'asistio')
+      GROUP BY c.actividad
+      ORDER BY ingreso DESC
+    `;
+
+    const [rows] = await db.promise().query(query, [fechaDesde, fechaHasta]);
+    return rows;
+  }
+
+  // Listado de actividades únicas para el selector del filtro
+  async getActividades() {
+    const query = `
+      SELECT DISTINCT actividad 
+      FROM clases 
+      WHERE estado = 'activa'
+      ORDER BY actividad ASC
+    `;
+    const [rows] = await db.promise().query(query);
+    return rows.map(r => r.actividad);
+  }
+}
+
+module.exports = new ReportesIngresosRepository();

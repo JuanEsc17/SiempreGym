@@ -13,7 +13,7 @@ router.post('/verificar-mensual', (req, res) => ctrl.verificarReservaMensual(req
 router.post('/crear-mensual', (req, res) => ctrl.crearReservaMensual(req, res));
 
 // marian presencial
-router.post('/crear-mensual',(req,res)=>ctrl.crearReservaMensual(req,res));
+router.post('/crear-mensual-presencial',(req,res)=>ctrl.crearReservaMensualPresencial(req,res));
 // fin marian
 
 //  Ingresar a lista de espera mensual
@@ -31,9 +31,11 @@ router.post('/verificar-individual', (req, res) => ctrl.verificarIndividual(req,
 //    Body: { id_usuario, id_clase, id_instancia, fecha_clase, tipo_pago, precio_total }
 router.post('/crear', (req, res) => ctrl.confirmarReservaIndividual(req, res));
 
-// Ingresar a lista de espera individual
-//    Body: { id_usuario, id_clase }
-router.post('/lista-espera', (req, res) => ctrl.confirmarListaEsperaIndividual(req, res));
+// marian presencial
+router.post('/crear-individual-presencial', (req, res) => ctrl.crearReservaIndividualPresencial(req, res))
+//
+
+//Pago
 router.post('/registrar-pago-efectivo', (req, res) => ctrl.registrarPagoEfectivo(req, res));
 // ─── HISTORIAL ───────────────────────────────────────────────────
 router.get('/usuario/:id', (req, res) => ctrl.getMisReservas(req, res));

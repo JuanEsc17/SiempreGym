@@ -49,12 +49,26 @@ const reservaMensualService = {
     }
 
     // Escenario 5: superposición en cualquiera de las fechas
-    const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
-      id_usuario, clase.horario, fechasArray
-    );
-    if (superposiciones.length > 0) {
-      throw new Error('Ya contás con una reserva en ese horario para alguna de las fechas del mes.');
-    }
+  const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
+  id_usuario, clase.horario, fechasArray
+);
+if (superposiciones.length > 0) {
+  const vistos = new Set();
+  const detalle = superposiciones
+    .map(s => ({ fecha: s.fecha_clase.toISOString().split('T')[0], actividad: s.actividad }))
+    .filter(item => {
+      const key = `${item.fecha}-${item.actividad}`;
+      if (vistos.has(key)) return false;
+      vistos.add(key);
+      return true;
+    })
+    .sort((a, b) => a.fecha.localeCompare(b.fecha))
+    .map(item => `• ${item.fecha} - ${item.actividad}`)
+    .join('\n');
+
+  throw new Error(`Ya contás con una reserva en ese horario: 
+    \n${detalle}`);
+}
 
     // Verificar cupo en CADA semana — si alguna está llena, ofrecer lista de espera
     for (const fecha_clase_str of fechasArray) {
@@ -168,6 +182,65 @@ const reservaMensualService = {
     reservasCreadas: fechasArray.length
   };
 },
+
+crearReservaMensualPresencial: async (id_usuario, id_clase, fechasArray, monto_total) => {
+  console.log("ENTRÉ A crearReservaMensualPresencial");
+
+  const clasesRepo = new ClasesRepository(db);
+  const clase = await clasesRepo.obtenerClasePorId(id_clase);
+
+  if (!clase) {
+    throw new Error('La clase seleccionada no existe.');
+  }
+
+  // Generar grupo mensual
+  const primeraFecha = new Date(fechasArray[0]);
+
+  const grupoId = `PRESENCIAL-MENSUAL-${id_usuario}-${id_clase}-${primeraFecha.getMonth() + 1}-${primeraFecha.getFullYear()}`;
+
+  let indice = 0;
+
+  for (const fecha_clase_str of fechasArray) {
+
+    const esPrincipal = indice === 0;
+
+    const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
+
+    let instancia = await reservasRepository.obtenerInstanciaPorFecha(
+      id_clase,
+      fechaExactaStr
+    );
+
+    if (!instancia) {
+      const nuevoId = await reservasRepository.crearInstanciaClase(
+        id_clase,
+        fechaExactaStr
+      );
+      instancia = { id_instancia: nuevoId };
+    }
+
+    await reservasRepository.insertarReserva(
+      id_usuario,
+      id_clase,
+      instancia.id_instancia,
+      'pendiente',
+      'mensual',
+      'total',
+      fecha_clase_str,
+      esPrincipal ? monto_total : 0,
+      grupoId
+    );
+
+    indice++;
+  }
+
+  return {
+    success: true,
+    reservasCreadas: fechasArray.length
+  };
+},
+
+
   // ─── PASO C: Ingresar a lista de espera mensual ──────────────
   ingresarListaEsperaMensual: async (id_usuario, id_clase) => {
     const yaEsta = await reservasRepository.verificarYaEnListaEspera(id_usuario, id_clase, 'mensual');

@@ -31,17 +31,27 @@ function calcularMesSiguiente(mes, anio) {
   return { mes: mes + 1, anio };
 }
 
-// ─── Helper: verificar ventana habilitada ─────────────────────
-function estaEnVentanaRenovacion() {
-  const hoy = new Date();
-  const dia = hoy.getDate();
-  const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
-  const ultimaSemanaInicio = diasEnMes - 6; // últimos 7 días del mes
+// La renovación es para el mes "mes/anio". Su ventana de pago es:
+// - Última semana del mes anterior
+// - Días 1 al 10 del mes "mes/anio"
+function estaEnVentanaParaRenovacion(mes, anio) {
+  const hoy = new Date();//probar '2026-07-05'
+  hoy.setHours(0, 0, 0, 0);
 
-  const esUltimaSemana = dia >= ultimaSemanaInicio;//a chequear que dice la profe
-  const esPrimerosDiez = dia >= 1 && dia <= 10;
+  // Ventana B: días 1 al 10 del mes de la renovación
+  const inicioVentanaB = new Date(anio, mes - 1, 1);
+  const finVentanaB    = new Date(anio, mes - 1, 10);
 
-  return esUltimaSemana || esPrimerosDiez;
+  // Ventana A: última semana del mes anterior
+  const mesAnteriorDate = new Date(anio, mes - 2, 1);
+  const diasEnMesAnterior = new Date(mesAnteriorDate.getFullYear(), mesAnteriorDate.getMonth() + 1, 0).getDate();
+  const inicioVentanaA = new Date(mesAnteriorDate.getFullYear(), mesAnteriorDate.getMonth(), diasEnMesAnterior - 6);
+  const finVentanaA    = new Date(mesAnteriorDate.getFullYear(), mesAnteriorDate.getMonth(), diasEnMesAnterior);
+
+  const enVentanaA = hoy >= inicioVentanaA && hoy <= finVentanaA;
+  const enVentanaB = hoy >= inicioVentanaB && hoy <= finVentanaB;
+
+  return enVentanaA || enVentanaB;
 }
 
 const renovacionesService = {
@@ -103,23 +113,19 @@ const renovacionesService = {
 
   // ─── Obtener renovaciones pendientes del usuario ──────────────
   obtenerRenovaciones: async (id_usuario) => {
-    const renovaciones = await renovacionesRepository.obtenerRenovacionesPendientes(
-      id_usuario
-    );
+  const renovaciones = await renovacionesRepository.obtenerRenovacionesPendientes(
+    id_usuario
+  );
 
-    const ventanaActiva = estaEnVentanaRenovacion();
-    const hoy = new Date().toISOString().split('T')[0];
+  const hoy = new Date().toISOString().split('T')[0];
 
-  // Helper para normalizar fecha_vencimiento a 'YYYY-MM-DD'
   const toFechaStr = (fecha) => {
     if (fecha instanceof Date) return fecha.toISOString().split('T')[0];
     return fecha;
   };
 
-  // Filtrar solo renovaciones NO vencidas
   const renovacionesValidas = renovaciones.filter(r => toFechaStr(r.fecha_vencimiento) >= hoy);
 
-  // Marcar como vencidas las que pasaron su fecha
   const renovacionesVencidas = renovaciones.filter(r => toFechaStr(r.fecha_vencimiento) < hoy);
   for (const ren of renovacionesVencidas) {
     await db.promise().execute(
@@ -130,59 +136,65 @@ const renovacionesService = {
 
     // Para cada renovación calculamos las fechas y el precio
     const resultado = renovacionesValidas.map(r => {
-      const fechas = calcularFechasDelMesSiguiente(r.dia, r.mes, r.anio);
-      const monto = parseFloat(r.precio_individual) * fechas.length;
-      const nombreMes = new Date(r.anio, r.mes - 1, 1)
-        .toLocaleString('es-AR', { month: 'long' });
+    const fechas = calcularFechasDelMesSiguiente(r.dia, r.mes, r.anio);
+    const monto = parseFloat(r.precio_individual) * fechas.length;
+    const nombreMes = new Date(r.anio, r.mes - 1, 1)
+      .toLocaleString('es-AR', { month: 'long' });
 
-      return {
-        id_renovacion:    r.id_renovacion,
-        id_clase:         r.id_clase,
-        actividad:        r.actividad,
-        dia:              r.dia,
-        horario:          r.horario,
-        nombre_profesor:  r.nombre_profesor,
-        mes:              r.mes,
-        anio:             r.anio,
-        nombre_mes:       nombreMes,
-        fecha_vencimiento: r.fecha_vencimiento,
-        cantidad_clases:  fechas.length,
-        fechas,
-        monto,
-        puede_renovar_ahora: ventanaActiva
-      };
-    });
+    // ← CAMBIO: ventana específica de ESTA renovación
+    const puedeRenovarAhora = estaEnVentanaParaRenovacion(r.mes, r.anio);
 
-    return { renovaciones: resultado, ventana_activa: ventanaActiva };
-  },
+    return {
+      id_renovacion:    r.id_renovacion,
+      id_clase:         r.id_clase,
+      actividad:        r.actividad,
+      dia:              r.dia,
+      horario:          r.horario,
+      nombre_profesor:  r.nombre_profesor,
+      mes:              r.mes,
+      anio:             r.anio,
+      nombre_mes:       nombreMes,
+      fecha_vencimiento: r.fecha_vencimiento,
+      cantidad_clases:  fechas.length,
+      fechas,
+      monto,
+      puede_renovar_ahora: puedeRenovarAhora
+    };
+  });
+
+  // ventana_activa general: true si AL MENOS UNA renovación está habilitada
+  const ventanaActiva = resultado.some(r => r.puede_renovar_ahora);
+
+  return { renovaciones: resultado, ventana_activa: ventanaActiva };
+},
 
   // ─── Verificar una renovación antes de pagar ─────────────────
   verificarRenovacion: async (id_renovacion) => {
-    const renovacion = await renovacionesRepository.obtenerRenovacionPorId(
-      id_renovacion
-    );
-    if (!renovacion) throw new Error('Renovación no encontrada.');
-    if (renovacion.estado !== 'pendiente') {
-      throw new Error('Esta renovación ya fue confirmada o venció.');
-    }
-    
-    // Verificar que no esté vencida (día 11 del mes de vencimiento)
-    const hoy = new Date().toISOString().split('T')[0];
-    if (renovacion.fecha_vencimiento < hoy) {
-      throw new Error('Esta renovación venció. No se puede renovar.');
-    }
-    
-    if (!estaEnVentanaRenovacion()) {
-      throw new Error('Estás fuera de la ventana de renovación.');
-    }
+  const renovacion = await renovacionesRepository.obtenerRenovacionPorId(
+    id_renovacion
+  );
+  if (!renovacion) throw new Error('Renovación no encontrada.');
+  if (renovacion.estado !== 'pendiente') {
+    throw new Error('Esta renovación ya fue confirmada o venció.');
+  }
 
-    const fechas = calcularFechasDelMesSiguiente(
-      renovacion.dia, renovacion.mes, renovacion.anio
-    );
-    const monto = parseFloat(renovacion.precio_individual) * fechas.length;
+  const hoy = new Date().toISOString().split('T')[0];
+  if (renovacion.fecha_vencimiento < hoy) {
+    throw new Error('Esta renovación venció. No se puede renovar.');
+  }
 
-    return { id_renovacion, monto, fechas, renovacion };
-  },
+  // ← CAMBIO: ventana específica de ESTA renovación
+  if (!estaEnVentanaParaRenovacion(renovacion.mes, renovacion.anio)) {
+    throw new Error('Todavía no se habilitó el período de renovación para este mes.');
+  }
+
+  const fechas = calcularFechasDelMesSiguiente(
+    renovacion.dia, renovacion.mes, renovacion.anio
+  );
+  const monto = parseFloat(renovacion.precio_individual) * fechas.length;
+
+  return { id_renovacion, monto, fechas, renovacion };
+},
 
   // ─── Confirmar renovación post-pago ──────────────────────────
   confirmarRenovacion: async (id_renovacion, id_usuario, id_clase, mes, anio) => {
@@ -222,35 +234,36 @@ const renovacionesService = {
   },
 
   // ─── Banner ───────────────────────────────────────────────────
-  obtenerBanner: async (id_usuario) => {
-    const hoy = new Date();
-    const dia = hoy.getDate();
-
-    // Banner solo aparece días 1-10
-    if (dia < 1 || dia > 10) {
-      return { mostrar: false };
-    }
-
-    const renovaciones = await renovacionesRepository.obtenerRenovacionesPendientes(
-      id_usuario
-    );
-    if (renovaciones.length === 0) {
-      return { mostrar: false };
-    }
-
-    // Tomar la fecha de vencimiento de la primera renovación
-    const fechaVenc = renovaciones[0].fecha_vencimiento;
-    const nombreMes = new Date(fechaVenc)
-      .toLocaleString('es-AR', { month: 'long' });
-    const dia10 = new Date(fechaVenc).getDate();
-
-    return {
-      mostrar: true,
-      cantidad_pendientes: renovaciones.length,
-      fecha_limite: fechaVenc,
-      mensaje: `Tenés tiempo hasta el ${dia10} de ${nombreMes} para renovar tus reservas mensuales y asegurar tu lugar.`
-    };
+  // DESPUÉS
+obtenerBanner: async (id_usuario) => {
+  const renovaciones = await renovacionesRepository.obtenerRenovacionesPendientes(id_usuario);
+  if (renovaciones.length === 0) {
+    return { mostrar: false };
   }
+
+  const renovacionEnVentana = renovaciones.find(r => 
+    estaEnVentanaParaRenovacion(r.mes, r.anio)
+  );
+
+  if (!renovacionEnVentana) {
+    return { mostrar: false };
+  }
+
+  const fechaVenc = renovacionEnVentana.fecha_vencimiento;
+  const nombreMes = new Date(fechaVenc).toLocaleString('es-AR', { month: 'long' });
+  const dia10 = new Date(fechaVenc).getDate();
+
+  const cantidadEnVentana = renovaciones.filter(r => 
+    estaEnVentanaParaRenovacion(r.mes, r.anio)
+  ).length;
+
+  return {
+    mostrar: true,
+    cantidad_pendientes: cantidadEnVentana,
+    fecha_limite: fechaVenc,
+    mensaje: `Tenés tiempo hasta el ${dia10} de ${nombreMes} para renovar tus reservas mensuales y asegurar tu lugar.`
+  };
+}
 };
 
 module.exports = renovacionesService;

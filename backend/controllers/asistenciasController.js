@@ -55,6 +55,40 @@ const AsistenciasController = {
       const reserva =
         await repo.obtenerReservaPorId(id_reserva);
 
+      const ahora = new Date();
+
+      const inicioClase = new Date(
+        `${reserva.fecha_clase.toISOString().split('T')[0]}
+         ${reserva.horario}`
+      );
+
+      const habilitaDesde = new Date(
+        inicioClase.getTime() - 30 * 60000
+      );
+
+      const finClase = new Date(
+      inicioClase.getTime() +
+      reserva.duracion * 60000
+      );
+
+      const venceEn = new Date(
+      finClase.getTime() - 15 * 60000
+      );
+
+      if (ahora < habilitaDesde) {
+        return res.status(400).json({
+          ok: false,
+          mensaje:'La asistencia sólo puede registrarse desde 30 minutos antes de la clase'
+        });
+      }
+
+      if (ahora > venceEn) {
+        return res.status(400).json({
+          ok: false,
+          mensaje:'La asistencia ya no puede registrarse porque la clase comenzó hace más de 15 minutos'
+        });
+      }
+
       if (!reserva) {
         return res.status(404).json({
           ok: false,

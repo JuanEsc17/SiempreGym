@@ -4,6 +4,7 @@ class AsistenciasRepository {
   }
 
   async obtenerReservasHoyPorUsuario(idUsuario) {
+    
     const [rows] = await this.db.promise().execute(
       `
       SELECT
@@ -14,6 +15,7 @@ class AsistenciasRepository {
         r.saldo_pendiente,
         c.actividad,
         c.horario,
+        c.duracion,
         r.fecha_clase
       FROM reservas r
       JOIN clases c
@@ -45,9 +47,13 @@ class AsistenciasRepository {
   async obtenerReservaPorId(idReserva) {
     const [rows] = await this.db.promise().execute(
       `
-      SELECT *
-      FROM reservas
-      WHERE id_reserva = ?
+      SELECT
+      r.*,
+      c.horario
+      FROM reservas r
+      JOIN clases c
+      ON c.id_clase = r.id_clase
+      WHERE r.id_reserva = ?
       `,
       [idReserva]
     );

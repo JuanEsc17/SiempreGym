@@ -144,8 +144,8 @@ function ClaseCard({ clase, fechaSeleccionada, onReservar }) {
     yaInicio = minAhora >= minClase;
   }
 
-  const borderColor  = yaInicio ? '#374151' : estaLlena ? '#f59e0b' : '#8A0BD2';
-  const overlayColor = yaInicio ? 'rgba(0,0,0,0.65)' : estaLlena ? 'rgba(146,64,14,0.55)' : 'rgba(0,0,0,0.58)';
+  const borderColor  = yaInicio ? '#374151' : '#8A0BD2';
+  const overlayColor = yaInicio ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.58)';
 
   return (
     <div
@@ -161,9 +161,9 @@ function ClaseCard({ clase, fechaSeleccionada, onReservar }) {
         </div>
       )}
       {!yaInicio && estaLlena && (
-        <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
-             style={{background:'#f59e0b', color:'#451a00'}}>
-          ⏳ Lista de espera
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium"
+             style={{background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.5)'}}>
+          📅 Mensual c/ espera
         </div>
       )}
 
@@ -180,16 +180,16 @@ function ClaseCard({ clase, fechaSeleccionada, onReservar }) {
                style={{ background: overlayColor }} />
         </div>
         <div className="relative z-10 p-4 h-full flex flex-col justify-between">
-          <div>
-            <h3 className="text-xl font-bold text-white capitalize m-0 leading-tight drop-shadow">{clase.actividad}</h3>
-            {estaLlena && !yaInicio && (
-              <span className="text-[9px] text-amber-300 mt-0.5 block">Tocá para anotarte</span>
-            )}
-          </div>
+          <h3 className="text-xl font-bold text-white capitalize m-0 leading-tight drop-shadow">{clase.actividad}</h3>
           <div className="flex items-end justify-between">
             <div className="w-2/3">
               {estaLlena ? (
-                <p className="text-[10px] mb-1 text-amber-400 font-medium">Sin cupos disponibles</p>
+                <>
+                  <p className="text-[10px] mb-1 text-red-400 font-medium">Sin cupo este día</p>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.1)'}}>
+                    <div className="h-full" style={{width:'0%', background:'#f87171'}} />
+                  </div>
+                </>
               ) : (
                 <>
                   <p className="text-[10px] mb-1 font-medium" style={{color:colorBarra}}>
@@ -201,10 +201,9 @@ function ClaseCard({ clase, fechaSeleccionada, onReservar }) {
                 </>
               )}
             </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg transition-all
-                            group-hover:scale-110 ${estaLlena?'':'group-hover:rotate-90'}`}
-                 style={{background: estaLlena?'#f59e0b':'#8A0BD2', fontSize:'20px', lineHeight:'1'}}>
-              {estaLlena ? '⏳' : '+'}
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg transition-all group-hover:scale-110 group-hover:rotate-90"
+                 style={{background:'#8A0BD2', fontSize:'20px', lineHeight:'1'}}>
+              +
             </div>
           </div>
         </div>
@@ -287,8 +286,10 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
         setDatosMensual(data); // data.fechas y data.monto ya vienen del backend
         setPaso('preview_mensual');
       }
+    } else if (data.status === 'CLASE_LLENA') {
+        setPaso('sin_cupo');
     } else if (data.status?.includes('LISTA_ESPERA')) {
-      setPaso(modo === 'INDIVIDUAL' ? 'lista_espera' : 'lista_espera_mensual');
+        setPaso('lista_espera_mensual');
     } else {
       setErrorMsg(data.mensaje || 'No se puede procesar la solicitud');
       setPaso('error');
@@ -405,25 +406,32 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
 };
 
   const handleListaEspera = async () => {
-    setProcesando(true);
-    try {
-      const ep = modo==='INDIVIDUAL' ? `${BASE_URL}/reservas/lista-espera` : `${BASE_URL}/reservas/lista-espera-mensual`;
-      const body = {
-        id_usuario: getUsuarioId(), id_clase: clase.id_clase,
-        ...(modo === 'INDIVIDUAL'
-          ? { fecha_clase: fechaISO(fechaSeleccionada) }
-          : { mes: fechaSeleccionada.getMonth()+1, anio: fechaSeleccionada.getFullYear() })
-      };
-      const data = await apiFetch(ep, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-      if (data.ok) { onToast(data.mensaje || '¡Anotado a la lista de espera!'); onReservaExitosa(); }
-      else { setErrorMsg(data.mensaje); setPaso('error'); }
-    } catch {
-      setErrorMsg('Error al anotarse');
+  setProcesando(true);
+  try {
+    const res = await fetch(`${BASE_URL}/lista-espera`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idUsuario: getUsuarioId(),
+        idClase: clase.id_clase,
+        tipoReserva: 'mensual'
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      onToast(`¡Anotado en la lista de espera! Posición #${data.posicion}`);
+      onReservaExitosa();
+    } else {
+      setErrorMsg(data.error || data.mensaje || 'No se pudo anotar en la lista de espera.');
       setPaso('error');
-    } finally {
-      setProcesando(false);
     }
-  };
+  } catch {
+    setErrorMsg('Error al anotarse');
+    setPaso('error');
+  } finally {
+    setProcesando(false);
+  }
+};
 
   // ── Render del contenido según el paso ──
   const renderContenido = () => {
@@ -453,7 +461,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
             subtitulo="Abonás el total ahora vía Mercado Pago"
             precio={formatPrecio(precio)}
             seleccionado={tipoPago==='TOTAL'} onClick={()=>setTipoPago('TOTAL')} />
-          <OpcionPago icono="🤝" titulo="Reserva con seña"
+          <OpcionPago icono="🤝" titulo="Pago con seña"
             subtitulo={puedeUsarSena
               ? `${fP(montoPrecio/2)} ahora + ${fP(montoPrecio/2)} el día de la clase`
               : 'No disponible el mismo día de la clase'}
@@ -528,31 +536,39 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
       );
     }
 
-    if (paso==='lista_espera'||paso==='lista_espera_mensual') {
-      const esMensual = paso==='lista_espera_mensual';
-      return (
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-               style={{background:'rgba(245,158,11,0.15)'}}>
-            <span style={{fontSize:'36px'}}>⏳</span>
-          </div>
-          <h3 className="text-white font-bold m-0 mb-2" style={{fontSize:'16px'}}>
-            {esMensual ? 'No hay cupos para todo el mes' : 'Esta clase está completa'}
-          </h3>
-          <p style={{color:'rgba(255,255,255,0.55)', fontSize:'13px', lineHeight:'1.6', marginBottom:'16px'}}>
-            {esMensual
-              ? 'Algunas clases del período no tienen cupos. Te notificamos si se libera disponibilidad completa.'
-              : 'Si alguien cancela, te avisamos y tendrás hasta el inicio de la clase para asegurar tu lugar.'}
-          </p>
-          <div className="rounded-xl p-3 text-left"
-               style={{background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)'}}>
-            <p style={{color:'#fbbf24', fontSize:'12px', margin:0}}>
-              ⚡ Tendrás <strong>24 hs</strong> para confirmar el pago una vez que se libere un lugar.
-            </p>
-          </div>
-        </div>
-      );
-    }
+    if (paso === 'sin_cupo') {
+  return (
+    <div className="text-center">
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+           style={{background:'rgba(239,68,68,0.1)'}}>
+        <span style={{fontSize:'32px'}}>⚠️</span>
+      </div>
+      <h3 className="text-white font-bold m-0 mb-2" style={{fontSize:'16px'}}>
+        Sin cupos disponibles
+      </h3>
+      <p style={{color:'rgba(255,255,255,0.55)', fontSize:'13px', lineHeight:'1.6'}}>
+        No hay lugar para esta clase en la fecha elegida. Probá otro horario o consultá el pase mensual.
+      </p>
+    </div>
+  );
+}
+
+if (paso === 'lista_espera_mensual') {
+  return (
+    <div className="text-center">
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+           style={{background:'rgba(245,158,11,0.15)'}}>
+        <span style={{fontSize:'36px'}}>⏳</span>
+      </div>
+      <h3 className="text-white font-bold m-0 mb-2" style={{fontSize:'16px'}}>
+        No hay cupos para todo el mes
+      </h3>
+      <p style={{color:'rgba(255,255,255,0.55)', fontSize:'13px', lineHeight:'1.6', marginBottom:'16px'}}>
+        Algunas clases del período no tienen cupos. Te notificamos si se libera disponibilidad completa.
+      </p>
+    </div>
+  );
+}
     return null;
   };
 
@@ -562,21 +578,24 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
     const base = "w-full py-3.5 rounded-2xl text-white font-bold border-none cursor-pointer transition-all active:scale-95 mt-4";
     if (paso==='error')
       return <button onClick={verificar} className={base} style={{background:'#8A0BD2'}}>Reintentar</button>;
-    if (paso==='lista_espera'||paso==='lista_espera_mensual')
-      return <button onClick={handleListaEspera} disabled={procesando} className={base}
-               style={{background:procesando?'rgba(245,158,11,0.4)':'#f59e0b', color:'#451a00'}}>
-               {procesando?'Anotando...':'⏳ Anotarme en lista de espera'}
-             </button>;
+    if (paso === 'sin_cupo')
+  return 
+
+if (paso === 'lista_espera_mensual')
+  return <button onClick={handleListaEspera} disabled={procesando} className={base}
+           style={{background:procesando?'rgba(245,158,11,0.4)':'#f59e0b', color:'#451a00'}}>
+           {procesando?'Anotando...':'⏳ Ingresar a la lista de espera'}
+         </button>;
     if (paso==='seleccionar_pago') {
-      const ok = tipoPago&&!procesando;
-      return <button onClick={handleConfirmar} disabled={!ok} className={base}
-               style={{background:ok?'#10b981':'rgba(255,255,255,0.07)', color:ok?'white':'rgba(255,255,255,0.3)',
-                       cursor:ok?'pointer':'not-allowed', boxShadow:ok?'0 4px 20px rgba(16,185,129,0.3)':'none'}}>
-               {procesando?'Procesando...'
-                :tipoPago?`Confirmar ${tipoPago==='TOTAL'?'pago total':tipoPago==='SEÑA'?'seña':'con crédito'} →`
-                :'Seleccioná un método de pago'}
-             </button>;
-    }
+  const ok = tipoPago && !procesando;
+  return <button onClick={handleConfirmar} disabled={!ok} className={base}
+           style={{background:ok?'#10b981':'rgba(255,255,255,0.07)', color:ok?'white':'rgba(255,255,255,0.3)',
+                   cursor:ok?'pointer':'not-allowed', boxShadow:ok?'0 4px 20px rgba(16,185,129,0.3)':'none'}}>
+           {procesando?'Procesando...'
+            :tipoPago?'Confirmar reserva individual →'
+            :'Seleccioná un método de pago'}
+         </button>;
+}
     if (paso==='preview_mensual')
       return <button onClick={handleConfirmar} disabled={procesando} className={base}
                style={{background:procesando?'rgba(16,185,129,0.4)':'#10b981', boxShadow:'0 4px 20px rgba(16,185,129,0.3)'}}>
@@ -618,7 +637,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
             <button key={m} onClick={()=>setModo(m)}
                     className="flex-1 py-2 text-[10px] font-bold rounded-lg border-none cursor-pointer transition-all"
                     style={{ background:modo===m?'#8A0BD2':'transparent', color:modo===m?'white':'rgba(255,255,255,0.35)' }}>
-              {m==='INDIVIDUAL'?'📌 UNA CLASE':'📅 PASE MENSUAL'}
+              {m==='INDIVIDUAL'?'📌 INDIVIDUAL':'📅 MENSUAL'}
             </button>
           ))}
         </div>
@@ -626,20 +645,16 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
         <div className="px-5 pb-6">
           {renderContenido()}
           {renderBoton()}
-          <p style={{color:'rgba(255,255,255,0.2)', fontSize:'10px', textAlign:'center', marginTop:'14px',
-                     textTransform:'uppercase', letterSpacing:'0.1em'}}>
-            Al confirmar aceptás nuestras políticas de cancelación
-          </p>
         </div>
       </div>
     </div>
   );
 }
 // ─── BannerRenovacion ─────────────────────────────────────────────
+// ─── BannerRenovacion ─────────────────────────────────────────────
 function BannerRenovacion({ banner, onNavegar }) {
   if (!banner?.mostrar) return null;
 
-  // Calcular días restantes
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const venc = new Date(banner.fecha_limite);
@@ -675,9 +690,9 @@ function BannerRenovacion({ banner, onNavegar }) {
           </div>
         </div>
 
-        {/* Tiempo restante */}
+        {/* Tiempo restante + botón */}
         <div className="flex-shrink-0 rounded-xl p-3 text-right"
-             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', minWidth: '120px' }}>
+             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', minWidth: '230px' }}>
           <p style={{ color: 'rgba(255,165,0,0.9)', fontSize: '10px', fontWeight: 'bold',
                       textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px' }}>
             ⏱ Tiempo restante
@@ -685,26 +700,17 @@ function BannerRenovacion({ banner, onNavegar }) {
           <p className="text-white font-bold m-0" style={{ fontSize: '22px', lineHeight: 1 }}>
             {diasRestantes} <span style={{ fontSize: '13px', fontWeight: 'normal' }}>días</span>
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', margin: '3px 0 0' }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', margin: '3px 0 10px' }}>
             Hasta el {venc.getDate()}/{String(venc.getMonth() + 1).padStart(2, '0')}
           </p>
+          <button
+            onClick={onNavegar}
+            className="w-full py-1.5 rounded-xl text-white font-bold border-none cursor-pointer transition-all hover:brightness-110"
+            style={{ background: 'rgba(255,165,0,0.9)', fontSize: '17px' }}>
+            Renovar →
+          </button>
         </div>
       </div>
-
-      {/* Fila inferior informativa */}
-      <div className="flex items-center justify-between px-4 py-2 gap-3"
-           style={{ background: 'rgba(0,0,0,0.35)', borderTop: '1px solid rgba(138,11,210,0.2)' }}>
-        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', margin: 0 }}>
-          ℹ️ Solo vos podés ver y renovar tus reservas. Si no renovás antes del {venc.getDate()}/{String(venc.getMonth() + 1).padStart(2, '0')}, perderás tu prioridad y el cupo quedará liberado.
-        </p>
-        <button
-          onClick={onNavegar}
-          className="flex-shrink-0 px-4 py-1.5 rounded-xl text-white font-bold border-none cursor-pointer transition-all hover:brightness-110"
-          style={{ background: '#8A0BD2', fontSize: '12px', whiteSpace: 'nowrap' }}>
-          Renovar →
-        </button>
-      </div>
-
     </div>
   );
 }
@@ -867,6 +873,18 @@ export default function Actividades() {
         letterSpacing:'0.06em', display:'inline-block', marginTop:2}}>Mensual</span>
     </div>
   </div>
+  <div onClick={() => navigate('/qr-viewer')}
+     className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
+     style={{background:'#6D28D9', border:'1px solid rgba(147,51,234,0.25)'}}>
+  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+       style={{background:'#7c3aed'}}>
+    <span style={{fontSize:'20px'}}>📱</span>
+  </div>
+  <div>
+    <p className="text-white font-bold text-sm m-0">Mi QR</p>
+    <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Ver mi código</p>
+  </div>
+  </div>
 </div>
 
         <DateSelector fechaSeleccionada={fechaSeleccionada} onSeleccionar={handleSeleccionarDia} />
@@ -925,5 +943,7 @@ export default function Actividades() {
           }
       `}</style>
     </div>
+    
   );
+  
 }
