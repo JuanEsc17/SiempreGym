@@ -17,9 +17,12 @@ import MisReservas from './pages/MisReservas'
 import PermisosAdmin from "./pages/PermisosAdmin"
 import ResubmitPermiso from "./pages/ResubmitPermiso"
 import ReportesAsistencias from "./pages/ReportesAsistencias.jsx"
+import ReportesIngresos from './pages/ReportesIngresos'
 import RegistrarUsuarioEmpleado from "./pages/RegistrarUsuarioEmpleado"
 import RegistrarAsistencia from "./pages/RegistrarAsistencia.jsx"
 import EmpleadoPanel from "./pages/EmpleadoPanel"
+import Personal         from "./pages/Personal"
+import RegisterEmpleado from "./pages/RegisterEmpleado"
 
 //lista de espera 
 
@@ -31,6 +34,10 @@ import Renovaciones from "./pages/Renovaciones.jsx"
 import ForgotPassword from "./pages/ForgotPassword"
 import VerifyCode from "./pages/VerifyCode"
 import ResetPassword from "./pages/ResetPassword"
+
+// Para Qr
+import QRViewer from "./pages/QRViewer.jsx"
+import QRScanner from "./pages/QRScanner.jsx"
 
 // Ruta protegida para usuarios autenticados (solo clientes regulares)
 function RutaProtegida({ children }) {
@@ -144,11 +151,14 @@ function AppContent() {
         <Route path="/crear-clase" element={<RutaAdmin><CrearClase /></RutaAdmin>} />
         <Route path="/editar-clase/:id" element={<RutaAdmin><EditarClase /></RutaAdmin>} />
         <Route path="/reportes-asistencias" element={<RutaAdmin><ReportesAsistencias /></RutaAdmin>} />
+        <Route path="/reportes-ingresos" element={<RutaAdmin><ReportesIngresos /></RutaAdmin>} />
         <Route path="/ver-clases-admin" element={<RutaEmpleado><VerClasesAdmin /></RutaEmpleado>} />
         <Route path="/reserva-presencial" element={<RutaEmpleado><ReservaPresencial /></RutaEmpleado>}/>
         <Route path="/registrar-pago" element={<RutaEmpleado><RegistrarPagoEfectivo /></RutaEmpleado>} />
         <Route path="/payment-status" element={<PaymentStatus />} />
         <Route path="/admin/permisos" element={<PermisosAdmin />} />
+        <Route path="/admin/personal"       element={<RutaAdmin><Personal /></RutaAdmin>} />
+        <Route path="/admin/personal/nuevo" element={<RutaAdmin><RegisterEmpleado /></RutaAdmin>} />
 
         {/** Rutas para empleado */}
         <Route path="/empleado" element={<RutaEmpleado><EmpleadoPanel /></RutaEmpleado>}/>
@@ -160,6 +170,10 @@ function AppContent() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-code" element={<VerifyCode />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        {/** Rutas para QR */}
+        <Route path="/qr-viewer" element={<QRViewer />} />
+        <Route path="/qr-scanner" element={<QRScanner />} />
+
       </Routes>
       </>
   )
