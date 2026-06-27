@@ -165,7 +165,7 @@ const QRController = {
           id_reserva: reserva.id_reserva,
           metodo: 'qr'
         });
-
+        await asistenciasRepo.marcarReservaAsistida(reserva.id_reserva);
         resultados.push({
           idReserva: reserva.id_reserva,
           clase: reserva.actividad,
