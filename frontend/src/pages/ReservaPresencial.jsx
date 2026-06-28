@@ -132,7 +132,7 @@ function ClaseCard({ clase, onSeleccionar }) {
 }
 
 // ─── Modal de Selección de Fechas ────────────────────────────────
-function ModalConfirmacion({ clase, usuarioSeleccionado, tipoReserva, fechaSeleccionada, onConfirmar, onCerrar, procesando }) {
+function ModalConfirmacion({ clase, usuarioSeleccionado, tipoReserva, fechaSeleccionada, fechasMensuales, onConfirmar, onCerrar, procesando }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.85)', backdropFilter:'blur(6px)'}} onClick={onCerrar}>
       <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl" style={{background:'#1a1a2e'}} onClick={e=>e.stopPropagation()}>
@@ -156,10 +156,38 @@ function ModalConfirmacion({ clase, usuarioSeleccionado, tipoReserva, fechaSelec
             <p className="text-white/50 text-xs mt-1">{clase.horario?.slice(0,5)} hs - {clase.duracion} min</p>
           </div>
 
-          <div className="rounded-lg p-4" style={{background:'rgba(138,11,210,0.15)', border:'1px solid rgba(138,11,210,0.3)'}}>
-            <p className="text-white/70 text-xs mb-1">Fecha:</p>
-            <p className="text-white font-bold">{formatCorta(fechaISO(fechaSeleccionada))}</p>
-          </div>
+          <div
+            className="rounded-lg p-4"
+            style={{
+            background: 'rgba(138,11,210,0.15)',
+            border: '1px solid rgba(138,11,210,0.3)'
+            }}
+          >
+          <p className="text-white/70 text-xs mb-1">
+            {tipoReserva === "INDIVIDUAL" ? "Fecha:" : "Fechas:"}
+          </p>
+
+            {tipoReserva === "INDIVIDUAL" ? (
+            <p className="text-white font-bold">
+              {formatCorta(fechaISO(fechaSeleccionada))}
+            </p>
+  ) : (
+    <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
+      {fechasMensuales.map((f) => (
+        <span
+          key={f}
+          className="px-2 py-1 rounded-lg text-xs font-semibold"
+          style={{
+            background: "rgba(138,11,210,0.3)",
+            color: "white"
+          }}
+        >
+          {formatCorta(f)}
+        </span>
+      ))}
+    </div>
+  )}
+</div>
 
           <div className="rounded-lg p-4" style={{background:'rgba(138,11,210,0.15)', border:'1px solid rgba(138,11,210,0.3)'}}>
             <p className="text-white/70 text-xs mb-1">Tipo de reserva:</p>
@@ -198,6 +226,8 @@ export default function ReservaPresencial() {
   const [claseParaReservar, setClaseParaReservar] = useState(null);
   const [toast, setToast] = useState(null);
   const [procesando, setProcesando] = useState(false);
+
+  const [fechasMensuales, setFechasMensuales] = useState([]);
 
   // ────────────────────────────────────────
   // CARGAR CLASES POR DÍA
@@ -468,27 +498,63 @@ export default function ReservaPresencial() {
         />
 
         {/* Clases Grid */}
-        <div className="space-y-3">
-          {clases.length > 0 ? (
-            clases.map(clase => (
-              <ClaseCard
-                key={clase.id_clase}
-                clase={clase}
-                onSeleccionar={() => {
-                  if (!usuarioSeleccionado) {
-                    setToast("Por favor selecciona un cliente primero");
-                    return;
-                  }
-                  setClaseParaReservar(clase);
-                }}
-              />
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-white/50 text-lg">No hay clases disponibles para esta fecha</p>
-            </div>
-          )}
-        </div>
+<div className="space-y-3">
+  {clases.length > 0 ? (
+    clases.map(clase => (
+      <ClaseCard
+        key={clase.id_clase}
+        clase={clase}
+        onSeleccionar={async () => {
+          if (!usuarioSeleccionado) {
+            setToast("Por favor selecciona un cliente primero");
+            return;
+          }
+
+          if (tipoReserva === "MENSUAL") {
+            try {
+              const response = await fetch(`${BASE_URL}/reservas/verificar-mensual`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  id_usuario: usuarioSeleccionado.id_usuario,
+                  id_clase: clase.id_clase,
+                  mes: fechaSeleccionada.getMonth() + 1,
+                  anio: fechaSeleccionada.getFullYear(),
+                  esPresencial: true
+                })
+              });
+
+              const data = await response.json();
+
+              if (!data.ok) {
+                setToast(data.mensaje || "No se puede reservar esta clase");
+                return;
+              }
+
+              setFechasMensuales(data.fechas || []);
+            } catch (error) {
+              console.error(error);
+              setToast("Error al obtener las fechas");
+              return;
+            }
+          } else {
+            setFechasMensuales([]);
+          }
+
+          setClaseParaReservar(clase);
+        }}
+      />
+    ))
+  ) : (
+    <div className="text-center py-12">
+      <p className="text-white/50 text-lg">
+        No hay clases disponibles para esta fecha
+      </p>
+    </div>
+  )}
+</div>
       </main>
 
       {/* Modal de Confirmación */}
@@ -498,6 +564,7 @@ export default function ReservaPresencial() {
           usuarioSeleccionado={usuarioSeleccionado}
           tipoReserva={tipoReserva}
           fechaSeleccionada={fechaSeleccionada}
+          fechasMensuales={fechasMensuales}
           onConfirmar={handleReservar}
           onCerrar={() => setClaseParaReservar(null)}
           procesando={procesando}
