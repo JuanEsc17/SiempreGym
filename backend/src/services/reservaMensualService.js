@@ -223,11 +223,11 @@ crearReservaMensualPresencial: async (id_usuario, id_clase, fechasArray, monto_t
       id_usuario,
       id_clase,
       instancia.id_instancia,
-      'pendiente',
+      'reservada',
       'mensual',
       'total',
       fecha_clase_str,
-      esPrincipal ? monto_total : 0,
+      0.00,
       grupoId
     );
 
