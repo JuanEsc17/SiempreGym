@@ -7,7 +7,7 @@ const { sendPagoConfirmado } = require('./emailService');
 // Recibe el nombre del día ('lunes', 'martes'...), el mes (1-12) y el año.
 // Devuelve un array de strings 'YYYY-MM-DD' con solo las fechas futuras del mes.
 function calcularFechasDelMes(diaEnum, mes, anio) {
-  const DIAS_MAP = { lunes:1, martes:2, miercoles:3, jueves:4, viernes:5, sabado:6 };
+  const DIAS_MAP = { lunes:1, martes:2, miercoles:3, jueves:4, viernes:5, sabado:6 , domingo:0};
   const diaN = DIAS_MAP[diaEnum.toLowerCase()];
   if (diaN === undefined) throw new Error(`Día de clase inválido: ${diaEnum}`);
 

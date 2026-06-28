@@ -7,10 +7,10 @@ const BASE_URL = 'http://localhost:3000/api';
 
 
 
-const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 const DIAS_LABEL = {
   lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
-  jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado'
+  jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo'
 };
 const FORMATOS_VALIDOS = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_IMG_MB = 16;
