@@ -42,7 +42,7 @@ const getEstado = (r) => {
   if (r.estado === 'pendiente')
     return { label:'Pendiente de pago', icon:'⏳', color:'#f59e0b', bg:'rgba(245,158,11,0.12)', desc:'pendiente' };
   // Seña pagada con saldo pendiente
-  if (r.tipo_pago === 'seña' && r.saldo_pendiente)
+  if (r.tipo_pago === 'seña' && Number(r.saldo_pendiente) > 0)
     return { label:'Seña pagada',       icon:'🤝', color:'#f97316', bg:'rgba(249,115,22,0.12)', desc:'Saldo pendiente a completar' };
   // Pago con crédito
   if (r.tipo_pago === 'credito')
@@ -123,8 +123,9 @@ export default function MisReservas() {
   }
 
   // Calcular precio del saldo pendiente
-  const precioTotal = reserva.precio_individual || 0;
-  const mitadPrecio = precioTotal / 2;
+  const saldoPendiente = Number(reserva.saldo_pendiente || 0);
+  //const precioTotal = reserva.precio_individual || 0;
+  //const mitadPrecio = precioTotal / 2;
 
   try {
     // Guardar en localStorage para después del pago en MP
@@ -135,7 +136,7 @@ export default function MisReservas() {
       id_instancia: reserva.id_instancia,
       fecha_clase: reserva.fecha_clase.split('T')[0],// cambio de tipo de fecha a string para evitar problemas de formato en el backend;
       tipo_pago: 'seña',
-      precio_total: mitadPrecio,
+      precio_total: saldoPendiente,
       id_reserva: reserva.id_reserva // Para actualizar la reserva existente
     }));
 
@@ -146,7 +147,7 @@ export default function MisReservas() {
       body: JSON.stringify({
         tipoPago: 'sena',
         descripcion: `${reserva.actividad} - Saldo pendiente ${formatFecha(reserva.fecha_clase)}`,
-        precio: mitadPrecio,
+        precio: saldoPendiente,
         id_usuario: getUsuarioId(),
         id_clase: reserva.id_clase
       })
@@ -494,7 +495,7 @@ export default function MisReservas() {
 
                   {/* Botones */}
                   <div style={{ display:'flex', gap:8, flexShrink:0 }}>
-                    {r.tipo_pago === 'seña' && r.saldo_pendiente && r.estado === 'reservada' && vista !== 'historial' && (
+                    {r.tipo_pago === 'seña' && Number(r.saldo_pendiente) > 0 && (r.estado === 'reservada' || r.estado == 'pendiente') && vista !== 'historial' && (
                       <button 
                         onClick={() => completarPagoSena(r)}
                         style={{ 

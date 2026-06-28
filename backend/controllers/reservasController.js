@@ -1,9 +1,11 @@
 const serviceMensual    = require('../src/services/reservaMensualService');
 const serviceIndividual = require('../src/services/reservaIndividualService');
 const reservasRepository = require('../repositories/reservasRepository');
+const listaEsperaMensualService = require('../src/services/listaEsperaMensualService');
 // cambio marian
 const UsuariosRepository = require('../repositories/usuariosRepository');
 const db = require('../src/db');
+const reservaIndividualService = require('../src/services/reservaIndividualService');
 
 const userRepo = new UsuariosRepository(db);
 // fin cambio marian
@@ -298,6 +300,41 @@ class ReservasController {
     }
   }
 
+  // individual presencial
+  async crearReservaIndividualPresencial (req, res) {
+  try {
+    const {
+      id_usuario,
+      id_clase,
+      id_instancia,
+      fecha_clase,
+      monto_total
+    } = req.body;
+
+    const resultado = await reservaIndividualService.crearReservaIndividualPresencial(
+      id_usuario,
+      id_clase,
+      id_instancia,
+      fecha_clase,
+      monto_total
+    );
+
+    res.status(201).json({
+      ok: true,
+      mensaje: "Reserva creada correctamente",
+      ...resultado
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(400).json({
+      ok: false,
+      mensaje: error.message
+    });
+  }
+}
+
   // ============================================================
   // HISTORIAL
   // ============================================================
@@ -400,16 +437,21 @@ class ReservasController {
         }
       }
 
-      // 4. Cancelar la(s) reserva(s)
       if (reserva.tipo_reserva === 'mensual') {
-        await reservasRepository.cancelarReservasMensualesTodas(reservasACancelar);
-      } else {
-        await reservasRepository.cancelarReserva(id_reserva);
-      }
 
-      // 5. Liberar cupos
-      if (reserva.id_instancia) {
+      // 1. cancelar todas
+        await reservasRepository.cancelarReservasMensualesTodas(reservasACancelar);
+
+      // 2. liberar cupo (si aplica lógica de instancia)
+        if (reserva.id_instancia) {
         await reservasRepository.contarReservasDeInstancia(reserva.id_instancia);
+        }
+
+      // 3. recién ahí lista de espera
+        await listaEsperaMensualService.procesarVacanteMensual(
+          reserva.id_clase,
+          reserva.fecha_clase
+        );
       }
 
       // 6. Procesar créditos y devoluciones

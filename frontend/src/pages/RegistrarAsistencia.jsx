@@ -52,23 +52,26 @@ function obtenerEstadoReserva(reserva) {
     inicioClase.getTime() - 30 * 60000
   );
 
+  const finClase = new Date(
+    inicioClase.getTime() +
+    reserva.duracion * 60000
+  );
+
   const venceEn = new Date(
-    inicioClase.getTime() + 15 * 60000
+    finClase.getTime() - 15 * 60000
   );
 
   if (ahora < habilitaDesde) {
     return {
       habilitada: false,
-      mensaje:
-        'Se habilitará 30 minutos antes del inicio'
+      mensaje: 'Se habilitará 30 minutos antes del inicio'
     };
   }
 
   if (ahora > venceEn) {
     return {
       habilitada: false,
-      mensaje:
-        'Iniciada hace más de 15 minutos'
+      mensaje: 'Quedan menos de 15 minutos para que finalice la clase'
     };
   }
 

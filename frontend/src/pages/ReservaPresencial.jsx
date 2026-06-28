@@ -290,14 +290,14 @@ export default function ReservaPresencial() {
         }
 
         // Ahora crear la reserva con el id_instancia
-        endpoint = `${BASE_URL}/reservas/crear`;
+        endpoint = `${BASE_URL}/reservas/crear-individual-presencial`;
         body = {
           id_usuario: usuarioSeleccionado.id_usuario,
           id_clase: claseParaReservar.id_clase,
           id_instancia: verificarData.id_instancia,
           fecha_clase: fechaISO(fechaSeleccionada),
           tipo_pago: 'TOTAL',
-          precio_total: 0
+          monto_total: claseParaReservar.precio_individual
         };
       } else {
         // Para mensual, primero verificar para obtener las fechas y monto
@@ -326,7 +326,7 @@ export default function ReservaPresencial() {
         }
 
         // Ahora crear la reserva mensual con las fechas obtenidas
-        endpoint = `${BASE_URL}/reservas/crear-mensual`;
+        endpoint = `${BASE_URL}/reservas/crear-mensual-presencial`;
         body = {
           id_usuario: usuarioSeleccionado.id_usuario,
           id_clase: claseParaReservar.id_clase,

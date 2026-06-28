@@ -66,8 +66,13 @@ const AsistenciasController = {
         inicioClase.getTime() - 30 * 60000
       );
 
+      const finClase = new Date(
+      inicioClase.getTime() +
+      reserva.duracion * 60000
+      );
+
       const venceEn = new Date(
-        inicioClase.getTime() + 15 * 60000
+      finClase.getTime() - 15 * 60000
       );
 
       if (ahora < habilitaDesde) {

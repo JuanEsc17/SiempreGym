@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `clases`;
 CREATE TABLE `clases` (
   `id_clase` int NOT NULL AUTO_INCREMENT,
   `actividad` varchar(100) NOT NULL,
-  `dia` enum('lunes','martes','miercoles','jueves','viernes','sabado') NOT NULL,
+  `dia` enum('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
   `precio_individual` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `horario` time NOT NULL,
   `duracion` int NOT NULL,
@@ -132,17 +132,20 @@ CREATE TABLE `reservas` (
   `id_clase` int NOT NULL,
   `id_instancia` int NULL,
   `tipo_reserva` enum('individual','mensual') NOT NULL,
-  `estado` enum('reservada','cancelada','asistio') DEFAULT 'reservada',
+  `estado` enum('reservada','cancelada','asistio', 'pendiente') DEFAULT 'reservada',
   `tipo_pago` enum('membresia','credito','total','seña') DEFAULT NULL,
   `saldo_pendiente` decimal(10,2) DEFAULT '0.00',
   `fecha_reserva` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_clase` date NOT NULL,
+  `grupo_mensual_id` int NULL,
+  `id_renovacion` int NULL,
   PRIMARY KEY (`id_reserva`),
   KEY `id_usuario` (`id_usuario`),
   KEY `id_clase` (`id_clase`),
   CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`id_instancia`) REFERENCES `instancias_clases` (`id_instancia`),
   CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
-  CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_clase`) REFERENCES `clases` (`id_clase`)
+  CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_clase`) REFERENCES `clases` (`id_clase`),
+  CONSTRAINT `fk_reservas_renovacion` FOREIGN KEY (id_renovacion) REFERENCES renovaciones(id_renovacion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

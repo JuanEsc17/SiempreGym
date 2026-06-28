@@ -13,7 +13,7 @@ router.post('/verificar-mensual', (req, res) => ctrl.verificarReservaMensual(req
 router.post('/crear-mensual', (req, res) => ctrl.crearReservaMensual(req, res));
 
 // marian presencial
-router.post('/crear-mensual',(req,res)=>ctrl.crearReservaMensual(req,res));
+router.post('/crear-mensual-presencial',(req,res)=>ctrl.crearReservaMensualPresencial(req,res));
 // fin marian
 
 //  Ingresar a lista de espera mensual
@@ -30,6 +30,10 @@ router.post('/verificar-individual', (req, res) => ctrl.verificarIndividual(req,
 // Confirmar la reserva individual (post-pago en MP o directo con crédito)
 //    Body: { id_usuario, id_clase, id_instancia, fecha_clase, tipo_pago, precio_total }
 router.post('/crear', (req, res) => ctrl.confirmarReservaIndividual(req, res));
+
+// marian presencial
+router.post('/crear-individual-presencial', (req, res) => ctrl.crearReservaIndividualPresencial(req, res))
+//
 
 //Pago
 router.post('/registrar-pago-efectivo', (req, res) => ctrl.registrarPagoEfectivo(req, res));

@@ -131,6 +131,24 @@ class ListaEsperaRepository {
   return rows;
 }
 
+async obtenerListaOrdenada(idClase){
+
+  const [rows] =
+  await this.db.promise().execute(
+    `
+    SELECT *
+    FROM lista_espera
+    WHERE id_clase = ?
+      AND tipo_reserva = 'mensual'
+      AND estado = 'esperando'
+    ORDER BY posicion ASC
+    `,
+    [idClase]
+  );
+
+  return rows;
+}
+
 }
 
 module.exports=ListaEsperaRepository;
