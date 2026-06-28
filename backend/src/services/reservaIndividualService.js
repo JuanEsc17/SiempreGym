@@ -171,11 +171,11 @@ const reservaIndividualService = {
     id_usuario,
     id_clase,
     id_instancia,
-    'pendiente',   // estado
+    'reservada',   // estado
     'individual',
     'total',
     fecha_clase,
-    monto_total,         // saldo pendiente
+    0.00,         // saldo pendiente
     null           // grupo_mensual_id
   );
 
