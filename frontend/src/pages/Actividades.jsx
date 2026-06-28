@@ -263,6 +263,19 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
   const verificar = async () => {
   setPaso('cargando');
 
+   // ── Límite 7 días para INDIVIDUAL ───────────────────────────
+  if (modo === 'INDIVIDUAL') {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const limite = new Date(hoy); limite.setDate(hoy.getDate() + 7);
+    const elegida = new Date(fechaSeleccionada); elegida.setHours(0,0,0,0);
+    if (elegida > limite) {
+      setErrorMsg('Las reservas individuales solo pueden realizarse con hasta 7 días de anticipación. Elegí una fecha más cercana o usá el pase mensual.');
+      setPaso('error');
+      return;
+    }
+  }
+  // ────────────────────────────────────────────────────────────
+
   try {
     const id_usuario = getUsuarioId();
     const body = modo === 'INDIVIDUAL'
@@ -785,10 +798,18 @@ export default function Actividades() {
               Gestioná tus clases y entrenamientos
             </p>
           </div>
-          <div className="rounded-full px-4 py-2 border border-white/10 text-white text-xs font-bold shadow"
-               style={{background:'#f3e5ffd3'}}>
-            👤 
+           <div className="flex items-center gap-2 rounded-2xl px-4 py-2"
+              style={{background:'rgba(175,80,229,0.18)', border:'1px solid rgba(175,80,229,0.35)'}}>
+          <span style={{fontSize:'18px'}}>⭐</span>
+          <div>
+          <p style={{color:'rgba(255,255,255,0.45)', fontSize:'9px', margin:0,
+                 textTransform:'uppercase', letterSpacing:'0.1em'}}>Créditos</p>
+          <p className="text-white font-bold m-0" style={{fontSize:'16px', lineHeight:1}}>
+            {creditos !== null ? creditos : '—'}
+            <span style={{color:'rgba(255,255,255,0.45)', fontSize:'11px', fontWeight:'normal'}}> disp.</span>
+          </p>
           </div>
+        </div>
         </header>
           <BannerRenovacion 
             banner={banner} 
@@ -844,19 +865,16 @@ export default function Actividades() {
       <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Clases en espera</p>
     </div>
   </div>
-
-  <div className="p-4 rounded-2xl flex items-center gap-3"
-       style={{background:'#AF50E5', border:'1px solid rgba(168,85,247,0.25)'}}>
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-         style={{background:'#bb59f3'}}>
-      <span style={{fontSize:'20px'}}>⭐</span>
+    <div onClick={() => navigate('/qr-viewer')}
+     className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
+     style={{background:'#6D28D9', border:'1px solid rgba(147,51,234,0.25)'}}>
+  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+       style={{background:'#7c3aed'}}>
+      <span style={{fontSize:'20px'}}>📱</span>
     </div>
     <div>
-      <p className="text-white font-bold text-sm m-0">Créditos</p>
-      <p style={{color:'white', fontSize:'15px', fontWeight:'bold', margin:0}}>
-        {creditos !== null ? creditos : '—'}
-        <span style={{color:'rgba(255,255,255,0.6)', fontSize:'11px', fontWeight:'normal'}}> disp.</span>
-      </p>
+      <p className="text-white font-bold text-sm m-0">Mi QR</p>
+      <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Ver mi código</p>
     </div>
   </div>
   <div onClick={() => navigate('/renovaciones')}
@@ -872,18 +890,6 @@ export default function Actividades() {
         fontWeight:'bold', padding:'2px 8px', borderRadius:999, textTransform:'uppercase',
         letterSpacing:'0.06em', display:'inline-block', marginTop:2}}>Mensual</span>
     </div>
-  </div>
-  <div onClick={() => navigate('/qr-viewer')}
-     className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
-     style={{background:'#6D28D9', border:'1px solid rgba(147,51,234,0.25)'}}>
-  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-       style={{background:'#7c3aed'}}>
-    <span style={{fontSize:'20px'}}>📱</span>
-  </div>
-  <div>
-    <p className="text-white font-bold text-sm m-0">Mi QR</p>
-    <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Ver mi código</p>
-  </div>
   </div>
 </div>
 

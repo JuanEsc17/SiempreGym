@@ -28,6 +28,14 @@ const reservaIndividualService = {
       throw new Error('No es posible reservar una clase ya iniciada o pasada.');
     }
 
+    // ── NUEVO: límite de 7 días para reservas individuales ──────────
+    const hoyMidnight = new Date(ahora); hoyMidnight.setHours(0,0,0,0);
+    const fechaLimite = new Date(hoyMidnight); fechaLimite.setDate(hoyMidnight.getDate() + 7);
+    const fechaElegida = new Date(`${fecha_clase_str}T00:00:00`);
+    if (fechaElegida > fechaLimite) {
+      throw new Error('Las reservas individuales solo pueden realizarse con hasta 7 días de anticipación.');
+    }
+    
     // Escenario 7: superposición horaria (PRIMERO - mensaje más específico)
     const superposiciones = await reservasRepository.verificarSuperposicionHoraria(
     id_usuario, clase.horario, fecha_clase_str
@@ -37,7 +45,7 @@ const reservaIndividualService = {
       .map(s => `• ${s.fecha_clase.toISOString().split('T')[0]} - ${s.actividad}`)
       .join('\n');
     throw new Error(`Ya contás con una actividad reservada en ese horario:\n${detalle}`);
-  }
+    }
 
     // Obtener o crear la instancia para esa fecha exacta
     const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
