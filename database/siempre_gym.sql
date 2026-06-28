@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS `clases`;
 CREATE TABLE `clases` (
   `id_clase` int NOT NULL AUTO_INCREMENT,
   `actividad` varchar(100) NOT NULL,
-  `dia` enum('lunes','martes','miercoles','jueves','viernes','sabado') NOT NULL,
+  `dia` enum('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
   `precio_individual` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `horario` time NOT NULL,
   `duracion` int NOT NULL,
