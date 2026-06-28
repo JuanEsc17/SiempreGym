@@ -95,7 +95,7 @@ const QRController = {
       if (!reservasHoy || reservasHoy.length === 0) {
         return res.status(400).json({
           ok: false,
-          mensaje: 'El cliente está sin reservas para el día actual'
+          mensaje: 'No hay reservas disponibles para registrar asistencia en este momento.'
         });
       }
 
@@ -109,12 +109,16 @@ const QRController = {
           `${reserva.fecha_clase.toISOString().split('T')[0]} ${reserva.horario}`
         );
 
-        const habilitaDesde = new Date(inicioClase.getTime() - 30 * 60000);
-        const venceEn = new Date(inicioClase.getTime() + 15 * 60000);
-
         // Validar tiempo
         const duracionClase = reserva.duracion || 60;
-        const finClase = new Date(inicioClase.getTime() + duracionClase * 60000);
+
+        const finClase = new Date(inicioClase.getTime() + duracionClase * 60000);//puse aca xq pedia cosas de otro
+
+        const habilitaDesde = new Date(inicioClase.getTime() - 30 * 60000);
+        const venceEn = new Date(finClase.getTime() - 15 * 60000);
+
+
+        
 
         // Fuera del rango (antes de 30 min o después de que terminó) → sin reservas
         if (ahora < habilitaDesde || ahora > finClase) {
@@ -161,7 +165,7 @@ const QRController = {
           id_reserva: reserva.id_reserva,
           metodo: 'qr'
         });
-
+        await asistenciasRepo.marcarReservaAsistida(reserva.id_reserva);
         resultados.push({
           idReserva: reserva.id_reserva,
           clase: reserva.actividad,
