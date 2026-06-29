@@ -408,6 +408,58 @@ const sendDevolucionSena = async (email, nombre, actividad, fechaClase, monto) =
   }
 };
 
+// Función para enviar notificación de clase cancelada
+const sendClaseCancelada = async (email, nombre, actividad, fechaClase) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Clase cancelada - SiempreGym",
+      html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+          <div style="max-width: 500px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="color: #5B0672; text-align: center;">SiempreGym</h2>
+            <h3 style="color: #f87171; text-align: center;">Clase Cancelada</h3>
+
+            <p style="color: #333;">Hola <b>${nombre}</b>,</p>
+
+            <div style="background-color: #fee2e2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f87171;">
+              <p style="color: #dc2626; margin: 0;">
+                Lamentamos informarte que la clase de <b>${actividad}</b> del <b>${fechaClase}</b> ha sido cancelada.
+              </p>
+            </div>
+
+            <p style="color: #666;">
+              Como compensación, se te ha asignado <b>1 crédito</b> para que puedas reservar otra clase sin costo adicional.
+            </p>
+
+            <div style="background-color: #E2CEF6; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="color: #5B0672; font-size: 16px; font-weight: bold; margin: 0;">
+                🎫 Tienes 1 crédito disponible
+              </p>
+            </div>
+
+            <p style="color: #666;">
+              Ingresa a tu cuenta en SiempreGym para reservar tu próxima clase.
+            </p>
+
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">
+              Gracias por tu comprensión. 💪
+            </p>
+          </div>
+        </div>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email de clase cancelada enviado:", info.response);
+    return true;
+  } catch (error) {
+    console.error("Error al enviar email de clase cancelada:", error);
+    return false;
+  }
+}
+
 module.exports = {
   sendVerificationCode,
   sendPagoConfirmado,
@@ -416,5 +468,6 @@ module.exports = {
   sendPasswordResetCode,
   sendPasswordChanged,
   sendNotificacionPagoProximoAVencer,
-  sendDevolucionSena
+  sendDevolucionSena,
+  sendClaseCancelada
 }

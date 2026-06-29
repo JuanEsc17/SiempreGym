@@ -15,23 +15,30 @@ class ClasesRepository {
   }
  
   async getPorDiaConLlenas(nombreDia, fecha) {
-  // Calcula los cupos reales contando reservas por instancia para esa fecha exacta
   const query = `
     SELECT c.*,
-      c.cupo_maximo - COALESCE(
-        (SELECT COUNT(*) 
-         FROM reservas r
-         JOIN instancias_clases ic ON r.id_instancia = ic.id_instancia
-         WHERE ic.id_clase = c.id_clase
-           AND DATE(ic.fecha_exacta) = ?
-           AND r.estado IN ('reservada', 'por_renovar')),
-        0
-      ) AS cupos_disponibles
+      CASE
+        WHEN EXISTS (
+          SELECT 1 FROM instancias_clases ic
+          WHERE ic.id_clase = c.id_clase
+            AND DATE(ic.fecha_exacta) = ?
+            AND ic.cancelada = 1
+        ) THEN 0
+        ELSE c.cupo_maximo - COALESCE(
+          (SELECT COUNT(*)
+           FROM reservas r
+           JOIN instancias_clases ic ON r.id_instancia = ic.id_instancia
+           WHERE ic.id_clase = c.id_clase
+             AND DATE(ic.fecha_exacta) = ?
+             AND r.estado IN ('reservada', 'por_renovar')),
+          0
+        )
+      END AS cupos_disponibles
     FROM clases c
     WHERE c.dia = ? AND c.estado = 'activa'
     ORDER BY c.horario ASC
   `;
-  const [rows] = await this.db.promise().execute(query, [fecha, nombreDia]);
+  const [rows] = await this.db.promise().execute(query, [fecha, fecha, nombreDia]);
   return rows;
 }
   

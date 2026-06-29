@@ -52,7 +52,11 @@ const reservaIndividualService = {
     let instancia = await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
     if (!instancia) {
       const nuevoId = await reservasRepository.crearInstanciaClase(id_clase, fechaExactaStr);
-      instancia = { id_instancia: nuevoId };
+      instancia = { id_instancia: nuevoId, cancelada: 0 };
+    }
+
+    if (instancia.cancelada) {
+      throw new Error('Esta clase ha sido cancelada y no está disponible.');
     }
 
     // Escenario 4: sin cupo → ofrecer lista de espera
@@ -91,6 +95,14 @@ const reservaIndividualService = {
     const inscriptosActuales = await reservasRepository.contarReservasDeInstancia(id_instancia);
     if (inscriptosActuales >= clase.cupo_maximo) {
       throw new Error('El cupo se llenó mientras procesabas el pago. No se pudo confirmar la reserva.');
+    }
+
+    const [instanciaRows] = await db.promise().execute(
+      'SELECT cancelada FROM instancias_clases WHERE id_instancia = ?',
+      [id_instancia]
+    );
+    if (instanciaRows.length > 0 && instanciaRows[0].cancelada) {
+      throw new Error('Esta clase ha sido cancelada y no está disponible.');
     }
 
     // Escenario 3: pago con crédito — descuento directo, sin pasarela

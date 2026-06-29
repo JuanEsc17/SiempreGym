@@ -76,7 +76,13 @@ if (superposiciones.length > 0) {
       let instancia = await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
       if (!instancia) {
         const nuevoId = await reservasRepository.crearInstanciaClase(id_clase, fechaExactaStr);
-        instancia = { id_instancia: nuevoId };
+        instancia = { id_instancia: nuevoId, cancelada: 0 };
+      }
+      if (instancia.cancelada) {
+        return {
+          status: 'SIN_CUPO_DISPONIBLE',
+          mensaje: 'Una de las clases del mes ha sido cancelada y no está disponible.'
+        };
       }
       const inscriptos = await reservasRepository.contarReservasDeInstancia(instancia.id_instancia);
       if (inscriptos >= clase.cupo_maximo) {
@@ -145,7 +151,11 @@ if (superposiciones.length > 0) {
 
     if (!instancia) {
       const nuevoId = await reservasRepository.crearInstanciaClase(id_clase, fechaExactaStr);
-      instancia = { id_instancia: nuevoId };
+      instancia = { id_instancia: nuevoId, cancelada: 0 };
+    }
+
+    if (instancia.cancelada) {
+      throw new Error(`La clase del ${fecha_clase_str} ha sido cancelada.`);
     }
 
     // insertar reserva
@@ -216,7 +226,11 @@ crearReservaMensualPresencial: async (id_usuario, id_clase, fechasArray, monto_t
         id_clase,
         fechaExactaStr
       );
-      instancia = { id_instancia: nuevoId };
+      instancia = { id_instancia: nuevoId, cancelada: 0 };
+    }
+
+    if (instancia.cancelada) {
+      throw new Error(`La clase del ${fecha_clase_str} ha sido cancelada.`);
     }
 
     await reservasRepository.insertarReserva(

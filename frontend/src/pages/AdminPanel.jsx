@@ -79,6 +79,17 @@ export default function AdminPanel() {
               </p>
             </div>
           </div>
+          <div onClick={() => navigate("/admin/cancelar-clase")}
+            className="flex items-center gap-3 p-6 rounded-xl cursor-pointer hover:opacity-85 transition-opacity"
+            style={{ background: '#991b1b' }}>
+            <span className="text-3xl">🚫</span>
+            <div>
+              <p className="text-white font-medium">Cancelar clase</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Cancelar una clase de una fecha específica
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

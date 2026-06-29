@@ -29,6 +29,7 @@ import RegisterEmpleado from "./pages/RegisterEmpleado"
 import ListaEspera from "./pages/ListaEspera";
 
 import Renovaciones from "./pages/Renovaciones.jsx"
+import CancelarClaseAdmin from "./pages/CancelarClaseAdmin"
 
 //para cambio de contraseña
 import ForgotPassword from "./pages/ForgotPassword"
@@ -157,6 +158,7 @@ function AppContent() {
         <Route path="/registrar-pago" element={<RutaEmpleado><RegistrarPagoEfectivo /></RutaEmpleado>} />
         <Route path="/payment-status" element={<PaymentStatus />} />
         <Route path="/admin/permisos" element={<PermisosAdmin />} />
+        <Route path="/admin/cancelar-clase" element={<RutaAdmin><CancelarClaseAdmin /></RutaAdmin>} />
         <Route path="/admin/personal"       element={<RutaAdmin><Personal /></RutaAdmin>} />
         <Route path="/admin/personal/nuevo" element={<RutaAdmin><RegisterEmpleado /></RutaAdmin>} />
 

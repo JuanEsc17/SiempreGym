@@ -15,6 +15,7 @@ const renovacionesRoutes = require("./src/routes/renovacionesRoutes")
 require("./src/crons/renovacionesCron")
 const reportesRoutes = require("./src/routes/reportesRoutes")
 const personalRoutes = require("./src/routes/personalRoutes")
+const instanciasRoutes = require("./src/routes/instanciasRoutes")
 
 //para qr
 const qrRoutes = require('./src/routes/qrRoutes');
@@ -49,6 +50,7 @@ app.use("/api/reportes", reportesRoutes)
 app.use("/api/personal", personalRoutes)
 app.use('/api/qr', qrRoutes);
 app.use('/api/cancelaciones', cancelacionRoutes);
+app.use('/api/instancias', instanciasRoutes);
 
 const PORT = 3000
 
