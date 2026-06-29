@@ -210,6 +210,29 @@ const reservasRepository = {
       id_reservas
     );
     return result.affectedRows;
+  },
+
+  // ─── CANCELACIÓN DE MENSUALIDAD ────────────────────────────
+  obtenerReservasMensualesPendientes: async (id_usuario, id_clase) => {
+    const [rows] = await db.promise().execute(
+      `SELECT id_reserva, id_instancia, fecha_clase FROM reservas
+       WHERE id_usuario = ?
+       AND id_clase = ?
+       AND tipo_reserva = 'mensual'
+       AND estado IN ('reservada', 'pendiente')`,
+      [id_usuario, id_clase]
+    );
+    return rows;
+  },
+
+  cancelarReservasPorIds: async (id_reservas) => {
+    if (!id_reservas || id_reservas.length === 0) return 0;
+    const placeholders = id_reservas.map(() => '?').join(', ');
+    const [result] = await db.promise().execute(
+      `UPDATE reservas SET estado = 'cancelada' WHERE id_reserva IN (${placeholders})`,
+      id_reservas
+    );
+    return result.affectedRows;
   }
 };
 

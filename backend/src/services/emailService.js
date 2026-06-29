@@ -374,6 +374,40 @@ const sendNotificacionPagoProximoAVencer = async (email, nombre, actividad) => {
   }
 }
 
+const sendDevolucionSena = async (email, nombre, actividad, fechaClase, monto) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Comprobante de devolución - SiempreGym',
+      html: `
+        <div style="font-family: Arial, sans-serif; background:#f5f5f5; padding:20px;">
+          <div style="max-width:500px; margin:auto; background:white; padding:30px; border-radius:10px;">
+            <h2 style="color:#5B0672; text-align:center;">SiempreGym</h2>
+            <h3 style="color:#f59e0b; text-align:center;">Devolución registrada</h3>
+            <p>Hola <b>${nombre}</b>,</p>
+            <p>Se registró la devolución de tu seña por la cancelación de la siguiente clase:</p>
+            <div style="background:#f3f3f3; padding:15px; border-radius:8px; margin-top:20px;">
+              <p><b>Actividad:</b> ${actividad}</p>
+              <p><b>Fecha:</b> ${fechaClase}</p>
+              <p><b>Monto a devolver:</b> $${monto}</p>
+            </div>
+            <p style="margin-top:15px;">Este email funciona como comprobante de devolución.</p>
+            <p style="margin-top:25px;">Gracias por elegir SiempreGym. 💪</p>
+          </div>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Mail devolución enviado:', info.response);
+    return true;
+  } catch (error) {
+    console.error('Error enviando mail devolución:', error);
+    return false;
+  }
+};
+
 module.exports = {
   sendVerificationCode,
   sendPagoConfirmado,
@@ -381,5 +415,6 @@ module.exports = {
   sendPermisoRechazado,
   sendPasswordResetCode,
   sendPasswordChanged,
-  sendNotificacionPagoProximoAVencer
+  sendNotificacionPagoProximoAVencer,
+  sendDevolucionSena
 }

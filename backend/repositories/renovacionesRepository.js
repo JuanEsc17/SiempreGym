@@ -95,6 +95,27 @@ const renovacionesRepository = {
     );
   },
 
+  // ─── CANCELAR MENSUALIDAD ─────────────────────────────────────
+  obtenerRenovacionActiva: async (id_usuario, id_clase) => {
+    const [rows] = await db.promise().execute(
+      `SELECT id_renovacion FROM renovaciones
+       WHERE id_usuario = ?
+       AND id_clase = ?
+       AND estado = 'pendiente'
+       ORDER BY anio DESC, mes DESC
+       LIMIT 1`,
+      [id_usuario, id_clase]
+    );
+    return rows[0] || null;
+  },
+
+  cancelarRenovacion: async (id_renovacion) => {
+    await db.promise().execute(
+      `UPDATE renovaciones SET estado = 'cancelada' WHERE id_renovacion = ?`,
+      [id_renovacion]
+    );
+  },
+
   // ─── CRON: obtener renovaciones próximas a vencer (2 días) ────
   // Se ejecuta el día 8 del mes para notificar sobre pagos que vencen el 10
   obtenerRenovacionesProximasAVencer: async () => {

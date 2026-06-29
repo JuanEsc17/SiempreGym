@@ -6,6 +6,8 @@ const listaEsperaMensualService = require('../src/services/listaEsperaMensualSer
 const UsuariosRepository = require('../repositories/usuariosRepository');
 const db = require('../src/db');
 const reservaIndividualService = require('../src/services/reservaIndividualService');
+const cancelacionMensualidadService = require('../src/services/cancelacionMensualidadService');
+const { sendDevolucionSena } = require('../src/services/emailService');
 
 const userRepo = new UsuariosRepository(db);
 // fin cambio marian
@@ -388,16 +390,6 @@ class ReservasController {
         });
       }
 
-      // 2. Contar cancelaciones del mes
-      const cancelacionesDelMes = await reservasRepository.contarCancelacionesMes(id_usuario);
-      
-      if (cancelacionesDelMes >= 3) {
-        return res.status(400).json({
-          ok: false,
-          mensaje: 'Se alcanzo el límite de cancelaciones en el mes.'
-        });
-      }
-
       // 3. Validar plazo según tipo de reserva
       const ahora = new Date();
       const fechaClase = new Date(reserva.fecha_clase);
@@ -432,7 +424,8 @@ class ReservasController {
 
         // Manejar devoluciones según tipo de pago
         if (reserva.tipo_pago === 'seña' && horasRestantes > 24) {
-          montoDevolucion = await reservasRepository.obtenerSenaPagada(id_reserva);
+          montoDevolucion = parseFloat(reserva.saldo_pendiente) || parseFloat(reserva.precio_individual) / 2 || 0;
+          console.log('[CANCELAR] Seña - monto devolución:', montoDevolucion, 'saldo_pendiente:', reserva.saldo_pendiente, 'precio_individual:', reserva.precio_individual);
           tipoDevolucion = 'seña';
         }
       }
@@ -452,6 +445,9 @@ class ReservasController {
           reserva.id_clase,
           reserva.fecha_clase
         );
+      } else {
+        // INDIVIDUAL: cancelar en DB y liberar cupo
+        await reservasRepository.cancelarReserva(id_reserva);
       }
 
       // 6. Procesar créditos y devoluciones
@@ -471,8 +467,28 @@ class ReservasController {
           creditosAcreditados = 1;
           await reservasRepository.agregarCredito(id_usuario, 1);
         } else if (reserva.tipo_pago === 'seña' && horasRestantes > 24) {
-          if (montoDevolucion > 0) {
-            await reservasRepository.registrarDevolucion(id_usuario, montoDevolucion, 'seña');
+          console.log('[CANCELAR] Registrando devolución de $' + montoDevolucion);
+          await reservasRepository.registrarDevolucion(id_usuario, montoDevolucion, 'seña');
+          try {
+            const usuario = await userRepo.buscarPorId(id_usuario);
+            console.log('[CANCELAR] Usuario para email:', usuario?.email);
+            if (usuario && usuario.email) {
+              const fechaStr = reserva.fecha_clase instanceof Date
+                ? reserva.fecha_clase.toISOString().split('T')[0]
+                : String(reserva.fecha_clase).split('T')[0];
+              const emailSent = await sendDevolucionSena(
+                usuario.email,
+                `${usuario.nombre} ${usuario.apellido}`,
+                reserva.actividad,
+                fechaStr,
+                montoDevolucion
+              );
+              console.log('[CANCELAR] Email enviado:', emailSent);
+            } else {
+              console.log('[CANCELAR] Usuario sin email, no se envía');
+            }
+          } catch (emailErr) {
+            console.error('[CANCELAR] Error enviando email de devolución:', emailErr);
           }
         }
       }
@@ -506,6 +522,38 @@ class ReservasController {
     } catch (error) {
       console.error('Error al cancelar reserva:', error);
       return res.status(500).json({
+        ok: false,
+        mensaje: error.message
+      });
+    }
+  }
+  // ============================================================
+  // CANCELACIÓN DE MENSUALIDAD
+  // ============================================================
+  async cancelarMensualidad(req, res) {
+    try {
+      const { id_usuario, id_clase } = req.body;
+
+      if (!id_usuario || !id_clase) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'id_usuario e id_clase son obligatorios.'
+        });
+      }
+
+      const resultado = await cancelacionMensualidadService.cancelarMensualidad(
+        id_usuario, id_clase
+      );
+
+      return res.status(200).json({
+        ok: true,
+        mensaje: `Mensualidad cancelada exitosamente. Se acreditaron ${resultado.creditosAcreditados} créditos en tu cuenta.`,
+        reservasCanceladas: resultado.reservasCanceladas,
+        creditosAcreditados: resultado.creditosAcreditados
+      });
+
+    } catch (error) {
+      return res.status(400).json({
         ok: false,
         mensaje: error.message
       });

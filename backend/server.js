@@ -18,6 +18,7 @@ const personalRoutes = require("./src/routes/personalRoutes")
 
 //para qr
 const qrRoutes = require('./src/routes/qrRoutes');
+const cancelacionRoutes = require('./src/routes/cancelacionRoutes');
 
 const app = express()
 
@@ -47,6 +48,7 @@ app.use("/api/renovaciones", renovacionesRoutes)
 app.use("/api/reportes", reportesRoutes)
 app.use("/api/personal", personalRoutes)
 app.use('/api/qr', qrRoutes);
+app.use('/api/cancelaciones', cancelacionRoutes);
 
 const PORT = 3000
 

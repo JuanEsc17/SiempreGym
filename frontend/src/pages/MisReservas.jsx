@@ -116,6 +116,30 @@ export default function MisReservas() {
     }
   };
 
+  const cancelarMensualidad = async (id_clase) => {
+    if (!window.confirm('¿Cancelar toda la membresía? Se cancelarán todas las clases pendientes de esta actividad y se acreditarán créditos en tu cuenta.')) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}/cancelaciones/mensualidad`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_usuario: getUsuarioId(), id_clase })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.mensaje);
+        cargar();
+      } else {
+        alert(`Error: ${data.mensaje}`);
+      }
+    } catch (error) {
+      console.error('Error al cancelar mensualidad:', error);
+      alert('Error al conectar con el servidor');
+    }
+  };
+
   const completarPagoSena = async (reserva) => {
   if (!reserva.id_reserva || !reserva.id_clase) {
     alert('Faltan datos de la reserva');
@@ -299,12 +323,21 @@ export default function MisReservas() {
         </div>
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {filtradas.map(r => {
+          {(() => {
+            const clasesConBotonMensual = new Set();
+            filtradas.forEach(item => {
+              if (item.tipo_reserva === 'mensual' && (item.estado === 'reservada' || item.estado === 'pendiente')) {
+                clasesConBotonMensual.add(item.id_clase);
+              }
+            });
+            return filtradas.map(r => {
             const estado     = getEstado(r);
             const colorClase = COLORES_CLASE[r.actividad?.toLowerCase()] || '#5B0672';
             const imgClase = IMAGENES_CLASE[r.actividad?.toLowerCase()] || null;
             const imagenUrl  = r.imagen ? `${UPLOADS_URL}/${r.imagen}` : null;
             const puedeCanc  = (r.estado === 'reservada' || r.estado === 'pendiente') && vista !== 'historial';
+            const esPrimeraMensual = r.tipo_reserva === 'mensual' && clasesConBotonMensual.has(r.id_clase);
+            if (esPrimeraMensual) clasesConBotonMensual.delete(r.id_clase);
             
             return (
               <div key={r.id_reserva}
@@ -543,11 +576,35 @@ export default function MisReservas() {
                         🗑️ Cancelar
                       </button>
                     )}
+                    {esPrimeraMensual && (
+                      <button
+                        onClick={() => cancelarMensualidad(r.id_clase)}
+                        style={{
+                          background:'rgba(239,68,68,0.15)',
+                          border:'1px solid rgba(255,165,0,0.4)',
+                          color:'#ffa500',
+                          borderRadius:8,
+                          padding:'8px 14px',
+                          fontSize:12,
+                          fontWeight:'bold',
+                          cursor:'pointer',
+                          display:'flex',
+                          alignItems:'center',
+                          gap:6,
+                          transition:'all 0.2s',
+                          whiteSpace:'nowrap'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(239,68,68,0.25)'}
+                        onMouseLeave={(e) => e.target.style.background = 'rgba(239,68,68,0.15)'}
+                      >
+                        🚫 Cancelar membresía
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             );
-          })}
+          });})()}
         </div>
       )}
 
