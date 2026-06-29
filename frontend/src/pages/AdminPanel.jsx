@@ -30,7 +30,7 @@ export default function AdminPanel() {
             <span className="text-3xl">📋</span>
             <div>
               <p className="text-white font-medium">Ver clases</p>
-              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Ver y editar clases</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Ver, editar y borrar clases</p>
             </div>
           </div>
 
