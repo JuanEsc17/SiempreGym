@@ -139,6 +139,16 @@ const renovacionesRepository = {
     );
     return rows;
   },
+  // ─── VERIFICAR SI TIENE RENOVACIÓN PENDIENTE PARA UNA CLASE/MES ──
+  tienRenovacionPendiente: async (id_usuario, id_clase, mes, anio) => {
+  const [rows] = await db.promise().execute(
+    `SELECT id_renovacion FROM renovaciones 
+     WHERE id_usuario = ? AND id_clase = ? AND mes = ? AND anio = ?
+     AND estado = 'pendiente'`,
+    [id_usuario, id_clase, mes, anio]
+  );
+  return rows.length > 0;
+  },
 
 };
 

@@ -1,6 +1,7 @@
 // controllers/renovacionesController.js
 
 const renovacionesService = require('../src/services/renovacionesService');
+const renovacionesRepository = require('../repositories/renovacionesRepository');
 const reservasRepository = require('../repositories/reservasRepository');
 const db = require('../src/db');
 
@@ -35,6 +36,23 @@ class RenovacionesController {
       });
     }
   }
+  // ─── GET /api/renovaciones/tiene-pendiente/:id_usuario/:id_clase/:mes/:anio
+async tienePendiente(req, res) {
+  try {
+    const { id_usuario, id_clase, mes, anio } = req.params;
+
+    const tiene = await renovacionesRepository.tienRenovacionPendiente(
+      parseInt(id_usuario),
+      parseInt(id_clase),
+      parseInt(mes),
+      parseInt(anio)
+    );
+
+    return res.status(200).json({ ok: true, tiene });
+  } catch (error) {
+    return res.status(500).json({ ok: false, mensaje: error.message });
+  }
+}
 
   // ─── POST /api/renovaciones/verificar ─────────────────────────
   // Calcula fechas y precio antes de redirigir a MP

@@ -24,7 +24,7 @@ class ClasesRepository {
          JOIN instancias_clases ic ON r.id_instancia = ic.id_instancia
          WHERE ic.id_clase = c.id_clase
            AND DATE(ic.fecha_exacta) = ?
-           AND r.estado = 'reservada'),
+           AND r.estado IN ('reservada', 'por_renovar')),
         0
       ) AS cupos_disponibles
     FROM clases c

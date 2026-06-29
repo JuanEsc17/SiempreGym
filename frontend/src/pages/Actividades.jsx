@@ -27,32 +27,6 @@ const formatCorta  = (iso) => { const [,m,d]=iso.split('-'); return `${+d} ${MES
 const fP = formatPrecio; 
 const apiFetch = (url, opts) => fetch(url, opts).then(r => r.json());
 
-
-/* ─── Sidebar ─────────────────────────────────────────────────────
-function Sidebar({ isOpen, setIsOpen }) {
-  return (
-    <div className={`fixed top-0 left-0 h-screen z-50 flex flex-col shadow-2xl transition-all duration-300 ${isOpen?'w-56':'w-16'}`}
-         style={{background:'#4a0560'}}>
-      <div className="p-4 flex justify-center cursor-pointer hover:bg-white/10 transition-colors"
-           onClick={()=>setIsOpen(!isOpen)}>
-        <span className="text-white text-2xl">☰</span>
-      </div>
-      {isOpen && (
-        <div className="flex flex-col gap-1 p-3">
-          {[['📅','Mis Reservas'],['📋','Listas de Espera'],['🏷️','Mis Créditos']].map(([ic,lbl])=>(
-            <button key={lbl} className="text-left bg-transparent border-none text-white p-2 hover:bg-white/10 rounded-xl cursor-pointer text-sm">
-              {ic} {lbl}
-            </button>
-          ))}
-          <hr className="border-white/20 my-2" />
-          <button className="text-left bg-transparent border-none text-red-200 p-2 hover:bg-red-400/20 rounded-xl cursor-pointer text-sm">
-            🚪 Salir
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}*/
 //Modicacion alert
 function Toast({ mensaje, onClose }) {
   useEffect(() => {
@@ -242,6 +216,7 @@ function OpcionPago({ icono, titulo, subtitulo, precio, seleccionado, onClick, d
 
 // ─── ModalDetalle ─────────────────────────────────────────────────
 function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, onToast }) {
+  const navigate = useNavigate(); 
   const [modo, setModo]             = useState('INDIVIDUAL');
   const [paso, setPaso]             = useState('cargando');
   // 'cargando' | 'seleccionar_pago' | 'preview_mensual' | 'lista_espera' | 'lista_espera_mensual' | 'error'
@@ -253,6 +228,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
   const [idInstancia, setIdInstancia]       = useState(null);
   const [puedeUsarSena, setPuedeUsarSena]   = useState(true);
   const [creditosUsuario, setCreditosUsuario] = useState(0);
+  const [tieneRenovacion, setTieneRenovacion] = useState(false);
 
   const PRECIO_BASE    = clase.precio || 2500;
   const CREDITOS_USER  = 2; // TODO: traer del contexto de autenticación
@@ -263,7 +239,6 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
   const verificar = async () => {
   setPaso('cargando');
 
-   // ── Límite 7 días para INDIVIDUAL ───────────────────────────
   if (modo === 'INDIVIDUAL') {
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     const limite = new Date(hoy); limite.setDate(hoy.getDate() + 7);
@@ -274,8 +249,37 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
       return;
     }
   }
-  // ────────────────────────────────────────────────────────────
+  if (modo === 'MENSUAL') {
+    const hoy = new Date();
+    const dia = hoy.getDate();
+    const diasEnMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+    const estaEnVentana = dia >= (diasEnMes - 6) || (dia >= 1 && dia <= 10);
+    console.log('dia:', dia);
+    console.log('diasEnMes:', diasEnMes);
+    console.log('estaEnVentana:', estaEnVentana);
+    if (estaEnVentana) {
+      try {
+        const id_usuario = getUsuarioId();
+        const mes = fechaSeleccionada.getMonth() + 1;
+        const anio = fechaSeleccionada.getFullYear();
+        console.log('chequeando renovacion para:', id_usuario, clase.id_clase, mes, anio);
 
+
+        const check = await apiFetch(
+          `${BASE_URL}/renovaciones/tiene-pendiente/${id_usuario}/${clase.id_clase}/${mes}/${anio}`
+        );
+        console.log('resultado check:', check);
+
+        if (check.ok && check.tiene) {
+          setTieneRenovacion(true);
+          setPaso('tiene_renovacion');
+          return;
+        }
+      } catch {
+        console.log('error en chequeo:', e);
+      }
+    }
+  }
   try {
     const id_usuario = getUsuarioId();
     const body = modo === 'INDIVIDUAL'
@@ -286,34 +290,49 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
     });
 
-    if (data.status === 'LISTO_PARA_RESERVAR' || data.status === 'LISTO_PARA_PAGAR') {
-      setMontoPrecio(data.monto);
+    // ─── FIX: unificar todos los status "OK" de backend ──────────────
+    const STATUS_OK = [
+      'LISTO_PARA_RESERVAR',       // por si se usa en el futuro
+      'LISTO_PARA_PAGAR',          // ídem
+      'DISPONIBILIDAD_OK',         // ← individual con cupo
+      'LISTO_PARA_RESERVAR_MES',   // ← mensual con cupo
+    ];
+
+    if (STATUS_OK.includes(data.status)) {
+      // FIX: individual usa 'precio_base', mensual usa 'monto'
+      setMontoPrecio(data.precio_base ?? data.monto);
 
       if (modo === 'INDIVIDUAL') {
-        // Guardamos los datos que vienen del backend
         setIdInstancia(data.id_instancia);
         setPuedeUsarSena(data.puede_usar_sena);
         setCreditosUsuario(data.creditos_usuario);
         setPaso('seleccionar_pago');
       } else {
-        setDatosMensual(data); // data.fechas y data.monto ya vienen del backend
+        setDatosMensual(data);
         setPaso('preview_mensual');
       }
+
     } else if (data.status === 'CLASE_LLENA') {
-        setPaso('sin_cupo');
-    } else if (data.status?.includes('LISTA_ESPERA')) {
-        setPaso('lista_espera_mensual');
+      setPaso('sin_cupo');
+
+    } else if (
+      data.status === 'SIN_CUPO_DISPONIBLE' ||  // ← FIX: mensual sin cupo
+      data.status?.includes('LISTA_ESPERA')      // por compatibilidad futura
+    ) {
+      setPaso('lista_espera_mensual');
+
     } else {
       setErrorMsg(data.mensaje || 'No se puede procesar la solicitud');
       setPaso('error');
     }
+
   } catch {
     setErrorMsg('Error al conectar con el servidor');
     setPaso('error');
   }
 };
 
- const handleConfirmar = async () => {
+const handleConfirmar = async () => {
   if (modo === 'INDIVIDUAL' && !tipoPago) return;
   setProcesando(true);
 
@@ -582,6 +601,28 @@ if (paso === 'lista_espera_mensual') {
     </div>
   );
 }
+if (paso === 'tiene_renovacion') {
+  return (
+    <div className="text-center">
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+           style={{ background: 'rgba(138,11,210,0.15)' }}>
+        <span style={{ fontSize: '32px' }}>🔄</span>
+      </div>
+      <h3 className="text-white font-bold m-0 mb-2" style={{ fontSize: '16px' }}>
+        Tenés una renovación pendiente
+      </h3>
+      <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
+        Ya tenés un lugar reservado para <strong style={{ color: 'white' }}>{clase.actividad}</strong> en este mes.
+      </p>
+      <div className="rounded-xl p-3"
+           style={{ background: 'rgba(138,11,210,0.08)', border: '1px solid rgba(138,11,210,0.2)' }}>
+        <p style={{ color: '#c084fc', fontSize: '12px', margin: 0 }}>
+          💡 Renovar es más conveniente — mantenés tu lugar asegurado para todo el mes.
+        </p>
+      </div>
+    </div>
+  );
+}
     return null;
   };
 
@@ -614,6 +655,16 @@ if (paso === 'lista_espera_mensual')
                style={{background:procesando?'rgba(16,185,129,0.4)':'#10b981', boxShadow:'0 4px 20px rgba(16,185,129,0.3)'}}>
                {procesando?'Procesando...':'Confirmar Reserva Mensual →'}
              </button>;
+    if (paso === 'tiene_renovacion') {
+      return (
+    <button
+      onClick={() => { onCerrar(); navigate('/renovaciones'); }}
+      className={base}
+      style={{ background: '#8A0BD2', boxShadow: '0 4px 20px rgba(138,11,210,0.35)' }}>
+      🔄 Ir a Renovaciones →
+    </button>
+  );
+}
     return null;
   };
 
