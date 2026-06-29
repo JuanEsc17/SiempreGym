@@ -904,7 +904,7 @@ export default function Actividades() {
     </div>
   </div>
 
-  <div onClick={() => navigate('/lista-espera')}
+  {/*<div onClick={() => navigate('/lista-espera')}
        className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
        style={{background:'#8A0BD2', border:'1px solid rgba(99,102,241,0.25)'}}>
     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -915,7 +915,7 @@ export default function Actividades() {
       <p className="text-white font-bold text-sm m-0">Lista Espera</p>
       <p style={{color:'rgba(255,255,255,0.4)', fontSize:'11px', margin:0}}>Clases en espera</p>
     </div>
-  </div>
+  </div>*/}
     <div onClick={() => navigate('/qr-viewer')}
      className="p-4 rounded-2xl flex items-center gap-3 cursor-pointer hover:brightness-110 transition-all"
      style={{background:'#6D28D9', border:'1px solid rgba(147,51,234,0.25)'}}>
