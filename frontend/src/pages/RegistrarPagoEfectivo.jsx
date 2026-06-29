@@ -44,8 +44,8 @@ function ModalConfirmacion({ reserva, cliente, onConfirmar, onCancelar, procesan
       <div className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl" style={{ background:'#1a1a2e' }} onClick={e => e.stopPropagation()}>
         <div className="p-6 text-white relative" style={{ background:'linear-gradient(135deg,#4a0560,#7A0BC0)' }}>
           <button onClick={onCancelar} disabled={procesando} className="absolute top-4 right-4 border-none w-8 h-8 rounded-full cursor-pointer transition-colors" style={{ background:'rgba(0,0,0,0.25)', color:'white', fontSize:'14px', opacity: procesando ? 0.5 : 1 }}>✕</button>
-          <h2 className="font-bold m-0" style={{ fontSize:'20px' }}>Confirmar pago en efectivo</h2>
-          <p className="text-white/70 mt-2 text-sm">Verifica los datos antes de registrar el pago.</p>
+          <h2 className="font-bold m-0" style={{ fontSize:'20px' }}>Confirmar pago presencial</h2>
+          <p className="text-white/70 mt-2 text-sm">Verifica los datos antes de completar el pago.</p>
         </div>
 
         <div className="p-6 space-y-4">
@@ -74,7 +74,7 @@ function ModalConfirmacion({ reserva, cliente, onConfirmar, onCancelar, procesan
               Cancelar
             </button>
             <button onClick={onConfirmar} disabled={procesando} className="flex-1 py-3 rounded-2xl text-white font-bold transition-all disabled:opacity-50" style={{ background:'linear-gradient(135deg,#AF50E5,#8A0BD2)' }}>
-              {procesando ? 'Registrando...' : 'Registrar pago'}
+              {procesando ? 'Completando...' : 'Completar pago'}
             </button>
           </div>
         </div>
@@ -161,10 +161,10 @@ export default function RegistrarPagoEfectivo() {
       })
       const data = await response.json()
       if (!response.ok) {
-        setToast(data.mensaje || 'No se pudo registrar el pago')
+        setToast(data.mensaje || 'No se pudo completar el pago')
         return
       }
-      setToast('Pago registrado correctamente')
+      setToast('Pago completado correctamente')
       setModalReserva(null)
       setCliente({ ...cliente })
       const updated = pendientes.filter(r => r.id_reserva !== modalReserva.id_reserva)
@@ -186,9 +186,9 @@ export default function RegistrarPagoEfectivo() {
         ← Volver
       </button>
 
-      <h1 style={{ color:'white', fontSize:26, fontWeight:'bold', margin:'0 0 4px' }}>Registrar pago en efectivo</h1>
+      <h1 style={{ color:'white', fontSize:26, fontWeight:'bold', margin:'0 0 4px' }}>Completar pago presencial</h1>
       <p style={{ color:'rgba(255,255,255,0.45)', fontSize:13, margin:'0 0 28px' }}>
-        Busca un cliente y registra sus pagos pendientes en efectivo.
+        Busca un cliente y completa sus pagos pendientes de forma presencial.
       </p>
 
       <div style={{ display:'grid', gridTemplateColumns:'360px 1fr', gap:20, alignItems:'start' }}>
@@ -244,7 +244,7 @@ export default function RegistrarPagoEfectivo() {
           ) : !cliente ? (
             <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14 }}>Selecciona un cliente para ver sus pagos pendientes.</p>
           ) : pendientes.length === 0 ? (
-            <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14 }}>No se encontraron pagos pendientes en efectivo para este cliente.</p>
+            <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14 }}>No se encontraron pagos pendientes para este cliente.</p>
           ) : (
             <div style={{ display:'grid', gap:14 }}>
               {pendientes.map(reserva => (
@@ -257,7 +257,7 @@ export default function RegistrarPagoEfectivo() {
                     <button
                       onClick={() => setModalReserva(reserva)}
                       style={{ border:'none', borderRadius:12, background:'#8A0BD2', color:'white', padding:'10px 14px', fontSize:12, cursor:'pointer' }}>
-                      Registrar pago
+                      Completar pago
                     </button>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:14, marginTop:14 }}>

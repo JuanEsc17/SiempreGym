@@ -124,7 +124,7 @@ export default function EmpleadoPanel() {
 
             <div>
               <p className="text-white font-medium">
-                Registrar pago efectivo
+                Completar pago presencial
               </p>
 
               <p
