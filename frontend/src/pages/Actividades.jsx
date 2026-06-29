@@ -118,23 +118,29 @@ function ClaseCard({ clase, fechaSeleccionada, onReservar }) {
     yaInicio = minAhora >= minClase;
   }
 
-  const borderColor  = yaInicio ? '#374151' : '#8A0BD2';
-  const overlayColor = yaInicio ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.58)';
+  const deshabilitada = yaInicio || clase.cancelada;
+  const borderColor  = deshabilitada ? '#374151' : '#8A0BD2';
+  const overlayColor = deshabilitada ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.58)';
 
   return (
     <div
-      onClick={yaInicio ? undefined : onReservar}
+      onClick={deshabilitada ? undefined : onReservar}
       className={`group rounded-2xl overflow-hidden flex h-36 transition-all duration-300 shadow-xl relative
-        ${yaInicio ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}`}
+        ${deshabilitada ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}`}
       style={{ background:'#252535', borderLeft:`5px solid ${borderColor}` }}>
 
-      {yaInicio && (
+      {clase.cancelada ? (
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
+             style={{background:'#374151', color:'#9ca3af'}}>
+          ❌ Clase cancelada
+        </div>
+      ) : yaInicio ? (
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
              style={{background:'#374151', color:'#9ca3af'}}>
           🔒 Clase iniciada
         </div>
-      )}
-      {!yaInicio && estaLlena && (
+      ) : null}
+      {!yaInicio && !clase.cancelada && estaLlena && (
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium"
              style={{background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.5)'}}>
           📅 Mensual c/ espera

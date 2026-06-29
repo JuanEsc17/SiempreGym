@@ -33,12 +33,18 @@ class ClasesRepository {
              AND r.estado IN ('reservada', 'por_renovar')),
           0
         )
-      END AS cupos_disponibles
+      END AS cupos_disponibles,
+      EXISTS (
+        SELECT 1 FROM instancias_clases ic
+        WHERE ic.id_clase = c.id_clase
+          AND DATE(ic.fecha_exacta) = ?
+          AND ic.cancelada = 1
+      ) AS cancelada
     FROM clases c
     WHERE c.dia = ? AND c.estado = 'activa'
     ORDER BY c.horario ASC
   `;
-  const [rows] = await this.db.promise().execute(query, [fecha, fecha, nombreDia]);
+  const [rows] = await this.db.promise().execute(query, [fecha, fecha, fecha, nombreDia]);
   return rows;
 }
   
