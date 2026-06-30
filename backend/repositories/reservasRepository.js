@@ -233,7 +233,14 @@ const reservasRepository = {
       id_reservas
     );
     return result.affectedRows;
-  }
+  },
+  cancelarReservasPorRenovacion: async (id_renovacion) => {
+  await db.promise().execute(
+    `UPDATE reservas SET estado = 'cancelada' 
+     WHERE id_renovacion = ? AND estado = 'por_renovar'`,
+    [id_renovacion]
+  );
+  },
 };
 
 module.exports = reservasRepository;

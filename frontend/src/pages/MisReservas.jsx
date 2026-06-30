@@ -43,7 +43,7 @@ const getEstado = (r) => {
     return { label:'Pendiente de pago', icon:'⏳', color:'#f59e0b', bg:'rgba(245,158,11,0.12)', desc:'pendiente' };
   // Seña pagada con saldo pendiente
   if (r.tipo_pago === 'seña' && Number(r.saldo_pendiente) > 0)
-    return { label:'Seña pagada',       icon:'🤝', color:'#f97316', bg:'rgba(249,115,22,0.12)', desc:'Saldo pendiente a completar' };
+    return { label:'Completar Seña',       icon:'🤝', color:'#f97316', bg:'rgba(249,115,22,0.12)', desc:'Saldo pendiente a completar' };
   // Pago con crédito
   if (r.tipo_pago === 'credito')
     return { label:'Confirmada',icon:'✓', color:'#10b981', bg:'rgba(16,185,129,0.12)', desc:'Reserva confirmada' };
@@ -447,7 +447,7 @@ export default function MisReservas() {
                     {vista === 'historial' && (
                       <p style={{ 
                         color:'rgba(255,255,255,0.35)', 
-                        fontSize:11, 
+                        fontSize:15, 
                         margin:0,
                         fontWeight:500
                       }}>
