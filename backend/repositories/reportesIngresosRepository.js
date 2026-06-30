@@ -3,8 +3,7 @@ const db = require('../src/db');
 class ReportesIngresosRepository {
 
   async getMetricas({ fechaDesde, fechaHasta, actividad }) {
-    console.log('=== getMetricas ===', { fechaDesde, fechaHasta, actividad });
-    
+
     let query = `
       SELECT 
         COALESCE(SUM(
@@ -28,12 +27,9 @@ class ReportesIngresosRepository {
     if (actividad) {
       query += ` AND c.actividad = ?`;
       params.push(actividad);
-      console.log('Filtro actividad aplicado:', actividad);
     }
 
-    console.log('Params:', params);
     const [rows] = await db.promise().query(query, params);
-    console.log('Resultado getMetricas:', rows[0]);
     return rows[0];
   }
 
@@ -92,7 +88,6 @@ class ReportesIngresosRepository {
     `;
 
     const [rows] = await db.promise().query(query, [fechaDesde, fechaHasta]);
-    console.log('Resultado getPorActividad:', rows);
     return rows;
   }
 
