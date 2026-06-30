@@ -80,16 +80,19 @@ export default function ReportesIngresos() {
   const actividadConPorcentaje = reporte?.por_actividad?.map(a => ({
     ...a,
     ingreso: Number(a.ingreso),
+    mensuales: Number(a.mensuales) || 0,
+    individuales: Number(a.individuales) || 0,
     porcentaje: totalActividad > 0 ? Math.round((Number(a.ingreso) / totalActividad) * 100) : 0
   })) || [];
 
-  // Filas filtradas según actividad seleccionada
+  // Filas filtradas — toLowerCase para evitar problemas de mayúsculas/minúsculas
   const filasMostradas = actividad
-    ? actividadConPorcentaje.filter(a => a.actividad === actividad)
+    ? actividadConPorcentaje.filter(
+        a => a.actividad.toLowerCase() === actividad.toLowerCase()
+      )
     : actividadConPorcentaje;
 
-  // Métricas de cards: si hay filtro de actividad, calcular desde filasMostradas
-  // Si no hay filtro, usar los datos que vienen del backend
+  // Métricas de cards: si hay filtro usar filasMostradas, si no usar backend
   const ingresoTotal = actividad
     ? filasMostradas.reduce((s, a) => s + a.ingreso, 0)
     : Number(metricas.ingreso_total) || 0;
@@ -98,12 +101,18 @@ export default function ReportesIngresos() {
     ? filasMostradas.reduce((s, a) => s + Number(a.cantidad), 0)
     : Number(metricas.total_reservas) || 0;
 
-  const mensuales = Number(metricas.mensuales) || 0;
-  const individuales = Number(metricas.individuales) || 0;
+  const mensuales = actividad
+    ? filasMostradas.reduce((s, a) => s + a.mensuales, 0)
+    : Number(metricas.mensuales) || 0;
+
+  const individuales = actividad
+    ? filasMostradas.reduce((s, a) => s + a.individuales, 0)
+    : Number(metricas.individuales) || 0;
+
   const pctMensual = totalReservas > 0 ? Math.round((mensuales / totalReservas) * 100) : 0;
   const pctIndividual = totalReservas > 0 ? Math.round((individuales / totalReservas) * 100) : 0;
 
-  const hayDatos = reporte && (Number(metricas.total_reservas) > 0 || filasMostradas.length > 0);
+  const hayDatos = reporte !== null;
 
   return (
     <div className="min-h-screen p-6" style={{ background: '#1a1a2e' }}>
@@ -117,8 +126,6 @@ export default function ReportesIngresos() {
           >
             ← Volver al panel
           </button>
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#8A0BD2' }}>
-          </p>
           <h1 className="text-4xl font-bold text-white mb-2">Reporte de Ingresos</h1>
           <p className="text-gray-400">
             Visualiza el detalle de los ingresos del gimnasio en el período seleccionado
@@ -190,16 +197,6 @@ export default function ReportesIngresos() {
           </div>
         )}
 
-        {/* Sin datos */}
-        {reporte && !hayDatos && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-yellow-500">
-            <p className="text-yellow-200 font-medium">
-              No hay reservas registradas para el período
-              {actividad ? ` y actividad "${actividad}"` : ''} seleccionado.
-            </p>
-          </div>
-        )}
-
         {/* Resultados */}
         {hayDatos && (
           <div className="space-y-6">
@@ -216,12 +213,8 @@ export default function ReportesIngresos() {
                   >$</div>
                   <p className="text-gray-400 text-sm">Ingreso Total</p>
                 </div>
-                <p className="text-white text-2xl font-bold">
-                  {formatearMonto(ingresoTotal)}
-                </p>
-                {actividad && (
-                  <p className="text-purple-400 text-xs mt-1">{actividad}</p>
-                )}
+                <p className="text-white text-2xl font-bold">{formatearMonto(ingresoTotal)}</p>
+                {actividad && <p className="text-purple-400 text-xs mt-1">{actividad}</p>}
               </div>
 
               {/* Reservas */}
@@ -311,72 +304,58 @@ export default function ReportesIngresos() {
                         </td>
                       </tr>
                     ) : (
-                    filasMostradas.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="border-b"
-                        style={{
-                          borderColor: 'rgba(255,255,255,0.06)',
-                          background: index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
-                        }}
-                      >
-                        {/* Actividad */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                              style={{ background: COLORES_ACTIVIDAD[index % COLORES_ACTIVIDAD.length] }}
-                            />
-                            <span>{item.actividad}</span>
-                          </div>
-                        </td>
-
-                        {/* Reservas */}
-                        <td className="px-6 py-4 text-center text-gray-300">
-                          {item.cantidad}
-                        </td>
-
-                        {/* Ingreso */}
-                        <td className="px-6 py-4 text-center font-semibold">
-                          {formatearMonto(item.ingreso)}
-                        </td>
-
-                        {/* Barra de progreso */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                      filasMostradas.map((item, index) => (
+                        <tr
+                          key={index}
+                          className="border-b"
+                          style={{
+                            borderColor: 'rgba(255,255,255,0.06)',
+                            background: index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+                          }}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
                               <div
-                                className="h-full rounded-full transition-all duration-700"
-                                style={{
-                                  width: `${item.porcentaje}%`,
-                                  background: COLORES_ACTIVIDAD[index % COLORES_ACTIVIDAD.length]
-                                }}
+                                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                style={{ background: COLORES_ACTIVIDAD[index % COLORES_ACTIVIDAD.length] }}
                               />
+                              <span>{item.actividad}</span>
                             </div>
-                            <span className="text-gray-400 text-sm w-10 text-right">
-                              {item.porcentaje}%
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td className="px-6 py-4 text-center text-gray-300">{item.cantidad}</td>
+                          <td className="px-6 py-4 text-center font-semibold">{formatearMonto(item.ingreso)}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-700"
+                                  style={{
+                                    width: `${item.porcentaje}%`,
+                                    background: COLORES_ACTIVIDAD[index % COLORES_ACTIVIDAD.length]
+                                  }}
+                                />
+                              </div>
+                              <span className="text-gray-400 text-sm w-10 text-right">{item.porcentaje}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                     )}
                   </tbody>
 
-                  {/* Fila total — solo si hay filas */}
                   {filasMostradas.length > 0 && (
-                  <tfoot>
-                    <tr style={{ background: 'rgba(138,11,210,0.15)', borderTop: '1px solid rgba(138,11,210,0.3)' }}>
-                      <td className="px-6 py-4 font-semibold text-purple-300">Total</td>
-                      <td className="px-6 py-4 text-center font-semibold text-purple-300">
-                        {filasMostradas.reduce((s, a) => s + Number(a.cantidad), 0)}
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold text-white text-lg">
-                        {formatearMonto(filasMostradas.reduce((s, a) => s + a.ingreso, 0))}
-                      </td>
-                      <td className="px-6 py-4 text-gray-500 text-sm">100%</td>
-                    </tr>
-                  </tfoot>
+                    <tfoot>
+                      <tr style={{ background: 'rgba(138,11,210,0.15)', borderTop: '1px solid rgba(138,11,210,0.3)' }}>
+                        <td className="px-6 py-4 font-semibold text-purple-300">Total</td>
+                        <td className="px-6 py-4 text-center font-semibold text-purple-300">
+                          {filasMostradas.reduce((s, a) => s + Number(a.cantidad), 0)}
+                        </td>
+                        <td className="px-6 py-4 text-center font-bold text-white text-lg">
+                          {formatearMonto(filasMostradas.reduce((s, a) => s + a.ingreso, 0))}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 text-sm">100%</td>
+                      </tr>
+                    </tfoot>
                   )}
                 </table>
               </div>

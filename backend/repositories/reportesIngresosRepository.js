@@ -2,11 +2,10 @@ const db = require('../src/db');
 
 class ReportesIngresosRepository {
 
-  // Métricas globales — siempre desde reservas+clases para que el filtro de actividad funcione
   async getMetricas({ fechaDesde, fechaHasta, actividad }) {
-    const params = [fechaDesde, fechaHasta, actividad || null, actividad || null];
-
-    const query = `
+    console.log('=== getMetricas ===', { fechaDesde, fechaHasta, actividad });
+    
+    let query = `
       SELECT 
         COALESCE(SUM(
           CASE 
@@ -16,30 +15,33 @@ class ReportesIngresosRepository {
             ELSE 0
           END
         ), 0) AS ingreso_total,
-
         COUNT(*)                                                              AS total_reservas,
         SUM(CASE WHEN r.tipo_reserva = 'mensual'    THEN 1 ELSE 0 END)      AS mensuales,
         SUM(CASE WHEN r.tipo_reserva = 'individual' THEN 1 ELSE 0 END)      AS individuales
-
       FROM reservas r
       JOIN clases c ON c.id_clase = r.id_clase
       WHERE r.fecha_clase BETWEEN ? AND ?
         AND r.estado IN ('reservada', 'asistio')
-        AND (? IS NULL OR c.actividad = ?)
     `;
+    const params = [fechaDesde, fechaHasta];
 
+    if (actividad) {
+      query += ` AND c.actividad = ?`;
+      params.push(actividad);
+      console.log('Filtro actividad aplicado:', actividad);
+    }
+
+    console.log('Params:', params);
     const [rows] = await db.promise().query(query, params);
+    console.log('Resultado getMetricas:', rows[0]);
     return rows[0];
   }
 
-  // Ingresos agrupados por día (para el gráfico de área)
   async getPorDia({ fechaDesde, fechaHasta, actividad }) {
-    const params = [fechaDesde, fechaHasta, actividad || null, actividad || null];
-
-    const query = `
+    let query = `
       SELECT 
-        r.fecha_clase                                         AS dia,
-        COUNT(*)                                             AS cantidad,
+        r.fecha_clase AS dia,
+        COUNT(*)      AS cantidad,
         SUM(
           CASE 
             WHEN r.tipo_pago = 'total'   THEN c.precio_individual
@@ -47,22 +49,25 @@ class ReportesIngresosRepository {
             WHEN r.tipo_pago = 'credito' THEN c.precio_individual
             ELSE 0
           END
-        )                                                    AS total
-
+        ) AS total
       FROM reservas r
       JOIN clases c ON c.id_clase = r.id_clase
       WHERE r.fecha_clase BETWEEN ? AND ?
         AND r.estado IN ('reservada', 'asistio')
-        AND (? IS NULL OR c.actividad = ?)
-      GROUP BY r.fecha_clase
-      ORDER BY r.fecha_clase ASC
     `;
+    const params = [fechaDesde, fechaHasta];
+
+    if (actividad) {
+      query += ` AND c.actividad = ?`;
+      params.push(actividad);
+    }
+
+    query += ` GROUP BY r.fecha_clase ORDER BY r.fecha_clase ASC`;
 
     const [rows] = await db.promise().query(query, params);
     return rows;
   }
 
-  // Ingresos agrupados por actividad (para el donut) — solo visible cuando no hay filtro de actividad
   async getPorActividad({ fechaDesde, fechaHasta }) {
     const query = `
       SELECT 
@@ -77,8 +82,7 @@ class ReportesIngresosRepository {
             WHEN r.tipo_pago = 'credito' THEN c.precio_individual
             ELSE 0
           END
-        )                                                                      AS ingreso
-
+        ) AS ingreso
       FROM reservas r
       JOIN clases c ON c.id_clase = r.id_clase
       WHERE r.fecha_clase BETWEEN ? AND ?
@@ -88,10 +92,10 @@ class ReportesIngresosRepository {
     `;
 
     const [rows] = await db.promise().query(query, [fechaDesde, fechaHasta]);
+    console.log('Resultado getPorActividad:', rows);
     return rows;
   }
 
-  // Listado de actividades únicas para el selector del filtro
   async getActividades() {
     const query = `
       SELECT DISTINCT actividad 
