@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
+import { useNavigate } from "react-router-dom";// para redirigir a otra página después de escanear el QR
+
 // Fuera del componente — persiste entre renders
 let qrGlobalInstance = null;
 
 export default function QRScanner() {
+  
+  const navigate = useNavigate();
   const [resultado, setResultado] = useState(null);
   const [loading, setLoading] = useState(false);
   const scanningRef = useRef(false);
@@ -83,12 +87,28 @@ export default function QRScanner() {
     };
   }, []);
 
+    
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center"
-      style={{ background: "#1a1a2e" }}
-    >
-      <h2 className="text-white text-2xl font-bold mb-6">Escanear QR</h2>
+  <div
+    className="min-h-screen flex flex-col items-center justify-center relative"
+    style={{ background: "#1a1a2e" }}
+  >
+    <div className="absolute top-6 right-6">
+      <button
+        onClick={() => navigate("/empleado")}
+        className="px-4 py-2 rounded-xl text-white font-medium cursor-pointer transition-all duration-200 hover:opacity-90"
+        style={{
+          background: "#8A0BD2",
+          border: "none",
+        }}
+      >
+        ← Volver
+      </button>
+    </div>
+
+    <h2 className="text-white text-2xl font-bold mb-6">
+      Escanear QR
+    </h2>
 
       <div
         className="relative rounded-2xl overflow-hidden"
@@ -130,7 +150,7 @@ export default function QRScanner() {
 
       {!resultado && !loading && (
         <p className="mt-4 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-          Apuntá la cámara al código QR
+          Apuntá a la cámara el código QR
         </p>
       )}
     </div>

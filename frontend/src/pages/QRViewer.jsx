@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext'; // Ajusta según tu contexto
 
+import { useNavigate } from "react-router-dom"; 
+
 export default function QRViewer() {
+  const navigate = useNavigate();
   const [qrCode, setQrCode] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -38,27 +41,59 @@ export default function QRViewer() {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Mi Código QR</h2>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center relative"
+      style={{ background: "#1a1a2e" }}
+      >
+      <div className="absolute top-6 right-6">
+  <button
+    onClick={() => navigate("/actividades")} 
+    className="px-4 py-2 rounded-xl text-white font-medium cursor-pointer transition-all duration-200 hover:brightness-75"
+    style={{
+      background: "#8A0BD2",
+      border: "none",
+    }}
+  >
+    ← Volver
+  </button>
+</div>
+      <h2 className="text-white text-2xl font-bold mb-6">
+        Mi Código QR
+      </h2>
       
       {!qrCode ? (
         <button
           onClick={obtenerQR}
           disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+          className="px-4 py-2 rounded-xl text-white font-medium cursor-pointer transition-all duration-200 hover:brightness-75"
+style={{
+  background: "#8A0BD2",
+  border: "none",
+}}
         >
           {loading ? 'Cargando...' : 'Mostrar QR'}
         </button>
       ) : (
-        <div className="flex flex-col items-center gap-4">
+        <div
+  className="p-8 rounded-2xl flex flex-col items-center"
+  style={{
+    background: "#252540",
+    border: "2px solid #8A0BD2",
+  }}
+>
           <img src={qrCode} alt="QR Code" className="w-64 h-64 border-2 border-gray-300 p-2" />
           <button
-            onClick={() => setQrCode(null)}
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-          >
+  onClick={() => setQrCode(null)}
+  className="mt-4 px-4 py-2 rounded-xl text-white font-medium cursor-pointer transition-all duration-200 hover:brightness-75"
+  style={{
+    background: "#8A0BD2",
+    border: "none",
+  }}
+>
             Ocultar QR
           </button>
         </div>
+        
       )}
 
       {error && (
