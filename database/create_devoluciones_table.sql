@@ -10,3 +10,7 @@ CREATE TABLE IF NOT EXISTS devoluciones (
 
 -- Verificar que la tabla fue creada
 SHOW TABLES LIKE 'devoluciones';
+
+-- cambio cancelar clase--
+ALTER TABLE instancias_clases
+ADD COLUMN cancelada BOOLEAN NOT NULL DEFAULT FALSE;
