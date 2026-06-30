@@ -173,32 +173,36 @@ function ModalConfirmacion({ clase, usuarioSeleccionado, tipoReserva, fechaSelec
           </p>
 
             {tipoReserva === "INDIVIDUAL" ? (
-            <p className="text-white font-bold">
-              {formatCorta(fechaISO(fechaSeleccionada))}
-            </p>
-  ) : (
-    <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
-      {fechasMensuales.map((f) => (
-        <span
-          key={f}
-          className="px-2 py-1 rounded-lg text-xs font-semibold"
-          style={{
-            background: "rgba(138,11,210,0.3)",
-            color: "white"
-          }}
-        >
+                                              <p className="text-white font-bold">
+                                              {formatCorta(fechaISO(fechaSeleccionada))}
+                                              </p>
+          
+                                            ) : (
+          <div className="flex flex-wrap gap-2 mt-2 max-h-32 overflow-y-auto">
+          {fechasMensuales.map((f) => (
+                                        <span
+                                          key={f}
+                                          className="px-2 py-1 rounded-lg text-xs font-semibold"
+                                          style={{
+                                                  background: "rgba(138,11,210,0.3)",
+                                                  color: "white"
+                                                }}
+                                        >
           {formatCorta(f)}
-        </span>
+      </span>
       ))}
     </div>
-  )}
-</div>
+                                  )}
+          </div>
 
           <div className="rounded-lg p-4" style={{background:'rgba(138,11,210,0.15)', border:'1px solid rgba(138,11,210,0.3)'}}>
             <p className="text-white/70 text-xs mb-1">Tipo de reserva:</p>
             <p className="text-white font-bold">{tipoReserva === 'INDIVIDUAL' ? 'Individual' : 'Mensual'}</p>
           </div>
-
+          <div className="rounded-lg p-4" style={{background:'rgba(138,11,210,0.15)', border:'1px solid rgba(138,11,210,0.3)'}}>
+            <p className="text-white/70 text-xs mb-1">Precio:</p>
+            <p className="text-white font-bold">${Number(clase.precio_individual).toLocaleString('es-AR')}</p>
+          </div>
           <div className="flex gap-3 mt-6">
             <button onClick={onCerrar} disabled={procesando} className="flex-1 py-3 rounded-2xl border-2 border-white/20 text-white font-bold cursor-pointer hover:bg-white/5 transition-colors disabled:opacity-50">
               Cancelar
