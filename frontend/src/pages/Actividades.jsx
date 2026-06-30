@@ -630,8 +630,6 @@ if (paso === 'tiene_renovacion') {
   const renderBoton = () => {
     if (paso==='cargando') return null;
     const base = "w-full py-3.5 rounded-2xl text-white font-bold border-none cursor-pointer transition-all active:scale-95 mt-4";
-    if (paso==='error')
-      return <button onClick={verificar} className={base} style={{background:'#8A0BD2'}}>Reintentar</button>;
     if (paso === 'sin_cupo')
   return 
 

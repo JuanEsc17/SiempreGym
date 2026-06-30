@@ -46,6 +46,8 @@ const cancelacionMensualidadService = {
     const renovacion = await renovacionesRepository.obtenerRenovacionActiva(id_usuario, id_clase);
     if (renovacion) {
       await renovacionesRepository.cancelarRenovacion(renovacion.id_renovacion);
+      //para que se liberen los cupos de las renovaciones canceladas
+      await reservasRepository.cancelarReservasPorRenovacion(renovacion.id_renovacion);
     }
 
     return {

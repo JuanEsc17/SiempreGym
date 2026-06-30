@@ -267,7 +267,7 @@ export default function Renovaciones() {
       </header>
 
       {/* Fuera de ventana */}
-      {!ventanaActiva && (
+      {!ventanaActiva && renovaciones.length > 0 && (
         <div className="mb-6 rounded-2xl p-4 flex items-center gap-3"
              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <span style={{ fontSize: '24px' }}>🔒</span>
