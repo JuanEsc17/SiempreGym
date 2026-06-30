@@ -21,76 +21,141 @@ const calcularMesAnioDesdeFechas = (fecha) => {
 
 const listaEsperaMensualService = {
 
-  procesarVacanteMensual: async (id_clase, fechaReferencia) => {
+ procesarVacanteMensual: async (id_clase, fechaReferencia) => {
 
-    // 1. obtener primero de la lista
-    const candidato = await repo.obtenerPrimero(id_clase, 'mensual');
+  // 1. Obtener primero de la lista
+  const candidato = await repo.obtenerPrimero(id_clase, 'mensual');
 
-    if (!candidato) return { status: 'SIN_ESPERA' };
+  if (!candidato) {
+    return { status: 'SIN_ESPERA' };
+  }
 
-    const clase = await clasesRepo.obtenerClasePorId(id_clase);
-    if (!clase) throw new Error("Clase no encontrada");
+  const clase = await clasesRepo.obtenerClasePorId(id_clase);
 
-    const { mes, anio } = calcularMesAnioDesdeFechas(fechaReferencia);
+  if (!clase) {
+    throw new Error("Clase no encontrada");
+  }
 
-    const grupoId = generarGrupoId(
-      candidato.id_usuario,
-      id_clase,
-      mes,
-      anio
-    );
+  const { mes, anio } = calcularMesAnioDesdeFechas(fechaReferencia);
 
-    // 2. traer todas las fechas del mes (reutilizamos lógica simple)
-    const fechasArray = await generarFechasMensualesSimples(clase, mes, anio);
+  const grupoId = generarGrupoId(
+    candidato.id_usuario,
+    id_clase,
+    mes,
+    anio
+  );
 
-    if (fechasArray.length === 0) {
-      await repo.eliminar(candidato.id_lista);
-      return { status: 'SIN_FECHAS' };
-    }
+  const fechasArray = await generarFechasMensualesSimples(
+    clase,
+    mes,
+    anio
+  );
 
-    const precioTotal = clase.precio_individual * fechasArray.length;
+  if (fechasArray.length === 0) {
+    return { status: "SIN_FECHAS" };
+  }
 
-    let indice = 0;
+  // ===========================================================
+  // NUEVO: verificar que haya cupo en TODAS las semanas
+  // ===========================================================
 
-    for (const fecha of fechasArray) {
+  for (const fecha of fechasArray) {
 
-        const esPrincipal = indice === 0;
-        const fechaExacta = `${fecha} ${clase.horario}`;
+    const fechaExacta = `${fecha} ${clase.horario}`;
 
-        let instancia = await reservasRepository.obtenerInstanciaPorFecha(
+    let instancia =
+      await reservasRepository.obtenerInstanciaPorFecha(
         id_clase,
         fechaExacta
+      );
+
+    if (!instancia) {
+      const id =
+        await reservasRepository.crearInstanciaClase(
+          id_clase,
+          fechaExacta
         );
 
-        if (!instancia) {
-        const id = await reservasRepository.crearInstanciaClase(id_clase, fechaExacta);
-        instancia = { id_instancia: id };
-        }
-
-        await reservasRepository.insertarReserva(
-            candidato.id_usuario,
-            id_clase,
-            instancia.id_instancia,
-            'pendiente',
-            'mensual',
-            'seña',
-            fecha,
-            esPrincipal ? precioTotal : 0,
-            grupoId
-        );
-
-        indice++;
+      instancia = {
+        id_instancia: id
+      };
     }
 
-    // 4. eliminar de lista de espera
-    await repo.eliminar(candidato.id_lista);
+    const ocupados =
+      await reservasRepository.contarReservasDeInstancia(
+        instancia.id_instancia
+      );
 
-    return {
-      status: 'OK',
-      usuario: candidato.id_usuario,
-      grupo_mensual_id: grupoId
-    };
+    if (ocupados >= clase.cupo_maximo) {
+
+      console.log(
+        "Todavía no hay lugar en todas las clases del mes."
+      );
+
+      return {
+        status: "AUN_SIN_CUPO"
+      };
+    }
   }
+
+  // ===========================================================
+  // Si llegó acá, ahora sí hay lugar en todas
+  // ===========================================================
+
+  const precioTotal =
+    clase.precio_individual * fechasArray.length;
+
+  let indice = 0;
+
+  for (const fecha of fechasArray) {
+
+    const esPrincipal = indice === 0;
+
+    const fechaExacta = `${fecha} ${clase.horario}`;
+
+    let instancia =
+      await reservasRepository.obtenerInstanciaPorFecha(
+        id_clase,
+        fechaExacta
+      );
+
+    if (!instancia) {
+
+      const id =
+        await reservasRepository.crearInstanciaClase(
+          id_clase,
+          fechaExacta
+        );
+
+      instancia = {
+        id_instancia: id
+      };
+    }
+
+    await reservasRepository.insertarReserva(
+      candidato.id_usuario,
+      id_clase,
+      instancia.id_instancia,
+      'pendiente',
+      'mensual',
+      'seña',
+      fecha,
+      esPrincipal ? precioTotal : 0,
+      grupoId
+    );
+
+    indice++;
+  }
+
+  await repo.eliminar(candidato.id_lista);
+
+  return {
+    status: "OK",
+    usuario: candidato.id_usuario,
+    grupo_mensual_id: grupoId
+  };
+
+}
 };
 
 // helper simple de fechas (reutiliza lógica existente sin romper nada)
