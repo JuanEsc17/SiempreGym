@@ -194,7 +194,7 @@ if (superposiciones.length > 0) {
 },
 
 crearReservaMensualPresencial: async (id_usuario, id_clase, fechasArray, monto_total) => {
-  console.log("ENTRÉ A crearReservaMensualPresencial");
+  //console.log("ENTRÉ A crearReservaMensualPresencial"); aa lo oculte JE
 
   const clasesRepo = new ClasesRepository(db);
   const clase = await clasesRepo.obtenerClasePorId(id_clase);

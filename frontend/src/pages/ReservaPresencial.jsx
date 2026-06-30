@@ -19,20 +19,25 @@ const formatCorta = (iso) => {
 };
 
 // ─── Toast ────────────────────────────────────────────────────
-function Toast({ mensaje, onClose }) {
+function Toast({ mensaje, tipo = 'exito', onClose }) {
   useEffect(() => {
     const id = setTimeout(onClose, 4000);
     return () => clearTimeout(id);
   }, []);
+
+  const esError = tipo === 'error';
+
   return (
     <div style={{
       position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)',
-      background:'#1e1e2e', border:'1px solid rgba(16,185,129,0.4)',
-      borderLeft:'4px solid #10b981', borderRadius:14, padding:'14px 20px',
+      background:'#1e1e2e', 
+      border: esError ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(16,185,129,0.4)',
+      borderLeft: esError ? '4px solid #ef4444' : '4px solid #10b981',
+      borderRadius:14, padding:'14px 20px',
       color:'white', fontSize:14, fontWeight:500, zIndex:9999,
       boxShadow:'0 8px 32px rgba(0,0,0,0.4)', maxWidth:400, textAlign:'center'
     }}>
-      ✅ {mensaje}
+      {esError ? '❌' : '✅'} {mensaje}
     </div>
   );
 }
@@ -286,7 +291,7 @@ export default function ReservaPresencial() {
   // ────────────────────────────────────────
   const handleReservar = async () => {
     if (!usuarioSeleccionado || !claseParaReservar) {
-      setToast("Error: faltan datos");
+      setToast({ mensaje: 'Error: faltan datos', tipo: 'error' })
       return;
     }
 
@@ -313,7 +318,7 @@ export default function ReservaPresencial() {
         const verificarData = await verificarResponse.json();
 
         if (!verificarData.ok || verificarData.status !== 'LISTO_PARA_RESERVAR') {
-          setToast(verificarData.mensaje || 'No se puede reservar esta clase');
+          setToast({ mensaje: verificarData.mensaje || 'No se puede reservar esta clase', tipo: 'error' });
           setProcesando(false);
           setClaseParaReservar(null);
           return;
@@ -349,7 +354,7 @@ export default function ReservaPresencial() {
         const verificarData = await verificarResponse.json();
 
         if (!verificarData.ok || verificarData.status !== 'LISTO_PARA_PAGAR') {
-          setToast(verificarData.mensaje || 'No se puede reservar esta clase');
+          setToast({ mensaje: verificarData.mensaje || 'No se puede reservar esta clase', tipo: 'error' });
           setProcesando(false);
           setClaseParaReservar(null);
           return;
@@ -374,16 +379,16 @@ export default function ReservaPresencial() {
       const data = await response.json();
 
       if (response.ok) {
-        setToast(data.mensaje || 'Reserva realizada exitosamente');
+        setToast({ mensaje: data.mensaje || 'Reserva realizada exitosamente', tipo: 'exito' });
         setClaseParaReservar(null);
         setBusqueda("");
         setUsuarioSeleccionado(null);
       } else {
-        setToast(data.mensaje || 'Error al reservar');
+        setToast({ mensaje: data.mensaje || 'Error al reservar', tipo: 'error' });
       }
     } catch (error) {
       console.log("Error:", error);
-      setToast("Error al conectar con el servidor");
+      setToast({ mensaje: 'Error al conectar con el servidor', tipo: 'error' });
     } finally {
       setProcesando(false);
     }
@@ -506,7 +511,7 @@ export default function ReservaPresencial() {
         clase={clase}
         onSeleccionar={async () => {
           if (!usuarioSeleccionado) {
-            setToast("Por favor selecciona un cliente primero");
+            setToast({ mensaje: 'Por favor selecciona un cliente primero', tipo: 'error' });
             return;
           }
 
@@ -529,14 +534,14 @@ export default function ReservaPresencial() {
               const data = await response.json();
 
               if (!data.ok) {
-                setToast(data.mensaje || "No se puede reservar esta clase");
+                setToast({ mensaje: data.mensaje || 'No se puede reservar esta clase', tipo: 'error' });
                 return;
               }
 
               setFechasMensuales(data.fechas || []);
             } catch (error) {
               console.error(error);
-              setToast("Error al obtener las fechas");
+              setToast({ mensaje: 'Error al obtener las fechas', tipo: 'error' });
               return;
             }
           } else {
@@ -574,7 +579,8 @@ export default function ReservaPresencial() {
       {/* Toast */}
       {toast && (
         <Toast
-          mensaje={toast}
+          mensaje={toast.mensaje}
+          tipo={toast.tipo}
           onClose={() => setToast(null)}
         />
       )}
