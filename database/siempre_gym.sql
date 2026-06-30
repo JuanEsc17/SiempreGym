@@ -303,21 +303,7 @@ CREATE TABLE `asistencias` (
 
 
 CREATE TABLE renovaciones (
-  id_renovacion     INT NOT NULL AUTO_INCREMENT,
-  id_usuario        INT NOT NULL,
-  id_clase          INT NOT NULL,
-  mes               INT NOT NULL,
-  anio              INT NOT NULL,
-  estado            ENUM('pendiente','confirmada','vencida') DEFAULT 'pendiente',
-  fecha_generada    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  fecha_vencimiento DATE NOT NULL,
-  PRIMARY KEY (id_renovacion),
-  FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
-  FOREIGN KEY (id_clase)   REFERENCES clases(id_clase)
-);
-
---
--- Dumping data for table `asistencias`
+  id_renovacion     INT NOT NULL AUTO_INCREMENT
 --
 
 LOCK TABLES `asistencias` WRITE;

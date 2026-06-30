@@ -430,35 +430,25 @@ class ReservasController {
         }
       }
 
+      // marian
+      // Siempre cancelar solamente ESTA reserva
+      await reservasRepository.cancelarReserva(id_reserva);
+
+      // Si era mensual, verificar si ahora puede entrar alguien
       if (reserva.tipo_reserva === 'mensual') {
-
-      // 1. cancelar todas
-        await reservasRepository.cancelarReservasMensualesTodas(reservasACancelar);
-
-      // 2. liberar cupo (si aplica lógica de instancia)
-        if (reserva.id_instancia) {
-        await reservasRepository.contarReservasDeInstancia(reserva.id_instancia);
-        }
-
-      // 3. recién ahí lista de espera
-        await listaEsperaMensualService.procesarVacanteMensual(
-          reserva.id_clase,
-          reserva.fecha_clase
-        );
-      } else {
-        // INDIVIDUAL: cancelar en DB y liberar cupo
-        await reservasRepository.cancelarReserva(id_reserva);
+      await listaEsperaMensualService.procesarVacanteMensual(
+      reserva.id_clase,
+      reserva.fecha_clase
+      );
       }
-
+      //fin marian
       // 6. Procesar créditos y devoluciones
       let creditosAcreditados = 0;
 
       if (reserva.tipo_reserva === 'mensual' && acreditarCredito) {
         // Acreditar 1 crédito por CADA clase cancelada del mes
-        creditosAcreditados = reservasACancelar.length;
-        for (let i = 0; i < creditosAcreditados; i++) {
+          creditosAcreditados = 1;
           await reservasRepository.agregarCredito(id_usuario, 1);
-        }
       } else if (reserva.tipo_reserva === 'individual') {
         if (reserva.tipo_pago === 'credito' && acreditarCredito) {
           creditosAcreditados = 1;
@@ -516,7 +506,7 @@ class ReservasController {
         mensaje: mensaje,
         acreditoODevolucion: acreditarCredito || montoDevolucion > 0,
         creditosAcreditados: creditosAcreditados,
-        reservasCanceladas: reservasACancelar.length
+        reservasCanceladas: 1
       });
 
     } catch (error) {

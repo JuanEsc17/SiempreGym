@@ -1,5 +1,8 @@
 const reservasRepository = require('../../repositories/reservasRepository');
 const renovacionesRepository = require('../../repositories/renovacionesRepository');
+// marian
+const listaEsperaMensualService = require('./listaEsperaMensualService');
+//
 
 const cancelacionMensualidadService = {
 
@@ -18,6 +21,21 @@ const cancelacionMensualidadService = {
 
     // 2. Cancelar todas las reservas
     await reservasRepository.cancelarReservasPorIds(idsReservas);
+
+    // marian
+    if (reservasPendientes.length > 0) {
+
+  const referencia = reservasPendientes.find(r => r.fecha_clase);
+
+  if (referencia) {
+    await listaEsperaMensualService.procesarVacanteMensual(
+      id_clase,
+      referencia.fecha_clase
+    );
+  }
+
+}
+    //
 
     // 3. Generar 1 crédito por cada clase cancelada
     for (let i = 0; i < reservasPendientes.length; i++) {
