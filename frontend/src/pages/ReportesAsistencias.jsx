@@ -10,9 +10,6 @@ export default function ReportesAsistencias() {
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
-  const [mostrarDetalles, setMostrarDetalles] = useState(false);
-  const [detalles, setDetalles] = useState(null);
-  const [detallesCargando, setDetallesCargando] = useState(false);
 
   // Cargar lista de clases al montar el componente
   useEffect(() => {
@@ -75,8 +72,6 @@ export default function ReportesAsistencias() {
 
     setCargando(true);
     setReporte(null);
-    setDetalles(null);
-    setMostrarDetalles(false);
 
     try {
       const idClase = id_clase_seleccionada === 'todas' ? null : id_clase_seleccionada;
@@ -98,69 +93,10 @@ export default function ReportesAsistencias() {
     }
   };
 
-  const cargarDetalles = async (id_clase, nombreClase) => {
-    setDetallesCargando(true);
-
-    try {
-      let inicio = fechaInicio;
-      let fin = fechaFin;
-
-      if (fechaInicio.includes('/')) {
-        inicio = convertirFecha(fechaInicio);
-      }
-      if (fechaFin.includes('/')) {
-        fin = convertirFecha(fechaFin);
-      }
-
-      const resultado = await reportesService.obtenerDetalles(id_clase, inicio, fin);
-
-      if (resultado.ok) {
-        setDetalles({
-          nombreClase,
-          datos: resultado.data
-        });
-        setMostrarDetalles(true);
-      } else {
-        setError('Error al cargar los detalles');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Error al conectar con el servidor');
-    } finally {
-      setDetallesCargando(false);
-    }
-  };
-
   const formatearFechaDisplay = (fecha) => {
     if (!fecha) return '';
     const [year, month, day] = fecha.split('-');
     return `${day}/${month}/${year}`;
-  };
-
-  const obtenerEstadoColor = (estado) => {
-    switch (estado) {
-      case 'asistio':
-        return 'bg-green-100 text-green-800';
-      case 'reservada':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelada':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const obtenerEstadoTexto = (estado) => {
-    switch (estado) {
-      case 'asistio':
-        return 'Asistió';
-      case 'reservada':
-        return 'No asistió';
-      case 'cancelada':
-        return 'Cancelada';
-      default:
-        return estado;
-    }
   };
 
   return (
@@ -281,7 +217,6 @@ export default function ReportesAsistencias() {
                       <th className="px-6 py-3 text-center font-semibold">% Asistencias</th>
                       <th className="px-6 py-3 text-center font-semibold">Inasistencias</th>
                       <th className="px-6 py-3 text-center font-semibold">% Inasistencias</th>
-                      <th className="px-6 py-3 text-center font-semibold">Acción</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -316,15 +251,6 @@ export default function ReportesAsistencias() {
                             {clase.porcentajeInasistencias}%
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => cargarDetalles(clase.id_clase, clase.actividad)}
-                            disabled={detallesCargando}
-                            className="px-4 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm transition-colors disabled:opacity-50"
-                          >
-                            Detalles
-                          </button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -332,55 +258,6 @@ export default function ReportesAsistencias() {
               </div>
             </div>
 
-            {/* Modal de Detalles */}
-            {mostrarDetalles && detalles && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
-                  {/* Header del Modal */}
-                  <div className="sticky top-0 bg-gray-800 px-6 py-4 border-b border-gray-700 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-white">
-                      Detalles: {detalles.nombreClase}
-                    </h3>
-                    <button
-                      onClick={() => setMostrarDetalles(false)}
-                      className="text-gray-400 hover:text-white text-2xl"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {/* Contenido */}
-                  <div className="p-6">
-                    {detalles.datos.length === 0 ? (
-                      <p className="text-gray-400">No hay registros de asistencia para este período.</p>
-                    ) : (
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {detalles.datos.map((asistencia, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
-                          >
-                            <div className="flex-1">
-                              <p className="text-white font-medium">
-                                {asistencia.nombre} {asistencia.apellido}
-                              </p>
-                              <p className="text-gray-400 text-sm">
-                                {formatearFechaDisplay(asistencia.fecha_clase)}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${obtenerEstadoColor(asistencia.estado)}`}>
-                                {obtenerEstadoTexto(asistencia.estado)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 

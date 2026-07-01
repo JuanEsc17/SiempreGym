@@ -22,7 +22,7 @@ class ReportesAsistenciasService {
         SELECT 
           c.id_clase,
           c.actividad,
-          COUNT(r.id_reserva) as total_inscritos,
+          SUM(CASE WHEN r.estado != 'cancelada' THEN 1 ELSE 0 END) as total_inscritos,
           SUM(CASE WHEN a.id_asistencia IS NOT NULL AND a.presente = 1 THEN 1 ELSE 0 END) as asistencias,
           SUM(CASE WHEN r.estado = 'reservada' AND a.id_asistencia IS NULL THEN 1 ELSE 0 END) as inasistencias,
           SUM(CASE WHEN r.estado = 'cancelada' THEN 1 ELSE 0 END) as canceladas
@@ -59,7 +59,6 @@ class ReportesAsistenciasService {
         const total = clase.total_inscritos;
         const asistencias = clase.asistencias || 0;
         
-        // Calcular inasistencias reales (reservadas - canceladas no cuentan como inasistencias)
         const inasistenciasReales = clase.inasistencias || 0;
         
         // Calcular porcentaje de inasistencias
