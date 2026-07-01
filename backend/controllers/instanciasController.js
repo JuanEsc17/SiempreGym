@@ -12,13 +12,13 @@ function formatDate(date) {
 }
 
 const InstanciasController = {
-  async obtenerSemana(req, res) {
+  async obtenerBimestre(req, res) {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const endDate = new Date(today);
-      endDate.setDate(today.getDate() + 7);
+      endDate.setMonth(endDate.getMonth() + 2);
 
       const [clases] = await db.promise().execute(
         `SELECT c.*,
@@ -30,6 +30,24 @@ const InstanciasController = {
          WHERE c.estado = 'activa'
          ORDER BY FIELD(c.dia, 'lunes','martes','miercoles','jueves','viernes','sabado','domingo'), c.horario`
       );
+
+      const todayStr = formatDate(today);
+      const endDateStr = formatDate(endDate);
+
+      const [allInstancias] = await db.promise().execute(
+        `SELECT ic.*,
+                (SELECT COUNT(*) FROM reservas r WHERE r.id_instancia = ic.id_instancia AND r.estado IN ('reservada', 'por_renovar')) AS inscriptos
+         FROM instancias_clases ic
+         WHERE DATE(ic.fecha_exacta) >= ? AND DATE(ic.fecha_exacta) < ?
+         ORDER BY ic.id_clase, ic.fecha_exacta`,
+        [todayStr, endDateStr]
+      );
+
+      const instanciaMap = new Map();
+      for (const inst of allInstancias) {
+        const datePart = formatDate(new Date(inst.fecha_exacta));
+        instanciaMap.set(`${inst.id_clase}|${datePart}`, inst);
+      }
 
       const instancias = [];
 
@@ -44,57 +62,66 @@ const InstanciasController = {
         const classDate = new Date(today);
         classDate.setDate(today.getDate() + daysUntil);
 
-        const [h, m] = clase.horario.split(':');
-        const classDateTime = new Date(classDate);
-        classDateTime.setHours(parseInt(h), parseInt(m), 0, 0);
-        if (classDateTime <= new Date()) continue;
+        if (daysUntil === 0) {
+          const [h, m] = clase.horario.split(':');
+          const classDateTime = new Date(classDate);
+          classDateTime.setHours(parseInt(h), parseInt(m), 0, 0);
+          if (classDateTime <= new Date()) {
+            classDate.setDate(classDate.getDate() + 7);
+          }
+        }
 
-        if (classDate >= endDate) continue;
+        while (classDate < endDate) {
+          const fechaStr = formatDate(classDate);
 
-        const fechaStr = formatDate(classDate);
+          const [h, m] = clase.horario.split(':');
+          const classDateTime = new Date(classDate);
+          classDateTime.setHours(parseInt(h), parseInt(m), 0, 0);
+          if (classDateTime <= new Date()) {
+            classDate.setDate(classDate.getDate() + 7);
+            continue;
+          }
 
-        const [existing] = await db.promise().execute(
-          `SELECT ic.*,
-                  (SELECT COUNT(*) FROM reservas r WHERE r.id_instancia = ic.id_instancia AND r.estado IN ('reservada', 'por_renovar')) AS inscriptos
-           FROM instancias_clases ic
-           WHERE ic.id_clase = ? AND DATE(ic.fecha_exacta) = ?`,
-          [clase.id_clase, fechaStr]
-        );
+          const mapKey = `${clase.id_clase}|${fechaStr}`;
+          const existing = instanciaMap.get(mapKey);
 
-        if (existing.length > 0) {
-          instancias.push({
-            id_instancia: existing[0].id_instancia,
-            id_clase: clase.id_clase,
-            actividad: clase.actividad,
-            dia: clase.dia,
-            horario: clase.horario,
-            duracion: clase.duracion,
-            fecha: fechaStr,
-            fecha_exacta: existing[0].fecha_exacta,
-            cancelada: existing[0].cancelada === 1 || existing[0].cancelada === true,
-            cupo_maximo: clase.cupo_maximo,
-            profesor: clase.nombre_profesor,
-            sala: clase.nombre_sala,
-            imagen: clase.imagen,
-            inscriptos: existing[0].inscriptos
-          });
-        } else {
-          instancias.push({
-            id_instancia: null,
-            id_clase: clase.id_clase,
-            actividad: clase.actividad,
-            dia: clase.dia,
-            horario: clase.horario,
-            duracion: clase.duracion,
-            fecha: fechaStr,
-            fecha_exacta: null,
-            cancelada: false,
-            cupo_maximo: clase.cupo_maximo,
-            profesor: clase.nombre_profesor,
-            sala: clase.nombre_sala,
-            imagen: clase.imagen,
-            inscriptos: 0
-          });
+          if (existing) {
+            instancias.push({
+              id_instancia: existing.id_instancia,
+              id_clase: clase.id_clase,
+              actividad: clase.actividad,
+              dia: clase.dia,
+              horario: clase.horario,
+              duracion: clase.duracion,
+              fecha: fechaStr,
+              fecha_exacta: existing.fecha_exacta,
+              cancelada: existing.cancelada === 1 || existing.cancelada === true,
+              cupo_maximo: clase.cupo_maximo,
+              profesor: clase.nombre_profesor,
+              sala: clase.nombre_sala,
+              imagen: clase.imagen,
+              inscriptos: existing.inscriptos
+            });
+          } else {
+            instancias.push({
+              id_instancia: null,
+              id_clase: clase.id_clase,
+              actividad: clase.actividad,
+              dia: clase.dia,
+              horario: clase.horario,
+              duracion: clase.duracion,
+              fecha: fechaStr,
+              fecha_exacta: null,
+              cancelada: false,
+              cupo_maximo: clase.cupo_maximo,
+              profesor: clase.nombre_profesor,
+              sala: clase.nombre_sala,
+              imagen: clase.imagen,
+              inscriptos: 0
+            });
+          }
+
+          classDate.setDate(classDate.getDate() + 7);
         }
       }
 
@@ -102,7 +129,7 @@ const InstanciasController = {
 
       res.json({ ok: true, data: instancias });
     } catch (error) {
-      console.error('Error obtenerSemana:', error);
+      console.error('Error obtenerBimestre:', error);
       res.status(500).json({ ok: false, mensaje: error.message });
     }
   },

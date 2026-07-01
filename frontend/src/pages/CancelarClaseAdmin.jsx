@@ -32,7 +32,7 @@ export default function CancelarClaseAdmin() {
   async function cargarInstancias() {
     try {
       setLoading(true)
-      const res = await axios.get(`${BASE_URL}/instancias/semana`)
+      const res = await axios.get(`${BASE_URL}/instancias/bimestre`)
       if (res.data.ok) setInstancias(res.data.data)
     } catch {
       setInstancias([])
@@ -109,13 +109,13 @@ export default function CancelarClaseAdmin() {
 
         {loading && (
           <p className="text-center py-10" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Cargando clases de la semana...
+            Cargando clases de los próximos 2 meses...
           </p>
         )}
 
         {!loading && instancias.length === 0 && (
           <p className="text-center py-10" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            No hay clases disponibles para esta semana
+            No hay clases disponibles en los próximos 2 meses
           </p>
         )}
 
