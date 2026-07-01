@@ -430,6 +430,7 @@ export default function MisReservas() {
 
                   {/* Estado - lado derecho */}
                   <div style={{ padding:'16px 20px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:4, textAlign:'right' }}>
+                    {vista !== 'historial' && (
                     <div style={{ 
                       display:'inline-flex', 
                       alignItems:'center', 
@@ -444,6 +445,7 @@ export default function MisReservas() {
                     }}>
                       {estado.icon} {estado.label}
                     </div>
+                    )}
                     {vista === 'historial' && (
                       <p style={{ 
                         color:'rgba(255,255,255,0.35)', 
@@ -576,7 +578,7 @@ export default function MisReservas() {
                         🗑️ Cancelar
                       </button>
                     )}
-                    {esPrimeraMensual && (
+                    {esPrimeraMensual && vista !== 'historial' && (
                       <button
                         onClick={() => cancelarMensualidad(r.id_clase)}
                         style={{
