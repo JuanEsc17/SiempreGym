@@ -44,6 +44,11 @@ const InstanciasController = {
         const classDate = new Date(today);
         classDate.setDate(today.getDate() + daysUntil);
 
+        const [h, m] = clase.horario.split(':');
+        const classDateTime = new Date(classDate);
+        classDateTime.setHours(parseInt(h), parseInt(m), 0, 0);
+        if (classDateTime <= new Date()) continue;
+
         if (classDate >= endDate) continue;
 
         const fechaStr = formatDate(classDate);
@@ -119,6 +124,13 @@ const InstanciasController = {
       }
       const clase = clases[0];
 
+      const [anio, mes, dia] = fecha.split('-').map(Number);
+      const [hora, minuto] = clase.horario.split(':').map(Number);
+      const fechaClaseDate = new Date(anio, mes - 1, dia, hora, minuto);
+      if (fechaClaseDate <= new Date()) {
+        return res.status(400).json({ ok: false, mensaje: 'No se puede cancelar una clase que ya ha ocurrido' });
+      }
+
       const fechaExactaStr = `${fecha} ${clase.horario}`;
 
       let instancia = await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
@@ -142,6 +154,11 @@ const InstanciasController = {
          JOIN usuarios u ON r.id_usuario = u.id_usuario
          WHERE r.id_instancia = ? AND r.estado = 'reservada'`,
         [instancia.id_instancia]
+      );
+
+      await db.promise().execute(
+        'UPDATE reservas SET estado = ? WHERE id_instancia = ? AND estado = ?',
+        ['cancelada', instancia.id_instancia, 'reservada']
       );
 
       if (reservas.length > 0) {

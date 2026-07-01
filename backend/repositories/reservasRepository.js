@@ -134,7 +134,11 @@ const reservasRepository = {
     const [rows] = await db.promise().execute(
       `SELECT COUNT(*) as total FROM reservas 
        WHERE id_usuario = ? AND estado = 'cancelada' 
-       AND fecha_reserva >= ? AND fecha_reserva <= ?`,
+       AND fecha_reserva >= ? AND fecha_reserva <= ?
+       AND NOT EXISTS (
+         SELECT 1 FROM instancias_clases ic 
+         WHERE ic.id_instancia = reservas.id_instancia AND ic.cancelada = 1
+       )`,
       [id_usuario, inicioMes, finMes]
     );
     return rows[0].total || 0;
