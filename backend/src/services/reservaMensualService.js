@@ -6,20 +6,23 @@ const { sendPagoConfirmado } = require('./emailService');
 // ─── Helper: fechas del mes para un día de semana dado ───────────
 // Recibe el nombre del día ('lunes', 'martes'...), el mes (1-12) y el año.
 // Devuelve un array de strings 'YYYY-MM-DD' con solo las fechas futuras del mes.
-function calcularFechasDelMes(diaEnum, mes, anio) {
-  const DIAS_MAP = { lunes:1, martes:2, miercoles:3, jueves:4, viernes:5, sabado:6 , domingo:0};
+function calcularFechasDelMes(diaEnum, mes, anio, fecha_inicio = null) {
+  const DIAS_MAP = { lunes:1, martes:2, miercoles:3, jueves:4, viernes:5, sabado:6, domingo:0 };
   const diaN = DIAS_MAP[diaEnum.toLowerCase()];
   if (diaN === undefined) throw new Error(`Día de clase inválido: ${diaEnum}`);
 
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  const fechas = [];
 
+  const desde = fecha_inicio
+    ? (() => { const d = new Date(`${fecha_inicio}T00:00:00`); d.setHours(0,0,0,0); return d > hoy ? d : hoy; })()
+    : hoy;
+
+  const fechas = [];
   const d = new Date(anio, mes - 1, 1);
-  // Avanzar hasta la primera ocurrencia del día buscado
   while (d.getDay() !== diaN) d.setDate(d.getDate() + 1);
 
   while (d.getMonth() === mes - 1) {
-    if (d >= hoy) fechas.push(d.toISOString().split('T')[0]);
+    if (d >= desde) fechas.push(d.toISOString().split('T')[0]);
     d.setDate(d.getDate() + 7);
   }
   return fechas;
@@ -30,8 +33,9 @@ const reservaMensualService = {
   // ─── PASO A: Verificar disponibilidad y calcular precio ──────
   // FIX: recibe mes + anio (no fechasArray) y los calcula internamente.
   // El controller solo pasa id_usuario, id_clase, mes, anio desde el body del request.
-  verificarYPresupuestarMensual: async (id_usuario, id_clase, mes, anio, esPresencial = false) => {
+  verificarYPresupuestarMensual: async (id_usuario, id_clase, mes, anio, esPresencial = false, fecha_inicio = null) => {
     const clasesRepo = new ClasesRepository(db);
+    
 
     const clase = await clasesRepo.obtenerClasePorId(id_clase);
     if (!clase) throw new Error('La clase seleccionada no existe.');
@@ -43,7 +47,7 @@ const reservaMensualService = {
     if (userRows.length === 0) throw new Error('El usuario especificado no existe.');
 
     // Calcular las fechas restantes del mes para esta clase
-    const fechasArray = calcularFechasDelMes(clase.dia, mes, anio);
+    const fechasArray = calcularFechasDelMes(clase.dia, mes, anio, fecha_inicio);
     if (fechasArray.length === 0) {
       throw new Error('No quedan clases disponibles para este mes.');
     }
@@ -69,29 +73,35 @@ if (superposiciones.length > 0) {
   throw new Error(`Ya contás con una reserva en ese horario: 
     \n${detalle}`);
 }
-
+const yaEnEspera = await reservasRepository.verificarYaEnListaEspera(id_usuario, id_clase, 'mensual');
+if (yaEnEspera) {
+  return {
+    status: 'YA_EN_LISTA_ESPERA',
+    mensaje: 'Ya estás en la lista de espera para esta clase.'
+  };
+}
     // Verificar cupo en CADA semana — si alguna está llena, ofrecer lista de espera
-    for (const fecha_clase_str of fechasArray) {
-      const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
-      let instancia = await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
-      if (!instancia) {
-        const nuevoId = await reservasRepository.crearInstanciaClase(id_clase, fechaExactaStr);
-        instancia = { id_instancia: nuevoId, cancelada: 0 };
-      }
-      if (instancia.cancelada) {
-        return {
-          status: 'SIN_CUPO_DISPONIBLE',
-          mensaje: 'Una de las clases del mes ha sido cancelada y no está disponible.'
-        };
-      }
-      const inscriptos = await reservasRepository.contarReservasDeInstancia(instancia.id_instancia);
-      if (inscriptos >= clase.cupo_maximo) {
-        return {
-          status: 'SIN_CUPO_DISPONIBLE',
-          mensaje: 'No hay cupos para todo el mes. ¿Querés anotarte en la lista de espera mensual?'
-        };
-      }
-    }
+    const fechasSinCupo = [];
+
+for (const fecha_clase_str of fechasArray) {
+  const fechaExactaStr = `${fecha_clase_str} ${clase.horario}`;
+  let instancia = await reservasRepository.obtenerInstanciaPorFecha(id_clase, fechaExactaStr);
+  if (!instancia) {
+    const nuevoId = await reservasRepository.crearInstanciaClase(id_clase, fechaExactaStr);
+    instancia = { id_instancia: nuevoId, cancelada: 0 };
+  }
+  if (instancia.cancelada) { fechasSinCupo.push(fecha_clase_str); continue; }
+  const inscriptos = await reservasRepository.contarReservasDeInstancia(instancia.id_instancia);
+  if (inscriptos >= clase.cupo_maximo) fechasSinCupo.push(fecha_clase_str);
+}
+
+if (fechasSinCupo.length > 0) {
+  return {
+    status: 'SIN_CUPO_DISPONIBLE',
+    fechas_sin_cupo: fechasSinCupo,
+    mensaje: 'No hay cupos para todo el mes.'
+  };
+}
 
     // Precio proporcional: precio por clase × clases restantes del mes
     const monto = parseFloat(clase.precio_individual) * fechasArray.length;

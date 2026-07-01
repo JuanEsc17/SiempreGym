@@ -21,7 +21,8 @@ class ReservasController {
   async verificarReservaMensual(req, res) {
     try {
       // FIX: ahora lee mes + anio del body (lo que manda el frontend)
-      const { id_clase, id_usuario, mes, anio, esPresencial } = req.body;
+      const { id_clase, id_usuario, mes, anio, esPresencial, fecha_inicio } = req.body;
+
 
       if (!id_clase || !id_usuario || !mes || !anio) {
         return res.status(400).json({
@@ -57,13 +58,22 @@ class ReservasController {
 
       // FIX: llamada correcta al service — pasa mes y anio (no clasesRepo)
       const resultado = await serviceMensual.verificarYPresupuestarMensual(
-        id_usuario, id_clase, parseInt(mes), parseInt(anio), esPresencial
+      id_usuario, id_clase, parseInt(mes), parseInt(anio), esPresencial, fecha_inicio
       );
+
+      if (resultado.status === 'YA_EN_LISTA_ESPERA') {
+        return res.status(200).json({
+          ok: true,
+          status: 'YA_EN_LISTA_ESPERA',
+          mensaje: resultado.mensaje
+        });
+      }
 
       if (resultado.status === 'SIN_CUPO_DISPONIBLE') {
         return res.status(200).json({
           ok: true,
           status: 'OFRECER_LISTA_ESPERA_MENSUAL',
+          fechas_sin_cupo: resultado.fechas_sin_cupo || [],
           mensaje: resultado.mensaje
         });
       }

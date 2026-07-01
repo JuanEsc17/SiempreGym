@@ -235,6 +235,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
   const [puedeUsarSena, setPuedeUsarSena]   = useState(true);
   const [creditosUsuario, setCreditosUsuario] = useState(0);
   const [tieneRenovacion, setTieneRenovacion] = useState(false);
+  const [fechasSinCupo, setFechasSinCupo] = useState([]);
 
   const PRECIO_BASE    = clase.precio || 2500;
   const CREDITOS_USER  = 2; // TODO: traer del contexto de autenticación
@@ -290,7 +291,7 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
     const id_usuario = getUsuarioId();
     const body = modo === 'INDIVIDUAL'
       ? { id_usuario, id_clase: clase.id_clase, fecha_clase: fechaISO(fechaSeleccionada) }
-      : { id_usuario, id_clase: clase.id_clase, mes: fechaSeleccionada.getMonth() + 1, anio: fechaSeleccionada.getFullYear() };
+      : { id_usuario, id_clase: clase.id_clase, mes: fechaSeleccionada.getMonth() + 1, anio: fechaSeleccionada.getFullYear(), fecha_inicio: fechaISO(fechaSeleccionada) };
 
     const data = await apiFetch(`${BASE_URL}/reservas/verificar-${modo.toLowerCase()}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
@@ -321,16 +322,19 @@ function ModalDetalle({ clase, fechaSeleccionada, onCerrar, onReservaExitosa, on
     } else if (data.status === 'CLASE_LLENA') {
       setPaso('sin_cupo');
 
+    } else if (data.status === 'YA_EN_LISTA_ESPERA') {   // ← AGREGÁS ACÁ
+      setPaso('ya_en_espera'); 
     } else if (
       data.status === 'SIN_CUPO_DISPONIBLE' ||  // ← FIX: mensual sin cupo
       data.status?.includes('LISTA_ESPERA')      // por compatibilidad futura
-    ) {
-      setPaso('lista_espera_mensual');
+      ) {
+      setFechasSinCupo(data.fechas_sin_cupo || []);
+      setPaso('lista_espera_mensual'); 
 
-    } else {
-      setErrorMsg(data.mensaje || 'No se puede procesar la solicitud');
-      setPaso('error');
-    }
+} else {
+  setErrorMsg(data.mensaje || 'No se puede procesar la solicitud');
+  setPaso('error');
+}
 
   } catch {
     setErrorMsg('Error al conectar con el servidor');
@@ -601,8 +605,41 @@ if (paso === 'lista_espera_mensual') {
       <h3 className="text-white font-bold m-0 mb-2" style={{fontSize:'16px'}}>
         No hay cupos para todo el mes
       </h3>
-      <p style={{color:'rgba(255,255,255,0.55)', fontSize:'13px', lineHeight:'1.6', marginBottom:'16px'}}>
-        Algunas clases del período no tienen cupos. Te notificamos si se libera disponibilidad completa.
+
+      {/* Fechas sin cupo */}
+      <div className="flex flex-wrap gap-2 justify-center my-3">
+        {fechasSinCupo.map(f => (
+          <span key={f} style={{
+            background:'rgba(239,68,68,0.1)',
+            border:'1px solid rgba(239,68,68,0.25)',
+            color:'rgba(255,255,255,0.5)',
+            fontSize:'11px',
+            padding:'3px 10px',
+            borderRadius:'8px'
+          }}>
+            {new Date(`${f}T00:00:00`).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' })}
+          </span>
+        ))}
+      </div>
+
+      <p style={{color:'rgba(255,255,255,0.4)', fontSize:'12px', marginTop:'8px'}}>
+        Te avisamos si se libera un lugar.
+      </p>
+    </div>
+  );
+}
+if (paso === 'ya_en_espera') {
+  return (
+    <div className="text-center">
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+           style={{background:'rgba(245,158,11,0.15)'}}>
+        <span style={{fontSize:'36px'}}>⏳</span>
+      </div>
+      <h3 className="text-white font-bold m-0 mb-2" style={{fontSize:'16px'}}>
+        Ya estás en lista de espera
+      </h3>
+      <p style={{color:'rgba(255,255,255,0.55)', fontSize:'13px', lineHeight:'1.6'}}>
+        Cuando se libere un lugar en <strong style={{color:'white'}}>{clase.actividad}</strong> te vamos a notificar.
       </p>
     </div>
   );
