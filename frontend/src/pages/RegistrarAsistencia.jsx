@@ -339,7 +339,7 @@ export default function RegistrarAsistencia() {
             }}
           />
 
-          {usuarios.length > 0 && (
+                    {usuarios.length > 0 && (
 
             <div
               className="mt-3 space-y-2 max-h-40 overflow-y-auto"
@@ -372,6 +372,20 @@ export default function RegistrarAsistencia() {
 
             </div>
 
+          )}
+
+          {busqueda.length >= 4 && usuarios.length === 0 && (
+            <div
+              className="mt-3 p-3 rounded-lg text-center"
+              style={{
+                background:'rgba(239,68,68,0.15)',
+                border:'1px solid rgba(239,68,68,0.3)'
+              }}
+            >
+              <p className="text-red-300 text-sm m-0">
+                Usuario no encontrado en el sistema
+              </p>
+            </div>
           )}
 
         </div>

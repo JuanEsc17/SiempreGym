@@ -6,6 +6,9 @@ const BASE_URL = 'http://localhost:3000/api';
 const NOMBRES_DIAS = ['DOM','LUN','MAR','MIE','JUE','VIE','SAB'];
 const MESES_CORTO  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
+// Plazo máximo (en días) hacia adelante permitido para reservar una clase individual
+const DIAS_PLAZO_INDIVIDUAL = 7;
+
 const fechaISO = (d) => {
   const año = d.getFullYear();
   const mes = String(d.getMonth() + 1).padStart(2, '0');
@@ -16,6 +19,21 @@ const fechaISO = (d) => {
 const formatCorta = (iso) => { 
   const [,m,d] = iso.split('-'); 
   return `${+d} ${MESES_CORTO[+m-1]}`; 
+};
+
+// Devuelve true si la fecha seleccionada está fuera del plazo permitido
+// (más de DIAS_PLAZO_INDIVIDUAL días posteriores a hoy) para reservas individuales.
+const estaFueraDePlazoIndividual = (fecha) => {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const límite = new Date(hoy);
+  límite.setDate(hoy.getDate() + DIAS_PLAZO_INDIVIDUAL);
+
+  const fechaComparar = new Date(fecha);
+  fechaComparar.setHours(0, 0, 0, 0);
+
+  return fechaComparar > límite;
 };
 
 // ─── Toast ────────────────────────────────────────────────────
@@ -87,14 +105,7 @@ function ClaseCard({ clase, onSeleccionar }) {
     <div
       onClick={onSeleccionar}
       className={`group rounded-2xl overflow-hidden flex h-36 transition-all duration-300 shadow-xl cursor-pointer hover:scale-[1.02]`}
-      style={{ background:'#252535', borderLeft:`5px solid ${estaLlena ? '#f59e0b' : '#8A0BD2'}` }}>
-
-      {estaLlena && (
-        <div className="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
-             style={{background:'#f59e0b', color:'#451a00'}}>
-          ⏳ Lista de espera
-        </div>
-      )}
+      style={{ background:'#252535', borderLeft:`5px solid ${estaLlena ? '#ef4444' : '#8A0BD2'}` }}>
 
       <div className="flex flex-col justify-center px-4 min-w-[96px] flex-shrink-0 bg-black/20">
         <span className="text-[9px] uppercase tracking-widest text-white/40">{clase.dia}</span>
@@ -113,7 +124,7 @@ function ClaseCard({ clase, onSeleccionar }) {
           <div className="flex items-end justify-between">
             <div className="w-2/3">
               {estaLlena ? (
-                <p className="text-[10px] mb-1 text-amber-400 font-medium">Sin cupos disponibles</p>
+                <p className="text-[10px] mb-1 text-red-500 font-medium">Sin cupos disponibles</p>
               ) : (
                 <>
                   <p className="text-[10px] mb-1 font-medium" style={{color:pct<=20?'#f87171':'#4ade80'}}>
@@ -126,8 +137,8 @@ function ClaseCard({ clase, onSeleccionar }) {
               )}
             </div>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg transition-all group-hover:scale-110`}
-                 style={{background: estaLlena?'#f59e0b':'#8A0BD2', fontSize:'20px', lineHeight:'1'}}>
-              {estaLlena ? '⏳' : '+'}
+                 style={{background: estaLlena?'#ef4444':'#8A0BD2', fontSize:'20px', lineHeight:'1'}}>
+              {estaLlena ? '✕' : '+'}
             </div>
           </div>
         </div>
@@ -296,6 +307,17 @@ export default function ReservaPresencial() {
   const handleReservar = async () => {
     if (!usuarioSeleccionado || !claseParaReservar) {
       setToast({ mensaje: 'Error: faltan datos', tipo: 'error' })
+      return;
+    }
+
+    // Validación extra de plazo por si el estado quedó desactualizado
+    // (defensa en profundidad; la validación principal ocurre al seleccionar la clase)
+    if (tipoReserva === 'INDIVIDUAL' && estaFueraDePlazoIndividual(fechaSeleccionada)) {
+      setToast({
+        mensaje: `No es posible reservar una clase fuera del plazo permitido de ${DIAS_PLAZO_INDIVIDUAL} días posteriores a la fecha actual.`,
+        tipo: 'error'
+      });
+      setClaseParaReservar(null);
       return;
     }
 
@@ -516,6 +538,17 @@ export default function ReservaPresencial() {
         onSeleccionar={async () => {
           if (!usuarioSeleccionado) {
             setToast({ mensaje: 'Por favor selecciona un cliente primero', tipo: 'error' });
+            return;
+          }
+
+          // Escenario 5: validar plazo permitido para reservas individuales
+          // (no se puede reservar una clase individual con más de
+          // DIAS_PLAZO_INDIVIDUAL días de anticipación)
+          if (tipoReserva === "INDIVIDUAL" && estaFueraDePlazoIndividual(fechaSeleccionada)) {
+            setToast({
+              mensaje: `No es posible reservar una clase fuera del plazo permitido de ${DIAS_PLAZO_INDIVIDUAL} días posteriores a la fecha actual.`,
+              tipo: 'error'
+            });
             return;
           }
 

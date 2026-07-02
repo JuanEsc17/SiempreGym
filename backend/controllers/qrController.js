@@ -93,6 +93,33 @@ const QRController = {
       const reservasHoy = await asistenciasRepo.obtenerReservasHoyPorUsuario(userId);
 
       if (!reservasHoy || reservasHoy.length === 0) {
+        // Verificar si ya asistió hoy
+        const [asistenciasHoy] = await db.promise().execute(
+          `SELECT a.*, c.actividad
+           FROM asistencias a
+           JOIN reservas r ON a.id_reserva = r.id_reserva
+           JOIN clases c ON r.id_clase = c.id_clase
+           WHERE a.usuario_id = ? AND DATE(a.fecha_registro) = CURDATE()`,
+          [userId]
+        );
+
+        if (asistenciasHoy && asistenciasHoy.length > 0) {
+          // Ya asistió hoy
+          const actividades = asistenciasHoy.map(a => a.actividad).join(', ');
+          return res.json({
+            ok: true,
+            valido: false,
+            usuario: usuario.nombre,
+            resultados: [{
+              clase: actividades,
+              valido: false,
+              razon: `Ya asistió a: ${actividades}`
+            }],
+            mensaje: `Ya asistió a: ${actividades}`
+          });
+        }
+
+        // No hay reservas ni asistencias
         return res.status(400).json({
           ok: false,
           mensaje: 'No hay reservas disponibles para registrar asistencia en este momento.'
