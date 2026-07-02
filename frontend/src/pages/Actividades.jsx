@@ -977,7 +977,7 @@ export default function Actividades() {
       <span style={{fontSize:'20px'}}>⚡</span>
     </div>
     <div>
-      <p className="text-white font-bold text-sm m-0">Renovarr</p>
+      <p className="text-white font-bold text-sm m-0">Renovar</p>
       <span style={{background:'rgba(20,184,166,0.2)', color:'#2dd4bf', fontSize:'10px',
         fontWeight:'bold', padding:'2px 8px', borderRadius:999, textTransform:'uppercase',
         letterSpacing:'0.06em', display:'inline-block', marginTop:2}}>Mensual</span>

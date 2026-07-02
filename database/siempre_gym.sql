@@ -57,6 +57,7 @@ CREATE TABLE `instancias_clases` (
   `id_instancia` int NOT NULL AUTO_INCREMENT,
   `id_clase` int NOT NULL,
   `fecha_exacta` datetime NOT NULL, -- Ej: 2026-05-25 16:00:00 
+  `cancelada` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id_instancia`),
   KEY `id_clase` (`id_clase`),
   CONSTRAINT `instancias_clases_ibfk_1` FOREIGN KEY (`id_clase`) REFERENCES `clases` (`id_clase`) ON DELETE CASCADE

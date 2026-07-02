@@ -24,6 +24,8 @@ export default function CancelarClaseAdmin() {
   const [loading, setLoading] = useState(true)
   const [cancelando, setCancelando] = useState(null)
   const [toastMsg, setToastMsg] = useState('')
+  const [actividadFiltro, setActividadFiltro] = useState("")
+  const [fechaFiltro, setFechaFiltro] = useState("")
 
   useEffect(() => {
     cargarInstancias()
@@ -74,8 +76,23 @@ export default function CancelarClaseAdmin() {
     return () => clearTimeout(t)
   }, [toastMsg])
 
+  //marian
+  const instanciasFiltradas = instancias.filter(inst => {
+
+  const coincideActividad =
+    actividadFiltro === "" ||
+    inst.actividad === actividadFiltro
+
+  const coincideFecha =
+    fechaFiltro === "" ||
+    inst.fecha === fechaFiltro
+
+  return coincideActividad && coincideFecha
+})
+//
+
   const groupedByDay = {}
-  instancias.forEach(inst => {
+  instanciasFiltradas.forEach(inst => {
     if (!groupedByDay[inst.fecha]) {
       groupedByDay[inst.fecha] = []
     }
@@ -107,15 +124,50 @@ export default function CancelarClaseAdmin() {
           </button>
         </div>
 
+      
+        {/* FILTROS */}
+<div className="flex gap-4 mb-6 flex-wrap">
+
+  <select
+    value={actividadFiltro}
+    onChange={(e) => setActividadFiltro(e.target.value)}
+    className="px-4 py-2 rounded-lg"
+    style={{
+      background: "#2d2d3a",
+      color: "white",
+      border: "1px solid rgba(255,255,255,0.1)"
+    }}
+  >
+    <option value="">Todas las actividades</option>
+    <option value="yoga">Yoga</option>
+    <option value="pilates">Pilates</option>
+    <option value="funcional">Funcional</option>
+  </select>
+
+  <input
+    type="date"
+    value={fechaFiltro}
+    onChange={(e) => setFechaFiltro(e.target.value)}
+    className="px-4 py-2 rounded-lg"
+    style={{
+      background: "#2d2d3a",
+      color: "white",
+      border: "1px solid rgba(255,255,255,0.1)"
+    }}
+  />
+
+</div>
+        
+
         {loading && (
           <p className="text-center py-10" style={{ color: 'rgba(255,255,255,0.6)' }}>
             Cargando clases de los próximos 2 meses...
           </p>
         )}
 
-        {!loading && instancias.length === 0 && (
+        {!loading && instanciasFiltradas.length === 0 && (
           <p className="text-center py-10" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            No hay clases disponibles en los próximos 2 meses
+            No se encontraron clases con los filtros seleccionados.
           </p>
         )}
 
