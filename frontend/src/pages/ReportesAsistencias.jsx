@@ -28,6 +28,17 @@ export default function ReportesAsistencias() {
     }
   };
 
+  // Obtener actividades únicas de las clases cargadas
+  const obtenerActividadesUnicas = () => {
+    const actividadesMap = new Map();
+    clases.forEach((clase) => {
+      if (!actividadesMap.has(clase.actividad)) {
+        actividadesMap.set(clase.actividad, clase.id_clase);
+      }
+    });
+    return Array.from(actividadesMap.entries());
+  };
+
   // Formatear fecha para el input
   const formatearFechaParaInput = (date) => {
     if (!date) return '';
@@ -153,9 +164,9 @@ export default function ReportesAsistencias() {
                 className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
               >
                 <option value="todas">Todas las clases</option>
-                {clases.map((clase) => (
-                  <option key={clase.id_clase} value={clase.id_clase}>
-                    {clase.actividad}
+                {obtenerActividadesUnicas().map(([actividad, id_clase]) => (
+                  <option key={actividad} value={id_clase}>
+                    {actividad}
                   </option>
                 ))}
               </select>
