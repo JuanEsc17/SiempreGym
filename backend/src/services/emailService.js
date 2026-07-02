@@ -460,6 +460,54 @@ const sendClaseCancelada = async (email, nombre, actividad, fechaClase) => {
   }
 }
 
+const sendListaEsperaAsignada = async (email, nombre, actividad, horario, fechas) => {
+  try {
+    const fechasHtml = fechas
+      .map(f => `<li style="color:#666; margin:4px 0;">${f}</li>`)
+      .join('');
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: '¡Conseguiste un lugar! - SiempreGym',
+      html: `
+        <div style="font-family: Arial, sans-serif; background:#f5f5f5; padding:20px;">
+          <div style="max-width:500px; margin:auto; background:white; padding:30px; border-radius:10px;">
+            <h2 style="color:#5B0672; text-align:center;">SiempreGym</h2>
+            <h3 style="color:#14b8a6; text-align:center;">¡Tenés un lugar disponible!</h3>
+            <p>Hola <b>${nombre}</b>,</p>
+            <p>Se liberó un cupo en tu clase de lista de espera y te asignamos las siguientes reservas:</p>
+            <div style="background:#f3f3f3; padding:15px; border-radius:8px; margin-top:20px;">
+              <p><b>Actividad:</b> ${actividad}</p>
+              <p><b>Horario:</b> ${horario}</p>
+              <p><b>Clases asignadas:</b></p>
+              <ul style="margin:8px 0; padding-left:20px;">
+                ${fechasHtml}
+              </ul>
+            </div>
+            <div style="background:#E2CEF6; padding:15px; border-radius:8px; margin-top:20px; text-align:center;">
+              <p style="color:#5B0672; font-weight:bold; margin:0;">
+                ⏳ Tenés tiempo limitado para completar el pago
+              </p>
+            </div>
+            <p style="margin-top:15px; color:#666;">
+              Ingresá a tu cuenta en SiempreGym, andá a <b>Mis Reservas</b> y completá el pago para confirmar tu lugar.
+            </p>
+            <p style="margin-top:25px;">Gracias por elegir SiempreGym. 💪</p>
+          </div>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Mail lista espera asignada enviado:', info.response);
+    return true;
+  } catch (error) {
+    console.error('Error enviando mail lista espera:', error);
+    return false;
+  }
+};
+
 module.exports = {
   sendVerificationCode,
   sendPagoConfirmado,
@@ -469,5 +517,6 @@ module.exports = {
   sendPasswordChanged,
   sendNotificacionPagoProximoAVencer,
   sendDevolucionSena,
-  sendClaseCancelada
+  sendClaseCancelada,
+  sendListaEsperaAsignada  
 }

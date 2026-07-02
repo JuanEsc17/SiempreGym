@@ -1,6 +1,7 @@
 const ListaEsperaRepository = require("../../repositories/listaEsperaRepository")
 const reservasRepository = require("../../repositories/reservasRepository");
 const ClasesRepository = require("../../repositories/clasesRepository");
+const { sendListaEsperaAsignada } = require('./emailService');
 const db = require("../../src/db");
 
 const repo = new ListaEsperaRepository(db);
@@ -149,11 +150,31 @@ const listaEsperaMensualService = {
 
   await repo.eliminar(candidato.id_lista);
 
-  return {
-    status: "OK",
-    usuario: candidato.id_usuario,
-    grupo_mensual_id: grupoId
-  };
+  try {
+  const [userRows] = await db.promise().execute(
+    'SELECT nombre, apellido, email FROM usuarios WHERE id_usuario = ?',
+    [candidato.id_usuario]
+  );
+  const usuario = userRows[0];
+  if (usuario) {
+    await sendListaEsperaAsignada(
+      usuario.email,
+      `${usuario.nombre} ${usuario.apellido}`,
+      clase.actividad,
+      clase.horario.slice(0, 5) + ' hs',
+      fechasArray  // ['2026-07-13', '2026-07-20', ...]
+    );
+  }
+} catch (emailErr) {
+  // No frenamos el flujo si falla el email
+  console.error('[LISTA ESPERA] Error enviando email:', emailErr.message);
+}
+
+return {
+  status: "OK",
+  usuario: candidato.id_usuario,
+  grupo_mensual_id: grupoId
+};
 
 }
 };
