@@ -79,7 +79,7 @@ function DateSelector({ fechaSeleccionada, onSeleccionar }) {
 
 // ─── ClaseCard ────────────────────────────────────────────────────
 function ClaseCard({ clase, onSeleccionar }) {
-  const cuposLibres = clase.cupo_maximo - (clase.cantidad_inscriptos || 0);
+  const cuposLibres = clase.cupos_disponibles ?? 0;
   const estaLlena = cuposLibres <= 0;
   const pct = Math.round((cuposLibres / clase.cupo_maximo) * 100);
 
