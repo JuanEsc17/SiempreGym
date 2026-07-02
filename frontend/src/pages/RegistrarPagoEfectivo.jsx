@@ -286,7 +286,10 @@ export default function RegistrarPagoEfectivo() {
           reserva={modalReserva}
           cliente={cliente}
           onConfirmar={handleRegistrarPago}
-          onCancelar={() => setModalReserva(null)}
+          onCancelar={() => {
+            setToast('Pago cancelado')
+            setModalReserva(null)
+          }}
           procesando={procesando}
         />
       )}
