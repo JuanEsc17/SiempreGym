@@ -101,6 +101,16 @@ export default function CancelarClaseAdmin() {
 
   const sortedDates = Object.keys(groupedByDay).sort()
 
+  const hoy = new Date()
+
+const fechaMin = hoy.toISOString().split("T")[0]
+
+const fechaMax = new Date(
+  hoy.getFullYear(),
+  hoy.getMonth() + 2,
+  hoy.getDate()
+).toISOString().split("T")[0]
+
   return (
     <div className="flex min-h-screen" style={{ background: '#1a1a2e' }}>
       <Sidebar />
@@ -148,6 +158,8 @@ export default function CancelarClaseAdmin() {
     type="date"
     value={fechaFiltro}
     onChange={(e) => setFechaFiltro(e.target.value)}
+    min={fechaMin}
+    max={fechaMax}
     className="px-4 py-2 rounded-lg"
     style={{
       background: "#2d2d3a",
