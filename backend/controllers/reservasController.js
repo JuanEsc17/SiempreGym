@@ -444,13 +444,12 @@ class ReservasController {
       // Siempre cancelar solamente ESTA reserva
       await reservasRepository.cancelarReserva(id_reserva);
 
-      // Si era mensual, verificar si ahora puede entrar alguien
-      if (reserva.tipo_reserva === 'mensual') {
+      // Siempre verificar si al liberarse este cupo puede ingresar
+      // alguien de la lista de espera mensual.
       await listaEsperaMensualService.procesarVacanteMensual(
-      reserva.id_clase,
-      reserva.fecha_clase
+        reserva.id_clase,
+        reserva.fecha_clase
       );
-      }
       //fin marian
       // 6. Procesar créditos y devoluciones
       let creditosAcreditados = 0;
