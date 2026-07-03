@@ -34,9 +34,15 @@ const InstanciasController = {
       const todayStr = formatDate(today);
       const endDateStr = formatDate(endDate);
 
+      // FIX: el conteo de inscriptos se calcula por id_clase + DATE(fecha_exacta)
       const [allInstancias] = await db.promise().execute(
         `SELECT ic.*,
-                (SELECT COUNT(*) FROM reservas r WHERE r.id_instancia = ic.id_instancia AND r.estado IN ('reservada', 'por_renovar')) AS inscriptos
+                (SELECT COUNT(*)
+                 FROM reservas r
+                 JOIN instancias_clases ic2 ON r.id_instancia = ic2.id_instancia
+                 WHERE ic2.id_clase = ic.id_clase
+                   AND DATE(ic2.fecha_exacta) = DATE(ic.fecha_exacta)
+                   AND r.estado IN ('reservada', 'por_renovar')) AS inscriptos
          FROM instancias_clases ic
          WHERE DATE(ic.fecha_exacta) >= ? AND DATE(ic.fecha_exacta) < ?
          ORDER BY ic.id_clase, ic.fecha_exacta`,
