@@ -181,7 +181,7 @@ class ClasesRepository {
   // para mostrar todas las clases en el admin
   async obtenerTodas() {
     const [rows] = await this.db.promise().execute(
-        `SELECT * FROM clases ORDER BY dia, horario`
+        `SELECT * FROM clases WHERE estado != 'cancelada' ORDER BY dia, horario`
     );
     return rows;
   }
@@ -210,7 +210,7 @@ class ClasesRepository {
 
   async eliminarClase(id_clase) {
     const [result] = await this.db.promise().execute(
-      `DELETE FROM clases WHERE id_clase = ?`,
+      `UPDATE clases SET estado = 'cancelada' WHERE id_clase = ?`,
       [id_clase]
     );
     return result.affectedRows > 0;
