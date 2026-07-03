@@ -8,7 +8,7 @@ class ReportesAsistenciasController {
    */
   async obtenerReporte(req, res) {
     try {
-      const { fechaInicio, fechaFin, id_clase } = req.query;
+      const { fechaInicio, fechaFin, actividad } = req.query;
 
       // Validar parámetros obligatorios
       if (!fechaInicio || !fechaFin) {
@@ -39,7 +39,7 @@ class ReportesAsistenciasController {
       const reporte = await reportesAsistenciasService.obtenerReporteAsistencias(
         fechaInicio,
         fechaFin,
-        id_clase ? parseInt(id_clase) : null
+        actividad || null
       );
 
       return res.status(200).json(reporte);

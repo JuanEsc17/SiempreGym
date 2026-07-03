@@ -9,12 +9,12 @@ const reportesService = {
    * @param {number|null} id_clase - ID de la clase o null para todas
    * @returns {Promise<Object>} Reporte de asistencias
    */
-  obtenerReporte: async (fechaInicio, fechaFin, id_clase = null) => {
+  obtenerReporte: async (fechaInicio, fechaFin, actividad = null) => {
     try {
       let url = `${API_URL}/reportes/asistencias?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`;
       
-      if (id_clase) {
-        url += `&id_clase=${id_clase}`;
+      if (actividad) {
+        url += `&actividad=${encodeURIComponent(actividad)}`;
       }
 
       const response = await fetch(url, {

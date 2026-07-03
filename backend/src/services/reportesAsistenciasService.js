@@ -8,10 +8,10 @@ class ReportesAsistenciasService {
    * 
    * @param {Date} fechaInicio - Fecha de inicio del rango
    * @param {Date} fechaFin - Fecha de fin del rango
-   * @param {number|null} id_clase - ID de la clase específica o null para todas
+   * @param {string|null} actividad - Nombre de la actividad o null para todas
    * @returns {Object} Objeto con el reporte de asistencias
    */
-  async obtenerReporteAsistencias(fechaInicio, fechaFin, id_clase = null) {
+  async obtenerReporteAsistencias(fechaInicio, fechaFin, actividad = null) {
     try {
       // Formatear fechas
       const inicio = new Date(fechaInicio).toISOString().split('T')[0];
@@ -20,7 +20,7 @@ class ReportesAsistenciasService {
       // Construir query dinámicamente según si es clase específica o todas
       let query = `
         SELECT 
-          c.id_clase,
+          MIN(c.id_clase) as id_clase,
           c.actividad,
           SUM(CASE WHEN r.estado != 'cancelada' THEN 1 ELSE 0 END) as total_inscritos,
           SUM(CASE WHEN a.id_asistencia IS NOT NULL AND a.presente = 1 THEN 1 ELSE 0 END) as asistencias,
@@ -34,13 +34,13 @@ class ReportesAsistenciasService {
 
       const params = [inicio, fin];
 
-      // Si se especifica una clase, filtrar por ella
-      if (id_clase) {
-        query += ` AND c.id_clase = ?`;
-        params.push(id_clase);
+      // Si se especifica una actividad, filtrar por ella
+      if (actividad) {
+        query += ` AND c.actividad = ?`;
+        params.push(actividad);
       }
 
-      query += ` GROUP BY c.id_clase, c.actividad ORDER BY c.actividad`;
+      query += ` GROUP BY c.actividad ORDER BY c.actividad`;
 
       const [results] = await db.promise().query(query, params);
 
@@ -87,7 +87,7 @@ class ReportesAsistenciasService {
         tieneClientes: true,
         fechaInicio: inicio,
         fechaFin: fin,
-        clasesReportadas: id_clase ? 1 : reportes.length,
+        clasesReportadas: actividad ? 1 : reportes.length,
         data: reportes
       };
 

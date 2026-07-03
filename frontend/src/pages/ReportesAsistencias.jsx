@@ -6,7 +6,7 @@ export default function ReportesAsistencias() {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [clases, setClases] = useState([]);
-  const [id_clase_seleccionada, setId_clase_seleccionada] = useState('todas');
+  const [filtroActividad, setFiltroActividad] = useState('todas');
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
@@ -85,8 +85,8 @@ export default function ReportesAsistencias() {
     setReporte(null);
 
     try {
-      const idClase = id_clase_seleccionada === 'todas' ? null : id_clase_seleccionada;
-      const resultado = await reportesService.obtenerReporte(inicio, fin, idClase);
+      const actividadFiltro = filtroActividad === 'todas' ? null : filtroActividad;
+      const resultado = await reportesService.obtenerReporte(inicio, fin, actividadFiltro);
 
       if (resultado.ok) {
         setReporte(resultado);
@@ -159,13 +159,13 @@ export default function ReportesAsistencias() {
                 Clase
               </label>
               <select
-                value={id_clase_seleccionada}
-                onChange={(e) => setId_clase_seleccionada(e.target.value)}
+                value={filtroActividad}
+                onChange={(e) => setFiltroActividad(e.target.value)}
                 className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
               >
                 <option value="todas">Todas las clases</option>
                 {obtenerActividadesUnicas().map(([actividad, id_clase]) => (
-                  <option key={actividad} value={id_clase}>
+                  <option key={actividad} value={actividad}>
                     {actividad}
                   </option>
                 ))}
